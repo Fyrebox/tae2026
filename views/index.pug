@@ -1,0 +1,15 @@
+extends layout
+include mixins
+
+block content
+  h1 Task 3: Prepare train a small group online
+  if courses.length === 0
+    p.empty
+      | No courses posted yet.
+      |
+      a(href="/courses/new") Post the first one
+      | .
+  else
+    .cards
+      each course in courses
+        +courseCard(course)

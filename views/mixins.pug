@@ -1,0 +1,59 @@
+mixin courseCard(course)
+  - var count = Number(course.attendee_count || 0)
+  - var attendees = course.attendees || []
+  - var needed = Math.max(0, 3 - count)
+  article.card(id=`course-${course.id}` x-data="{ open: false }")
+    .card-header
+      h3
+        a(href=`/courses/${course.id}`)= course.title
+      a.edit-link(href=`/courses/${course.id}/edit`) Edit
+    p.meta
+      strong= course.presenter
+      if course.contact
+        |
+        span.contact= course.contact
+    if course.description
+      p= course.description
+    if needed > 0
+      p.status.status-needs= `Needs ${needed} more`
+    if attendees.length
+      ul.attendee-chips
+        each a in attendees
+          li
+            span= a.name
+            button.chip-remove(
+              type="button"
+              hx-delete=`/courses/${course.id}/attendees/${a.id}?view=card`
+              hx-target=`#course-${course.id}`
+              hx-swap="outerHTML"
+              hx-confirm=`Remove ${a.name}?`
+              aria-label=`Remove ${a.name}`
+            ) ×
+    .card-footer
+      p.spots= `${count} enrolled`
+      button.enrol-toggle(@click="open = !open" x-text="open ? 'Cancel' : 'Enrol'") Enrol
+    form.inline-enrol(
+      x-show="open"
+      x-cloak
+      hx-post=`/courses/${course.id}/attendees`
+      hx-target=`#course-${course.id}`
+      hx-swap="outerHTML"
+      hx-vals='{"view":"card"}'
+    )
+      input(type="text" name="name" placeholder="Your name" required maxlength="80")
+      button(type="submit") Confirm
+
+mixin attendeesBlock(courseId, attendees)
+  ul#attendees.attendees
+    if attendees.length === 0
+      li.empty No one has enrolled yet.
+    else
+      each a in attendees
+        li
+          span= a.name
+          button(
+            hx-delete=`/courses/${courseId}/attendees/${a.id}`
+            hx-target="#attendees"
+            hx-swap="outerHTML"
+            hx-confirm=`Remove ${a.name}?`
+          ) Withdraw

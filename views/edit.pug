@@ -1,0 +1,37 @@
+extends layout
+
+block content
+  a.back(href=`/courses/${course.id}`) ← Back to course
+  h1 Edit mini course
+  form.stack(
+    method="post"
+    action=`/courses/${course.id}/edit`
+    x-data="{ submitting: false }"
+    @submit="submitting = true"
+  )
+    label
+      | Title
+      input(type="text" name="title" required maxlength="120" value=course.title)
+    label
+      | Presenter
+      input(type="text" name="presenter" required maxlength="80" value=course.presenter)
+    label
+      | Contact (email or phone)
+      input(type="text" name="contact" required maxlength="120" value=course.contact || '')
+    label
+      | Description
+      textarea(name="description" rows="4" maxlength="1000")= course.description || ''
+    .form-actions
+      a.cancel-link(href=`/courses/${course.id}`) Cancel
+      button(
+        type="submit"
+        ":disabled"="submitting"
+        "x-text"="submitting ? 'Saving…' : 'Save changes'"
+      ) Save changes
+
+  form.delete-form(
+    method="post"
+    action=`/courses/${course.id}/delete`
+    onsubmit=`return confirm('Delete this course? This cannot be undone.')`
+  )
+    button.delete-btn(type="submit") Delete course

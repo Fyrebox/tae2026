@@ -1,0 +1,32 @@
+extends layout
+include mixins
+
+block content
+  a.back(href="/") ← All courses
+  .title-row
+    h1= course.title
+    a.edit-link(href=`/courses/${course.id}/edit`) Edit
+  p.meta
+    strong= course.presenter
+    if course.contact
+      |
+      span.contact= course.contact
+  if course.description
+    p.description= course.description
+
+  section
+    h2
+      | Attendees
+      |
+      small (#{attendees.length})
+
+    form(
+      hx-post=`/courses/${course.id}/attendees`
+      hx-target="#attendees"
+      hx-swap="outerHTML"
+      hx-on::after-request="if(event.detail.successful) this.reset()"
+    )
+      input(type="text" name="name" placeholder="Your name" required maxlength="80")
+      button(type="submit") Enrol
+
+    +attendeesBlock(course.id, attendees)

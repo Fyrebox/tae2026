@@ -1,0 +1,29 @@
+extends layout
+
+block content
+  h1 Post a mini course
+  form.stack(
+    method="post"
+    action="/courses"
+    x-data="{ submitting: false }"
+    @submit="submitting = true"
+  )
+    label
+      | Title
+      input(type="text" name="title" required maxlength="120")
+    label
+      | Presenter (your name)
+      input(type="text" name="presenter" required maxlength="80")
+    label
+      | Contact (email or phone)
+      input(type="text" name="contact" required maxlength="120" placeholder="you@example.com or 04xx xxx xxx")
+    label
+      | Description
+      textarea(name="description" rows="4" maxlength="1000")
+    .form-actions
+      a.cancel-link(href="/") Cancel
+      button(
+        type="submit"
+        ":disabled"="submitting"
+        "x-text"="submitting ? 'Posting…' : 'Post course'"
+      ) Post course
