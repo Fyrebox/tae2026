@@ -6,11 +6,22 @@ block content
   .title-row
     h1= course.title
     a.edit-link(href=`/courses/${course.id}/edit`) Edit
+  if warnings && warnings.length
+    .warning-banner
+      strong Heads up:
+      ul
+        each w in warnings
+          li= w
   p.meta
     strong= course.presenter
     if course.contact
       |
       span.contact= course.contact
+  if course.scheduled_at
+    p.schedule
+      span.schedule-icon 🗓
+      span= new Date(course.scheduled_at).toLocaleString()
+      span.schedule-duration  · 30 min
   if course.description
     p.description= course.description
 

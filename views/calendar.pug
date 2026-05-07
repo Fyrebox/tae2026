@@ -1,0 +1,79 @@
+extends layout
+
+block content
+  -
+    // Build the 6-row month grid (always 42 cells, leading from prev month, trailing into next).
+    var firstOfMonth = new Date(year, month, 1)
+    var leading = (firstOfMonth.getDay() + 6) % 7  // Monday-first: 0=Mon..6=Sun
+    var gridStart = new Date(year, month, 1 - leading)
+    var cells = []
+    for (var i = 0; i < 42; i++) {
+      var d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i)
+      cells.push(d)
+    }
+    // Group courses by YYYY-MM-DD (local).
+    function dayKey(d) {
+      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0')
+    }
+    var byDay = {}
+    courses.forEach(function(c) {
+      var d = new Date(c.scheduled_at)
+      var k = dayKey(d)
+      if (!byDay[k]) byDay[k] = []
+      byDay[k].push(c)
+    })
+    var todayKey = dayKey(new Date())
+    var weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+    function fmtTime(d) {
+      return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0')
+    }
+
+  .calendar-header
+    h1= monthLabel
+    .calendar-nav
+      a.cal-nav-btn(href=`/calendar?month=${prevMonth}`) ← Prev
+      a.cal-nav-btn(href="/calendar") Today
+      a.cal-nav-btn(href=`/calendar?month=${nextMonth}`) Next →
+
+  .calendar-legend
+    span.legend-item
+      span.legend-swatch.legend-clean
+      | Scheduled
+    span.legend-item
+      span.legend-swatch.legend-conflict
+      | Has student conflict
+
+  .calendar-grid
+    each w in weekdays
+      .calendar-weekday= w
+    each cell in cells
+      -
+        var k = dayKey(cell)
+        var inMonth = cell.getMonth() === month
+        var dayCourses = byDay[k] || []
+        // sort by time
+        dayCourses.sort(function(a,b){ return new Date(a.scheduled_at) - new Date(b.scheduled_at) })
+      .calendar-day(class=(inMonth ? '' : 'outside') + (k === todayKey ? ' today' : ''))
+        .calendar-day-num= cell.getDate()
+        if dayCourses.length
+          .calendar-events
+            each c in dayCourses
+              -
+                var conflicts = conflictsByCourse.get ? conflictsByCourse.get(c.id) : null
+                var hasConflict = !!(conflicts && conflicts.length)
+                var tipParts = []
+                if (hasConflict) {
+                  conflicts.forEach(function(conf) {
+                    var otherTitle = titleById.get ? titleById.get(conf.otherCourseId) : null
+                    tipParts.push(conf.name + (otherTitle ? ' — also in "' + otherTitle + '"' : ''))
+                  })
+                }
+              a.calendar-event(
+                href=`/courses/${c.id}`
+                class=(hasConflict ? 'has-conflict' : '')
+                title=(hasConflict ? 'Conflicts:\n' + tipParts.join('\n') : c.title + ' — ' + c.presenter)
+              )
+                span.event-time= fmtTime(new Date(c.scheduled_at))
+                span.event-title= c.title
+                if hasConflict
+                  span.event-conflict-dot(aria-label="conflict") !

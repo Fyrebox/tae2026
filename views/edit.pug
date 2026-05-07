@@ -3,6 +3,14 @@ extends layout
 block content
   a.back(href=`/courses/${course.id}`) ← Back to course
   h1 Edit mini course
+  -
+    var scheduledLocal = ''
+    if (course.scheduled_at) {
+      var d = new Date(course.scheduled_at)
+      var pad = function(n){ return String(n).padStart(2,'0') }
+      scheduledLocal = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate())
+        + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes())
+    }
   form.stack(
     method="post"
     action=`/courses/${course.id}/edit`
@@ -18,6 +26,9 @@ block content
     label
       | Contact (email or phone)
       input(type="text" name="contact" required maxlength="120" value=course.contact || '')
+    label
+      | Date & time (optional, 30 min)
+      input(type="datetime-local" name="scheduled_at" value=scheduledLocal)
     label
       | Description
       textarea(name="description" rows="4" maxlength="1000")= course.description || ''

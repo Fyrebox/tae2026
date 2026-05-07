@@ -19,6 +19,8 @@ ALTER TABLE courses DROP COLUMN IF EXISTS duration_min;
 ALTER TABLE courses DROP COLUMN IF EXISTS location;
 ALTER TABLE courses DROP COLUMN IF EXISTS max_attendees;
 ALTER TABLE courses ADD COLUMN IF NOT EXISTS contact TEXT;
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS scheduled_at TIMESTAMPTZ;
 
 DROP INDEX IF EXISTS idx_courses_starts_at;
 CREATE INDEX IF NOT EXISTS idx_attendees_course ON attendees(course_id);
+CREATE INDEX IF NOT EXISTS idx_courses_scheduled_at ON courses(scheduled_at);

@@ -12,6 +12,12 @@ mixin courseCard(course)
       if course.contact
         |
         span.contact= course.contact
+    if course.scheduled_at
+      p.schedule
+        span.schedule-icon 🗓
+        span= new Date(course.scheduled_at).toLocaleString()
+    if typeof errorMessage !== 'undefined' && errorMessage
+      .error-banner= errorMessage
     if course.description
       p= course.description
     if needed > 0
