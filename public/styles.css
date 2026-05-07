@@ -343,6 +343,28 @@ button.chip-remove:focus {
   font-size: 0.9rem;
   background: var(--accent-red);
 }
+.card-footer .join-link {
+  margin-left: auto;
+  margin-right: 0.5rem;
+}
+.join-link {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--ink);
+  background: #d6f5e0;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+}
+.join-link:hover {
+  background: #b9ecc8;
+}
+.schedule-label {
+  font-weight: 700;
+  margin-right: 0.15rem;
+}
 
 .inline-enrol {
   display: flex;
@@ -378,6 +400,7 @@ form.stack label {
 input[type="text"],
 input[type="number"],
 input[type="datetime-local"],
+input[type="url"],
 textarea {
   padding: 0.6rem 0.75rem;
   border: 2px solid var(--ink);

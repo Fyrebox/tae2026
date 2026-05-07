@@ -18,8 +18,14 @@ block content
       | Contact (email or phone)
       input(type="text" name="contact" required maxlength="120" placeholder="you@example.com or 04xx xxx xxx")
     label
-      | Date & time (optional, 30 min)
+      | First session (optional, 30 min)
       input(type="datetime-local" name="scheduled_at")
+    label
+      | Second session (optional, 30 min)
+      input(type="datetime-local" name="scheduled_at_2")
+    label
+      | Meeting link (optional)
+      input(type="url" name="meeting_link" maxlength="500" placeholder="https://zoom.us/j/...")
     label
       | Description
       textarea(name="description" rows="4" maxlength="1000")

@@ -25,18 +25,25 @@ function parseScheduledAt(raw) {
   return d;
 }
 
-async function findStudentConflicts(client, courseId, scheduledAt, name) {
-  if (!scheduledAt) return [];
+async function findStudentConflicts(client, courseId, targetTimes, name) {
+  const times = (targetTimes || []).filter(Boolean);
+  if (times.length === 0) return [];
   const { rows } = await client.query(
-    `SELECT c2.id, c2.title, c2.scheduled_at
+    `SELECT c2.id, c2.title, c2.scheduled_at, c2.scheduled_at_2
      FROM attendees a
      JOIN courses c2 ON c2.id = a.course_id
      WHERE LOWER(TRIM(a.name)) = LOWER(TRIM($1))
        AND a.course_id <> $2
-       AND c2.scheduled_at IS NOT NULL
-       AND c2.scheduled_at <  ($3::timestamptz + ($4 || ' minutes')::interval)
-       AND c2.scheduled_at + ($4 || ' minutes')::interval > $3::timestamptz`,
-    [name, courseId, scheduledAt, COURSE_DURATION_MIN]
+       AND EXISTS (
+         SELECT 1 FROM unnest($3::timestamptz[]) t
+         WHERE (c2.scheduled_at IS NOT NULL
+                AND c2.scheduled_at <  t + ($4 || ' minutes')::interval
+                AND c2.scheduled_at + ($4 || ' minutes')::interval > t)
+            OR (c2.scheduled_at_2 IS NOT NULL
+                AND c2.scheduled_at_2 <  t + ($4 || ' minutes')::interval
+                AND c2.scheduled_at_2 + ($4 || ' minutes')::interval > t)
+       )`,
+    [name, courseId, times, COURSE_DURATION_MIN]
   );
   return rows;
 }
@@ -79,21 +86,23 @@ app.get('/courses/new', (req, res) => {
 });
 
 app.post('/courses', async (req, res) => {
-  const { title, presenter, contact, description, scheduled_at } = req.body;
+  const { title, presenter, contact, description, scheduled_at, scheduled_at_2, meeting_link } = req.body;
 
   if (!title?.trim() || !presenter?.trim() || !contact?.trim()) {
     return res.status(400).send('Missing required fields');
   }
 
   await pool.query(
-    `INSERT INTO courses (title, presenter, contact, description, scheduled_at)
-     VALUES ($1, $2, $3, $4, $5)`,
+    `INSERT INTO courses (title, presenter, contact, description, scheduled_at, scheduled_at_2, meeting_link)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
     [
       title.trim(),
       presenter.trim(),
       contact.trim(),
       description?.trim() || null,
       parseScheduledAt(scheduled_at),
+      parseScheduledAt(scheduled_at_2),
+      meeting_link?.trim() || null,
     ]
   );
 
@@ -122,43 +131,56 @@ app.post('/courses/:id/edit', async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) return res.status(400).send('Bad id');
 
-  const { title, presenter, contact, description, scheduled_at } = req.body;
+  const { title, presenter, contact, description, scheduled_at, scheduled_at_2, meeting_link } = req.body;
   if (!title?.trim() || !presenter?.trim() || !contact?.trim()) {
     return res.status(400).send('Missing required fields');
   }
 
   const newScheduledAt = parseScheduledAt(scheduled_at);
+  const newScheduledAt2 = parseScheduledAt(scheduled_at_2);
+  const newMeetingLink = meeting_link?.trim() || null;
 
   const { rowCount } = await pool.query(
     `UPDATE courses
-     SET title = $1, presenter = $2, contact = $3, description = $4, scheduled_at = $5
-     WHERE id = $6`,
-    [title.trim(), presenter.trim(), contact.trim(), description?.trim() || null, newScheduledAt, id]
+     SET title = $1, presenter = $2, contact = $3, description = $4,
+         scheduled_at = $5, scheduled_at_2 = $6, meeting_link = $7
+     WHERE id = $8`,
+    [title.trim(), presenter.trim(), contact.trim(), description?.trim() || null,
+     newScheduledAt, newScheduledAt2, newMeetingLink, id]
   );
   if (rowCount === 0) return res.status(404).send('Course not found');
 
   // Warn (don't block) about students now in conflict because of this time change.
   const warnings = [];
-  if (newScheduledAt) {
+  const newTimes = [newScheduledAt, newScheduledAt2].filter(Boolean);
+  if (newTimes.length) {
     const { rows } = await pool.query(
       `SELECT a1.name,
               c2.id   AS other_id,
               c2.title AS other_title,
-              c2.scheduled_at AS other_scheduled_at
+              c2.scheduled_at AS other_scheduled_at,
+              c2.scheduled_at_2 AS other_scheduled_at_2
        FROM attendees a1
        JOIN attendees a2
          ON LOWER(TRIM(a2.name)) = LOWER(TRIM(a1.name))
         AND a2.course_id <> a1.course_id
        JOIN courses c2 ON c2.id = a2.course_id
        WHERE a1.course_id = $1
-         AND c2.scheduled_at IS NOT NULL
-         AND c2.scheduled_at <  ($2::timestamptz + ($3 || ' minutes')::interval)
-         AND c2.scheduled_at + ($3 || ' minutes')::interval > $2::timestamptz`,
-      [id, newScheduledAt, COURSE_DURATION_MIN]
+         AND EXISTS (
+           SELECT 1 FROM unnest($2::timestamptz[]) t
+           WHERE (c2.scheduled_at IS NOT NULL
+                  AND c2.scheduled_at <  t + ($3 || ' minutes')::interval
+                  AND c2.scheduled_at + ($3 || ' minutes')::interval > t)
+              OR (c2.scheduled_at_2 IS NOT NULL
+                  AND c2.scheduled_at_2 <  t + ($3 || ' minutes')::interval
+                  AND c2.scheduled_at_2 + ($3 || ' minutes')::interval > t)
+         )`,
+      [id, newTimes, COURSE_DURATION_MIN]
     );
     for (const r of rows) {
+      const otherTime = r.other_scheduled_at || r.other_scheduled_at_2;
       warnings.push(
-        `${r.name} is also enrolled in "${r.other_title}" at ${new Date(r.other_scheduled_at).toLocaleString()}`
+        `${r.name} is also enrolled in "${r.other_title}" at ${new Date(otherTime).toLocaleString()}`
       );
     }
   }
@@ -172,7 +194,7 @@ app.post('/courses/:id/edit', async (req, res) => {
     return res.render('course', { title: course.title, course, attendees, warnings });
   }
 
-  res.redirect(`/courses/${id}`);
+  res.redirect('/');
 });
 
 app.get('/calendar', async (req, res) => {
@@ -192,16 +214,18 @@ app.get('/calendar', async (req, res) => {
   const monthEnd = new Date(year, month + 1, 1);
 
   const { rows: courses } = await pool.query(
-    `SELECT id, title, presenter, scheduled_at
+    `SELECT id, title, presenter, scheduled_at, scheduled_at_2
      FROM courses
-     WHERE scheduled_at >= $1 AND scheduled_at < $2
-     ORDER BY scheduled_at ASC`,
+     WHERE (scheduled_at   >= $1 AND scheduled_at   < $2)
+        OR (scheduled_at_2 >= $1 AND scheduled_at_2 < $2)
+     ORDER BY COALESCE(scheduled_at, scheduled_at_2) ASC`,
     [monthStart, monthEnd]
   );
 
   // Conflict pairs across the whole DB (cheap; small table).
+  // Two courses conflict if any session of one overlaps with any session of the other.
   const { rows: conflictRows } = await pool.query(
-    `SELECT a1.name,
+    `SELECT DISTINCT a1.name,
             c1.id AS course_a,
             c2.id AS course_b
      FROM attendees a1
@@ -210,10 +234,12 @@ app.get('/calendar', async (req, res) => {
       AND a2.course_id > a1.course_id
      JOIN courses c1 ON c1.id = a1.course_id
      JOIN courses c2 ON c2.id = a2.course_id
-     WHERE c1.scheduled_at IS NOT NULL
-       AND c2.scheduled_at IS NOT NULL
-       AND c1.scheduled_at <  c2.scheduled_at + ($1 || ' minutes')::interval
-       AND c1.scheduled_at + ($1 || ' minutes')::interval > c2.scheduled_at`,
+     CROSS JOIN LATERAL (VALUES (c1.scheduled_at), (c1.scheduled_at_2)) AS s1(t)
+     CROSS JOIN LATERAL (VALUES (c2.scheduled_at), (c2.scheduled_at_2)) AS s2(t)
+     WHERE s1.t IS NOT NULL
+       AND s2.t IS NOT NULL
+       AND s1.t <  s2.t + ($1 || ' minutes')::interval
+       AND s1.t + ($1 || ' minutes')::interval > s2.t`,
     [COURSE_DURATION_MIN]
   );
 
@@ -270,18 +296,20 @@ app.post('/courses/:id/attendees', async (req, res) => {
   if (!Number.isInteger(id) || !name) return res.status(400).send('Bad request');
 
   const { rows: courseRows } = await pool.query(
-    `SELECT id, scheduled_at FROM courses WHERE id = $1`,
+    `SELECT id, scheduled_at, scheduled_at_2 FROM courses WHERE id = $1`,
     [id]
   );
   if (courseRows.length === 0) return res.status(404).send('Course not found');
   const target = courseRows[0];
 
   let conflictMessage = null;
-  if (target.scheduled_at) {
-    const conflicts = await findStudentConflicts(pool, id, target.scheduled_at, name);
+  const targetTimes = [target.scheduled_at, target.scheduled_at_2].filter(Boolean);
+  if (targetTimes.length) {
+    const conflicts = await findStudentConflicts(pool, id, targetTimes, name);
     if (conflicts.length) {
       const c = conflicts[0];
-      conflictMessage = `${name} is already enrolled in "${c.title}" at ${new Date(c.scheduled_at).toLocaleString()}.`;
+      const otherTime = c.scheduled_at || c.scheduled_at_2;
+      conflictMessage = `${name} is already enrolled in "${c.title}" at ${new Date(otherTime).toLocaleString()}.`;
     }
   }
 

@@ -18,11 +18,24 @@ block content
       |
       span.contact= course.contact
   if course.scheduled_at
-    - var iso = new Date(course.scheduled_at).toISOString()
+    - var iso1 = new Date(course.scheduled_at).toISOString()
     p.schedule
       span.schedule-icon 🗓
-      time(datetime=iso data-iso=iso)
+      span.schedule-label 1st:
+      |
+      time(datetime=iso1 data-iso=iso1)
       span.schedule-duration  · 30 min
+  if course.scheduled_at_2
+    - var iso2 = new Date(course.scheduled_at_2).toISOString()
+    p.schedule
+      span.schedule-icon 🗓
+      span.schedule-label 2nd:
+      |
+      time(datetime=iso2 data-iso=iso2)
+      span.schedule-duration  · 30 min
+  if course.meeting_link
+    p.meeting
+      a.join-link(href=course.meeting_link target="_blank" rel="noopener noreferrer") Join meeting
   if course.description
     p.description= course.description
 

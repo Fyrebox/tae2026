@@ -17,17 +17,25 @@ block content
     }
     var todayKey = dayKey(new Date())
     var weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
-    var eventsPayload = courses.map(function(c) {
+    var eventsPayload = []
+    courses.forEach(function(c) {
       var conflicts = (conflictsByCourse.get(c.id) || []).map(function(conf) {
         return { name: conf.name, otherTitle: titleById.get(conf.otherCourseId) || null }
       })
-      return {
-        id: c.id,
-        title: c.title,
-        presenter: c.presenter,
-        scheduledAt: new Date(c.scheduled_at).toISOString(),
-        conflicts: conflicts
-      }
+      ;[
+        { ts: c.scheduled_at, label: '1st' },
+        { ts: c.scheduled_at_2, label: '2nd' }
+      ].forEach(function(s) {
+        if (!s.ts) return
+        eventsPayload.push({
+          id: c.id,
+          title: c.title,
+          presenter: c.presenter,
+          sessionLabel: s.label,
+          scheduledAt: new Date(s.ts).toISOString(),
+          conflicts: conflicts
+        })
+      })
     })
 
   .calendar-header
@@ -92,7 +100,7 @@ block content
         t.textContent = fmtTime(d);
         var ti = document.createElement('span');
         ti.className = 'event-title';
-        ti.textContent = ev.title;
+        ti.textContent = ev.sessionLabel ? ev.title + ' (' + ev.sessionLabel + ')' : ev.title;
         a.appendChild(t);
         a.appendChild(ti);
         if (hasConflict) {

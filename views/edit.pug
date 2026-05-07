@@ -4,13 +4,15 @@ block content
   a.back(href=`/courses/${course.id}`) ← Back to course
   h1 Edit mini course
   -
-    var scheduledLocal = ''
-    if (course.scheduled_at) {
-      var d = new Date(course.scheduled_at)
-      var pad = function(n){ return String(n).padStart(2,'0') }
-      scheduledLocal = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate())
+    var pad = function(n){ return String(n).padStart(2,'0') }
+    function toLocal(value) {
+      if (!value) return ''
+      var d = new Date(value)
+      return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate())
         + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes())
     }
+    var scheduledLocal = toLocal(course.scheduled_at)
+    var scheduledLocal2 = toLocal(course.scheduled_at_2)
   form.stack(
     method="post"
     action=`/courses/${course.id}/edit`
@@ -27,8 +29,14 @@ block content
       | Contact (email or phone)
       input(type="text" name="contact" required maxlength="120" value=course.contact || '')
     label
-      | Date & time (optional, 30 min)
+      | First session (optional, 30 min)
       input(type="datetime-local" name="scheduled_at" value=scheduledLocal)
+    label
+      | Second session (optional, 30 min)
+      input(type="datetime-local" name="scheduled_at_2" value=scheduledLocal2)
+    label
+      | Meeting link (optional)
+      input(type="url" name="meeting_link" maxlength="500" placeholder="https://zoom.us/j/..." value=course.meeting_link || '')
     label
       | Description
       textarea(name="description" rows="4" maxlength="1000")= course.description || ''
