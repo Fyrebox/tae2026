@@ -3,6 +3,7 @@ extends layout
 block content
   -
     // Build the 6-row month grid (always 42 cells, leading from prev month, trailing into next).
+    // Cell labels are calendar dates, independent of timezone — events get bucketed in the browser.
     var firstOfMonth = new Date(year, month, 1)
     var leading = (firstOfMonth.getDay() + 6) % 7  // Monday-first: 0=Mon..6=Sun
     var gridStart = new Date(year, month, 1 - leading)
@@ -11,22 +12,23 @@ block content
       var d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i)
       cells.push(d)
     }
-    // Group courses by YYYY-MM-DD (local).
     function dayKey(d) {
       return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0')
     }
-    var byDay = {}
-    courses.forEach(function(c) {
-      var d = new Date(c.scheduled_at)
-      var k = dayKey(d)
-      if (!byDay[k]) byDay[k] = []
-      byDay[k].push(c)
-    })
     var todayKey = dayKey(new Date())
     var weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
-    function fmtTime(d) {
-      return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0')
-    }
+    var eventsPayload = courses.map(function(c) {
+      var conflicts = (conflictsByCourse.get(c.id) || []).map(function(conf) {
+        return { name: conf.name, otherTitle: titleById.get(conf.otherCourseId) || null }
+      })
+      return {
+        id: c.id,
+        title: c.title,
+        presenter: c.presenter,
+        scheduledAt: new Date(c.scheduled_at).toISOString(),
+        conflicts: conflicts
+      }
+    })
 
   .calendar-header
     h1= monthLabel
@@ -50,30 +52,56 @@ block content
       -
         var k = dayKey(cell)
         var inMonth = cell.getMonth() === month
-        var dayCourses = byDay[k] || []
-        // sort by time
-        dayCourses.sort(function(a,b){ return new Date(a.scheduled_at) - new Date(b.scheduled_at) })
-      .calendar-day(class=(inMonth ? '' : 'outside') + (k === todayKey ? ' today' : ''))
+      .calendar-day(
+        data-day-key=k
+        class=(inMonth ? '' : 'outside') + (k === todayKey ? ' today' : '')
+      )
         .calendar-day-num= cell.getDate()
-        if dayCourses.length
-          .calendar-events
-            each c in dayCourses
-              -
-                var conflicts = conflictsByCourse.get ? conflictsByCourse.get(c.id) : null
-                var hasConflict = !!(conflicts && conflicts.length)
-                var tipParts = []
-                if (hasConflict) {
-                  conflicts.forEach(function(conf) {
-                    var otherTitle = titleById.get ? titleById.get(conf.otherCourseId) : null
-                    tipParts.push(conf.name + (otherTitle ? ' — also in "' + otherTitle + '"' : ''))
-                  })
-                }
-              a.calendar-event(
-                href=`/courses/${c.id}`
-                class=(hasConflict ? 'has-conflict' : '')
-                title=(hasConflict ? 'Conflicts:\n' + tipParts.join('\n') : c.title + ' — ' + c.presenter)
-              )
-                span.event-time= fmtTime(new Date(c.scheduled_at))
-                span.event-title= c.title
-                if hasConflict
-                  span.event-conflict-dot(aria-label="conflict") !
+        .calendar-events
+
+  script(type="application/json" id="cal-events")
+    != JSON.stringify(eventsPayload)
+
+  script.
+    (function() {
+      var raw = document.getElementById('cal-events').textContent;
+      var events = JSON.parse(raw);
+      function pad(n){ return String(n).padStart(2,'0'); }
+      function dayKey(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+      function fmtTime(d){
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+      events.sort(function(a,b){ return new Date(a.scheduledAt) - new Date(b.scheduledAt); });
+      events.forEach(function(ev) {
+        var d = new Date(ev.scheduledAt);
+        var cell = document.querySelector(
+          '.calendar-day[data-day-key="' + dayKey(d) + '"] .calendar-events'
+        );
+        if (!cell) return;
+        var hasConflict = ev.conflicts && ev.conflicts.length > 0;
+        var a = document.createElement('a');
+        a.className = 'calendar-event' + (hasConflict ? ' has-conflict' : '');
+        a.href = '/courses/' + ev.id;
+        a.title = hasConflict
+          ? 'Conflicts:\n' + ev.conflicts.map(function(c){
+              return c.name + (c.otherTitle ? ' — also in "' + c.otherTitle + '"' : '');
+            }).join('\n')
+          : ev.title + ' — ' + ev.presenter;
+        var t = document.createElement('span');
+        t.className = 'event-time';
+        t.textContent = fmtTime(d);
+        var ti = document.createElement('span');
+        ti.className = 'event-title';
+        ti.textContent = ev.title;
+        a.appendChild(t);
+        a.appendChild(ti);
+        if (hasConflict) {
+          var dot = document.createElement('span');
+          dot.className = 'event-conflict-dot';
+          dot.setAttribute('aria-label', 'conflict');
+          dot.textContent = '!';
+          a.appendChild(dot);
+        }
+        cell.appendChild(a);
+      });
+    })();

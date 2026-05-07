@@ -15,3 +15,18 @@ html(lang="en")
         a(href="/courses/new") + Post a course
     main
       block content
+    script.
+      function formatLocalTimes(root) {
+        (root || document).querySelectorAll('time[data-iso]').forEach(function(el) {
+          var d = new Date(el.dataset.iso);
+          if (isNaN(d.getTime())) return;
+          var fmt = el.dataset.fmt || 'datetime';
+          if (fmt === 'time') {
+            el.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          } else {
+            el.textContent = d.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+          }
+        });
+      }
+      formatLocalTimes();
+      document.body.addEventListener('htmx:afterSwap', function(e) { formatLocalTimes(e.target); });

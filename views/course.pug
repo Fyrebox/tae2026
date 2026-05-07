@@ -18,9 +18,10 @@ block content
       |
       span.contact= course.contact
   if course.scheduled_at
+    - var iso = new Date(course.scheduled_at).toISOString()
     p.schedule
       span.schedule-icon 🗓
-      span= new Date(course.scheduled_at).toLocaleString()
+      time(datetime=iso data-iso=iso)
       span.schedule-duration  · 30 min
   if course.description
     p.description= course.description
