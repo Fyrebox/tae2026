@@ -4,16 +4,9 @@ block content
   a.back(href=`/courses/${course.id}`) ← Back to course
   h1 Edit mini course
   -
-    var pad = function(n){ return String(n).padStart(2,'0') }
-    function toLocal(value) {
-      if (!value) return ''
-      var d = new Date(value)
-      return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate())
-        + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes())
-    }
-    var scheduledLocal = toLocal(course.scheduled_at)
-    var scheduledLocal2 = toLocal(course.scheduled_at_2)
-  form.stack(
+    var iso1 = course.scheduled_at ? new Date(course.scheduled_at).toISOString() : ''
+    var iso2 = course.scheduled_at_2 ? new Date(course.scheduled_at_2).toISOString() : ''
+  form.stack#edit-form(
     method="post"
     action=`/courses/${course.id}/edit`
     x-data="{ submitting: false }"
@@ -30,10 +23,10 @@ block content
       input(type="text" name="contact" required maxlength="120" value=course.contact || '')
     label
       | First session (optional, 30 min)
-      input(type="datetime-local" name="scheduled_at" value=scheduledLocal)
+      input(type="datetime-local" name="scheduled_at" data-iso=iso1)
     label
       | Second session (optional, 30 min)
-      input(type="datetime-local" name="scheduled_at_2" value=scheduledLocal2)
+      input(type="datetime-local" name="scheduled_at_2" data-iso=iso2)
     label
       | Meeting link (optional)
       input(type="url" name="meeting_link" maxlength="500" placeholder="https://zoom.us/j/..." value=course.meeting_link || '')
@@ -54,3 +47,25 @@ block content
     onsubmit=`return confirm('Delete this course? This cannot be undone.')`
   )
     button.delete-btn(type="submit") Delete course
+
+  script.
+    (function() {
+      var pad = function(n) { return String(n).padStart(2, '0'); };
+      document.querySelectorAll('input[type="datetime-local"][data-iso]').forEach(function(input) {
+        var iso = input.dataset.iso;
+        if (!iso) return;
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return;
+        input.value = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
+          + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+      });
+      // Submit UTC ISO so the server doesn't reinterpret the local string in its own TZ.
+      document.getElementById('edit-form').addEventListener('submit', function() {
+        this.querySelectorAll('input[type="datetime-local"]').forEach(function(input) {
+          if (!input.value) return;
+          var d = new Date(input.value);
+          if (isNaN(d.getTime())) return;
+          input.value = d.toISOString();
+        });
+      }, { capture: true });
+    })();

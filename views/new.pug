@@ -2,7 +2,7 @@ extends layout
 
 block content
   h1 Create a new Online Course
-  form.stack(
+  form.stack#new-form(
     method="post"
     action="/courses"
     x-data="{ submitting: false }"
@@ -36,3 +36,13 @@ block content
         ":disabled"="submitting"
         "x-text"="submitting ? 'Posting…' : 'Post course'"
       ) Post course
+
+  script.
+    document.getElementById('new-form').addEventListener('submit', function() {
+      this.querySelectorAll('input[type="datetime-local"]').forEach(function(input) {
+        if (!input.value) return;
+        var d = new Date(input.value);
+        if (isNaN(d.getTime())) return;
+        input.value = d.toISOString();
+      });
+    }, { capture: true });
