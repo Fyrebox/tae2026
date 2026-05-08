@@ -33,6 +33,9 @@ block content
       |
       time(datetime=iso2 data-iso=iso2)
       span.schedule-duration  · 30 min
+      if course.title_2
+        |
+        span.schedule-subtitle= course.title_2
   if course.meeting_link
     p.meeting
       a.join-link(href=course.meeting_link target="_blank" rel="noopener noreferrer") Join meeting

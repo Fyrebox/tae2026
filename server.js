@@ -86,17 +86,18 @@ app.get('/courses/new', (req, res) => {
 });
 
 app.post('/courses', async (req, res) => {
-  const { title, presenter, contact, description, scheduled_at, scheduled_at_2, meeting_link } = req.body;
+  const { title, title_2, presenter, contact, description, scheduled_at, scheduled_at_2, meeting_link } = req.body;
 
   if (!title?.trim() || !presenter?.trim() || !contact?.trim()) {
     return res.status(400).send('Missing required fields');
   }
 
   await pool.query(
-    `INSERT INTO courses (title, presenter, contact, description, scheduled_at, scheduled_at_2, meeting_link)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    `INSERT INTO courses (title, title_2, presenter, contact, description, scheduled_at, scheduled_at_2, meeting_link)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
     [
       title.trim(),
+      title_2?.trim() || null,
       presenter.trim(),
       contact.trim(),
       description?.trim() || null,
@@ -131,7 +132,7 @@ app.post('/courses/:id/edit', async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) return res.status(400).send('Bad id');
 
-  const { title, presenter, contact, description, scheduled_at, scheduled_at_2, meeting_link } = req.body;
+  const { title, title_2, presenter, contact, description, scheduled_at, scheduled_at_2, meeting_link } = req.body;
   if (!title?.trim() || !presenter?.trim() || !contact?.trim()) {
     return res.status(400).send('Missing required fields');
   }
@@ -142,10 +143,10 @@ app.post('/courses/:id/edit', async (req, res) => {
 
   const { rowCount } = await pool.query(
     `UPDATE courses
-     SET title = $1, presenter = $2, contact = $3, description = $4,
-         scheduled_at = $5, scheduled_at_2 = $6, meeting_link = $7
-     WHERE id = $8`,
-    [title.trim(), presenter.trim(), contact.trim(), description?.trim() || null,
+     SET title = $1, title_2 = $2, presenter = $3, contact = $4, description = $5,
+         scheduled_at = $6, scheduled_at_2 = $7, meeting_link = $8
+     WHERE id = $9`,
+    [title.trim(), title_2?.trim() || null, presenter.trim(), contact.trim(), description?.trim() || null,
      newScheduledAt, newScheduledAt2, newMeetingLink, id]
   );
   if (rowCount === 0) return res.status(404).send('Course not found');

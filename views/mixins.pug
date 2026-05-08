@@ -4,8 +4,11 @@ mixin courseCard(course)
   - var needed = Math.max(0, 3 - count)
   article.card(id=`course-${course.id}` x-data="{ open: false }")
     .card-header
-      h3
-        a(href=`/courses/${course.id}`)= course.title
+      .card-titles
+        h3
+          a(href=`/courses/${course.id}`)= course.title
+        if course.title_2
+          p.card-subtitle= course.title_2
       a.edit-link(href=`/courses/${course.id}/edit`) Edit
     p.meta
       strong= course.presenter
