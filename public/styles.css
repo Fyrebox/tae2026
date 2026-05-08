@@ -691,7 +691,7 @@ ul.attendees button {
 }
 .calendar-event {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.35rem;
   padding: 0.2rem 0.4rem;
   background: var(--accent-teal);
@@ -702,16 +702,15 @@ ul.attendees button {
   font-weight: 600;
   text-decoration: none;
   line-height: 1.2;
-  overflow: hidden;
+  min-width: 0;
 }
 .calendar-event:hover { filter: brightness(1.05); }
 .calendar-event.has-conflict { background: var(--accent-red); }
-.event-time { font-variant-numeric: tabular-nums; opacity: 0.95; }
+.event-time { font-variant-numeric: tabular-nums; opacity: 0.95; flex-shrink: 0; }
 .event-title {
   flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .event-conflict-dot {
   background: var(--paper);
@@ -727,6 +726,13 @@ ul.attendees button {
 }
 
 @media (max-width: 720px) {
-  .calendar-day { min-height: 80px; }
-  .event-title { display: none; }
+  .calendar-day { min-height: 80px; padding: 0.3rem; }
+  .calendar-event {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.1rem;
+    padding: 0.2rem 0.3rem;
+    font-size: 0.7rem;
+  }
+  .event-title { font-size: 0.7rem; }
 }
