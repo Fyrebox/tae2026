@@ -197,6 +197,10 @@ app.post('/courses/:id/edit', async (req, res) => {
   res.redirect('/');
 });
 
+app.get('/seo-game', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'seo-game', 'index.html'));
+});
+
 app.get('/calendar', async (req, res) => {
   // Month query param: YYYY-MM. Default to current month.
   const now = new Date();

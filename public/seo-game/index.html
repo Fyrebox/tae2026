@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SERP Climber — an SEO game</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --panel-2: #273449;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --good: #22c55e;
+    --bad: #ef4444;
+    --warn: #f59e0b;
+    --gold: #fbbf24;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+  body { min-height: 100vh; padding: 20px; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { margin: 0 0 8px; font-size: 32px; letter-spacing: -0.5px; }
+  h2 { margin: 0 0 8px; font-size: 22px; }
+  p { color: var(--muted); line-height: 1.5; }
+  button {
+    background: var(--accent); color: #0b1220; border: 0; padding: 10px 18px;
+    border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px;
+  }
+  button:hover { filter: brightness(1.1); }
+  button.secondary { background: var(--panel-2); color: var(--text); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* Title */
+  .title-box { background: var(--panel); border-radius: 14px; padding: 40px; text-align: center; }
+  .title-box .tagline { font-size: 18px; color: var(--muted); margin: 0 0 24px; }
+  .title-box .actions { display: flex; gap: 12px; justify-content: center; }
+
+  /* Board layout */
+  .board { display: grid; grid-template-columns: 1fr 320px; gap: 16px; }
+  .panel { background: var(--panel); border-radius: 12px; padding: 16px; }
+  .panel h3 { margin: 0 0 12px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+
+  /* SERP */
+  .serp { background: var(--panel-2); border-radius: 8px; padding: 8px; }
+  .serp-row {
+    display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 6px;
+    transition: background 0.3s; min-height: 36px;
+  }
+  .serp-row.top3 { background: rgba(251, 191, 36, 0.08); }
+  .serp-rank { width: 32px; color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .serp-site { flex: 1; color: #64748b; font-size: 13px; }
+  .serp-marker { font-size: 18px; transition: transform 0.4s; }
+  .serp-row.you .serp-site { color: var(--accent); font-weight: 600; }
+  .serp-row.them .serp-site { color: var(--bad); font-weight: 600; }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  .stat { background: var(--panel-2); padding: 10px; border-radius: 8px; text-align: center; }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-value { font-size: 22px; font-weight: 700; margin-top: 2px; }
+
+  /* Hand */
+  .hand { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .card {
+    background: var(--panel-2); border-radius: 8px; padding: 10px; cursor: pointer;
+    border: 2px solid transparent; transition: all 0.15s; min-height: 140px;
+    display: flex; flex-direction: column; font-size: 12px;
+  }
+  .card:hover:not(.disabled) { border-color: var(--accent); transform: translateY(-3px); }
+  .card.disabled { opacity: 0.4; cursor: not-allowed; }
+  .card-name { font-weight: 700; font-size: 13px; margin-bottom: 4px; color: var(--text); }
+  .card-cost { color: var(--warn); margin-bottom: 6px; font-size: 11px; }
+  .card-effect { color: var(--muted); flex: 1; line-height: 1.35; }
+  .card-tag { color: var(--accent); font-size: 10px; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Log */
+  .log { font-size: 13px; max-height: 240px; overflow-y: auto; }
+  .log-entry { padding: 6px 8px; border-radius: 4px; margin-bottom: 4px; line-height: 1.4; }
+  .log-entry.you { background: rgba(56, 189, 248, 0.1); }
+  .log-entry.them { background: rgba(239, 68, 68, 0.1); }
+  .log-entry.event { background: rgba(245, 158, 11, 0.12); }
+  .log-entry.system { color: var(--muted); }
+
+  /* Modal */
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none;
+    align-items: center; justify-content: center; padding: 20px; z-index: 100;
+  }
+  .modal-bg.show { display: flex; }
+  .modal { background: var(--panel); border-radius: 14px; padding: 28px; max-width: 560px; width: 100%; }
+  .modal h2 { margin-top: 0; }
+  .modal ul { color: var(--muted); line-height: 1.6; }
+
+  /* Results */
+  .result-hero { text-align: center; padding: 30px; }
+  .result-hero .verdict { font-size: 42px; font-weight: 800; margin-bottom: 8px; }
+  .result-hero .verdict.win { color: var(--good); }
+  .result-hero .verdict.lose { color: var(--bad); }
+  .recap { margin: 20px 0; }
+  .recap li { margin-bottom: 8px; }
+
+  @media (max-width: 800px) {
+    .board { grid-template-columns: 1fr; }
+    .hand { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- TITLE -->
+  <section id="screen-title" class="screen active">
+    <div class="title-box">
+      <h1>SERP Climber</h1>
+      <p class="tagline">A tiny card game that teaches SEO. Race a competitor to page 1 of Google in 10 turns.</p>
+      <div class="actions">
+        <button id="btn-play">Play</button>
+        <button id="btn-how" class="secondary">How SEO works</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOARD -->
+  <section id="screen-board" class="screen">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <div>
+        <h1 style="font-size:22px; margin:0">Keyword: <span id="keyword">—</span></h1>
+        <p style="margin:2px 0 0; font-size:13px;">Difficulty: <span id="difficulty">—</span> · Goal: reach top 3 by turn 10</p>
+      </div>
+      <button class="secondary" id="btn-quit">Quit</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Turn</div><div class="stat-value"><span id="stat-turn">1</span>/10</div></div>
+      <div class="stat"><div class="stat-label">Time</div><div class="stat-value" id="stat-time">10</div></div>
+      <div class="stat"><div class="stat-label">Budget</div><div class="stat-value">$<span id="stat-budget">1000</span></div></div>
+    </div>
+
+    <div class="board">
+      <div>
+        <div class="panel">
+          <h3>Search results</h3>
+          <div class="serp" id="serp"></div>
+        </div>
+        <div class="panel" style="margin-top:12px;">
+          <h3>Your hand — pick one card per turn</h3>
+          <div class="hand" id="hand"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Activity log</h3>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="screen-results" class="screen">
+    <div class="panel result-hero">
+      <div class="verdict" id="verdict">—</div>
+      <p id="verdict-detail" style="font-size:16px; margin:0">—</p>
+    </div>
+    <div class="panel">
+      <h3>What you learned</h3>
+      <ul class="recap" id="recap"></ul>
+      <div style="display:flex; gap:10px; margin-top:16px;">
+        <button id="btn-replay">Play again</button>
+        <button id="btn-home" class="secondary">Back to title</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- HOW-TO MODAL -->
+<div class="modal-bg" id="modal-how">
+  <div class="modal">
+    <h2>How SEO works (30 seconds)</h2>
+    <p>Search engines rank pages by mixing many signals. The biggest ones:</p>
+    <ul>
+      <li><strong>Content</strong> — does the page actually answer the query? Pillar posts and supporting articles build topical authority.</li>
+      <li><strong>On-page</strong> — title tag, headings, schema markup, page speed.</li>
+      <li><strong>Backlinks</strong> — other reputable sites linking to you. Quality &gt; quantity. Cheap link buying can backfire.</li>
+      <li><strong>Time</strong> — SEO compounds. Foundations (good content) make later actions (links) far more effective.</li>
+    </ul>
+    <p>In this game, you'll play one action per turn. Watch how prerequisites and risk interact.</p>
+    <button id="btn-close-how">Got it</button>
+  </div>
+</div>
+
+<script>
+// =========================================================
+// Cards
+// =========================================================
+const CARDS = [
+  { id: 'pillar', name: 'Write Pillar Post', timeCost: 3, moneyCost: 200, basePts: 8, tag: 'Content',
+    effect: '+8 rank pts. Doubles the value of backlinks afterward.' },
+  { id: 'support', name: 'Write Supporting Post', timeCost: 1, moneyCost: 50, basePts: 2, tag: 'Content',
+    effect: '+2 rank pts. Builds a topic cluster.' },
+  { id: 'title', name: 'Optimize Title Tag', timeCost: 1, moneyCost: 0, basePts: 3, tag: 'On-page',
+    effect: '+3 rank pts. Quick on-page win.', oneShot: true },
+  { id: 'schema', name: 'Add Schema Markup', timeCost: 1, moneyCost: 0, basePts: 2, tag: 'On-page',
+    effect: '+2 rank pts. Unlocks rich-result events.', oneShot: true },
+  { id: 'speed', name: 'Improve Page Speed', timeCost: 2, moneyCost: 100, basePts: 3, tag: 'Tech',
+    effect: '+3 rank pts. Core Web Vitals.' },
+  { id: 'quality', name: 'Earn Quality Backlink', timeCost: 2, moneyCost: 300, basePts: 6, tag: 'Authority',
+    effect: '+6 rank pts (×2 if Pillar Post played).' },
+  { id: 'cheap', name: 'Buy Cheap Backlinks', timeCost: 0, moneyCost: 200, basePts: 5, tag: 'Risk',
+    effect: '+5 rank pts now. 30% chance of a -10 penalty next algorithm update.' },
+  { id: 'guest', name: 'Guest Post', timeCost: 3, moneyCost: 0, basePts: 4, tag: 'Authority',
+    effect: '+4 rank pts. White-hat outreach.' },
+  { id: 'cannibal', name: 'Fix Cannibalization', timeCost: 1, moneyCost: 0, basePts: 0, tag: 'Architecture',
+    effect: '+3 rank pts if 2+ Supporting Posts played.' },
+  { id: 'refresh', name: 'Refresh Old Content', timeCost: 1, moneyCost: 0, basePts: 0, tag: 'Maintenance',
+    effect: '+2 rank pts per Supporting Post on board.' },
+];
+
+const KEYWORDS = [
+  { kw: 'best running shoes for flat feet', diff: 4 },
+  { kw: 'how to make sourdough starter', diff: 3 },
+  { kw: 'remote work tax deductions', diff: 5 },
+  { kw: 'beginner home workout no equipment', diff: 4 },
+];
+
+// =========================================================
+// State
+// =========================================================
+let state;
+
+function newGame() {
+  const k = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)];
+  const deck = [];
+  for (const c of CARDS) deck.push(c.id, c.id);
+  shuffle(deck);
+
+  state = {
+    keyword: k.kw,
+    difficulty: k.diff,
+    turn: 1,
+    maxTurn: 10,
+    time: 10,
+    budget: 1000,
+    youPts: 0,
+    themPts: 0,
+    deck,
+    hand: [],
+    played: [],            // ids you've played (for prereq checks)
+    themPlayed: [],
+    cheapRisks: 0,         // pending penalty rolls
+    log: [],
+    over: false,
+  };
+  drawTo(5);
+  log('Keyword chosen: <strong>' + k.kw + '</strong> (difficulty ' + k.diff + '/5)', 'system');
+  log('You start at rank #50. Reach top 3 by turn 10 to win.', 'system');
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function drawTo(n) {
+  while (state.hand.length < n && state.deck.length > 0) {
+    state.hand.push(state.deck.shift());
+  }
+}
+
+function cardById(id) { return CARDS.find(c => c.id === id); }
+
+function rankFromPts(pts) {
+  // 0 pts → #50; ~250 pts → #1
+  const r = 50 - Math.floor(pts / 5);
+  return Math.max(1, Math.min(50, r));
+}
+
+function canPlay(card) {
+  if (state.time < card.timeCost) return false;
+  if (state.budget < card.moneyCost) return false;
+  if (card.oneShot && state.played.includes(card.id)) return false;
+  return true;
+}
+
+function computePts(cardId, played) {
+  const c = cardById(cardId);
+  let pts = c.basePts;
+  if (cardId === 'quality' && played.includes('pillar')) pts *= 2;
+  if (cardId === 'cannibal') {
+    const supp = played.filter(x => x === 'support').length;
+    pts = supp >= 2 ? 3 : 0;
+  }
+  if (cardId === 'refresh') {
+    const supp = played.filter(x => x === 'support').length;
+    pts = 2 * supp;
+  }
+  return pts;
+}
+
+// =========================================================
+// Game flow
+// =========================================================
+function playCard(handIdx) {
+  if (state.over) return;
+  const id = state.hand[handIdx];
+  const card = cardById(id);
+  if (!canPlay(card)) return;
+
+  state.time -= card.timeCost;
+  state.budget -= card.moneyCost;
+  state.hand.splice(handIdx, 1);
+  state.played.push(id);
+
+  const pts = computePts(id, state.played);
+  state.youPts += pts;
+  log('You played <strong>' + card.name + '</strong> → +' + pts + ' rank pts', 'you');
+
+  if (id === 'cheap') state.cheapRisks++;
+  if (id === 'schema' && Math.random() < 0.5) {
+    state.youPts += 4;
+    log('Rich result earned! +4 bonus rank pts', 'event');
+  }
+
+  // Competitor's turn
+  competitorTurn();
+
+  // Event every 3 turns
+  if (state.turn % 3 === 0) runEvent();
+
+  state.turn++;
+  drawTo(5);
+
+  // Check end conditions
+  const youRank = rankFromPts(state.youPts);
+  const themRank = rankFromPts(state.themPts);
+  if (youRank <= 3 && youRank <= themRank) return endGame(true, 'You hit rank #' + youRank + '!');
+  if (themRank <= 3 && themRank < youRank) return endGame(false, 'Competitor hit rank #' + themRank + ' first.');
+  if (state.turn > state.maxTurn) {
+    return endGame(youRank <= 3,
+      'Final: you #' + youRank + ', competitor #' + themRank + '.');
+  }
+
+  render();
+}
+
+function competitorTurn() {
+  // Simple AI: play a "random plausible" action with scaled output.
+  const moves = [
+    { name: 'Wrote a blog post', pts: 3 + Math.floor(Math.random() * 4) },
+    { name: 'Built a backlink', pts: 4 + Math.floor(Math.random() * 4) },
+    { name: 'Optimized on-page', pts: 2 + Math.floor(Math.random() * 3) },
+    { name: 'Ran a PR campaign', pts: 5 + Math.floor(Math.random() * 4) },
+  ];
+  // Difficulty scaling: harder keyword = stronger competitor.
+  const m = moves[Math.floor(Math.random() * moves.length)];
+  const pts = Math.round(m.pts * (0.7 + state.difficulty * 0.1));
+  state.themPts += pts;
+  state.themPlayed.push(m.name);
+  log('Competitor: ' + m.name + ' → +' + pts + ' rank pts', 'them');
+}
+
+function runEvent() {
+  const r = Math.random();
+  if (r < 0.4 && state.cheapRisks > 0) {
+    // Algorithm update penalty
+    let penalty = 0;
+    for (let i = 0; i < state.cheapRisks; i++) {
+      if (Math.random() < 0.6) penalty += 10;
+    }
+    if (penalty > 0) {
+      state.youPts = Math.max(0, state.youPts - penalty);
+      log('⚠️ Algorithm update! Cheap backlinks penalized you -' + penalty + ' pts', 'event');
+    } else {
+      log('Algorithm update — your cheap backlinks survived this round.', 'event');
+    }
+    state.cheapRisks = 0;
+  } else if (r < 0.7) {
+    state.themPts += 6;
+    log('Competitor PR win → competitor +6 pts', 'event');
+  } else {
+    if (state.played.includes('schema')) {
+      state.youPts += 5;
+      log('Featured snippet opportunity! Your schema earned +5 pts', 'event');
+    } else {
+      log('Featured snippet opportunity — but you had no schema markup.', 'event');
+    }
+  }
+}
+
+function endGame(win, detail) {
+  state.over = true;
+  showScreen('results');
+  document.getElementById('verdict').textContent = win ? 'You win!' : 'You lose';
+  document.getElementById('verdict').className = 'verdict ' + (win ? 'win' : 'lose');
+  document.getElementById('verdict-detail').textContent = detail;
+  renderRecap();
+}
+
+function renderRecap() {
+  const recap = [];
+  if (state.played.includes('pillar')) {
+    recap.push('You built foundational content with a pillar post — that\'s why backlinks paid off.');
+  } else if (state.played.includes('quality')) {
+    recap.push('You earned backlinks without a pillar post — they were worth half as much. Content first, then links.');
+  }
+  if (state.played.includes('cheap')) {
+    recap.push('Buying cheap backlinks is fast but risky — algorithm updates can wipe out the gains.');
+  }
+  if (state.played.includes('schema')) {
+    recap.push('Schema markup is cheap and unlocks rich-result wins (featured snippets, rich cards).');
+  }
+  const supp = state.played.filter(x => x === 'support').length;
+  if (supp >= 2) {
+    recap.push('You built a topic cluster (' + supp + ' supporting posts) — Google rewards topical depth.');
+  }
+  if (recap.length < 3) {
+    recap.push('SEO compounds: small consistent actions outperform single big swings.');
+  }
+  const ul = document.getElementById('recap');
+  ul.innerHTML = '';
+  for (const r of recap) {
+    const li = document.createElement('li');
+    li.textContent = r;
+    ul.appendChild(li);
+  }
+}
+
+// =========================================================
+// Rendering
+// =========================================================
+function render() {
+  document.getElementById('keyword').textContent = state.keyword;
+  document.getElementById('difficulty').textContent = state.difficulty + '/5';
+  document.getElementById('stat-turn').textContent = state.turn;
+  document.getElementById('stat-time').textContent = state.time;
+  document.getElementById('stat-budget').textContent = state.budget;
+
+  // SERP — show top 10
+  const youRank = rankFromPts(state.youPts);
+  const themRank = rankFromPts(state.themPts);
+  const serp = document.getElementById('serp');
+  serp.innerHTML = '';
+  const fakeSites = [
+    'wikipedia.org', 'reddit.com', 'medium.com', 'forbes.com',
+    'nytimes.com', 'youtube.com', 'quora.com', 'pinterest.com',
+    'amazon.com', 'bbc.com',
+  ];
+  for (let i = 1; i <= 10; i++) {
+    const row = document.createElement('div');
+    row.className = 'serp-row' + (i <= 3 ? ' top3' : '');
+    let label = fakeSites[i - 1];
+    let marker = '';
+    if (i === youRank) {
+      row.classList.add('you');
+      label = 'yoursite.com';
+      marker = '🟦';
+    } else if (i === themRank) {
+      row.classList.add('them');
+      label = 'competitor.com';
+      marker = '🟥';
+    }
+    row.innerHTML =
+      '<span class="serp-rank">#' + i + '</span>' +
+      '<span class="serp-site">' + label + '</span>' +
+      '<span class="serp-marker">' + marker + '</span>';
+    serp.appendChild(row);
+  }
+  // Indicate off-screen positions
+  if (youRank > 10 || themRank > 10) {
+    const row = document.createElement('div');
+    row.className = 'serp-row';
+    row.innerHTML = '<span class="serp-rank">…</span><span class="serp-site">' +
+      (youRank > 10 ? 'You: #' + youRank + '  ' : '') +
+      (themRank > 10 ? 'Competitor: #' + themRank : '') +
+      '</span>';
+    serp.appendChild(row);
+  }
+
+  // Hand
+  const hand = document.getElementById('hand');
+  hand.innerHTML = '';
+  state.hand.forEach((id, idx) => {
+    const c = cardById(id);
+    const playable = canPlay(c);
+    const div = document.createElement('div');
+    div.className = 'card' + (playable ? '' : ' disabled');
+    let cost = [];
+    if (c.timeCost) cost.push(c.timeCost + 't');
+    if (c.moneyCost) cost.push('$' + c.moneyCost);
+    div.innerHTML =
+      '<div class="card-name">' + c.name + '</div>' +
+      '<div class="card-cost">' + (cost.join(' · ') || 'free') + '</div>' +
+      '<div class="card-effect">' + c.effect + '</div>' +
+      '<div class="card-tag">' + c.tag + '</div>';
+    if (playable) div.addEventListener('click', () => playCard(idx));
+    hand.appendChild(div);
+  });
+
+  // Log
+  const logEl = document.getElementById('log');
+  logEl.innerHTML = '';
+  for (const e of state.log.slice().reverse()) {
+    const div = document.createElement('div');
+    div.className = 'log-entry ' + e.kind;
+    div.innerHTML = '<strong>T' + e.turn + '</strong> · ' + e.msg;
+    logEl.appendChild(div);
+  }
+}
+
+function log(msg, kind) {
+  state.log.push({ turn: state.turn, msg, kind: kind || 'system' });
+}
+
+// =========================================================
+// Screen routing
+// =========================================================
+function showScreen(name) {
+  for (const s of document.querySelectorAll('.screen')) s.classList.remove('active');
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+document.getElementById('btn-play').addEventListener('click', () => {
+  newGame();
+  showScreen('board');
+  render();
+});
+document.getElementById('btn-replay').addEventListener('click', () => {
+  newGame();
+  showScreen('board');
+  render();
+});
+document.getElementById('btn-home').addEventListener('click', () => showScreen('title'));
+document.getElementById('btn-quit').addEventListener('click', () => showScreen('title'));
+document.getElementById('btn-how').addEventListener('click', () => {
+  document.getElementById('modal-how').classList.add('show');
+});
+document.getElementById('btn-close-how').addEventListener('click', () => {
+  document.getElementById('modal-how').classList.remove('show');
+});
+</script>
+</body>
+</html>
