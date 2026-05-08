@@ -1,5 +1,7 @@
 import "dotenv/config";
 import express from "express";
+import fs from "fs";
+import crypto from "crypto";
 import path from "path";
 import { fileURLToPath } from "url";
 import Anthropic from "@anthropic-ai/sdk";
@@ -116,6 +118,15 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
+
+// Hash styles.css at boot so the URL changes whenever the file does, busting Cloudflare/browser caches.
+const cssPath = path.join(__dirname, "public", "styles.css");
+const cssVersion = crypto
+  .createHash("md5")
+  .update(fs.readFileSync(cssPath))
+  .digest("hex")
+  .slice(0, 8);
+app.locals.cssVersion = cssVersion;
 
 function parseScheduledAt(raw) {
   if (!raw || !raw.trim()) return null;
