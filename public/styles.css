@@ -545,6 +545,50 @@ ul.attendees button {
 .warning-banner ul { margin: 0.4rem 0 0; padding-left: 1.25rem; }
 .warning-banner strong { display: block; margin-bottom: 0.15rem; }
 
+.lede {
+  font-size: 1.05rem;
+  color: #555;
+  margin: 0.25rem 0 1.25rem;
+}
+.idea-cards {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+.idea-card {
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  background: var(--paper);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.idea-card h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+}
+.idea-blurb { margin: 0 0 0.6rem; }
+.idea-task {
+  margin: 0 0 0.6rem;
+  padding: 0.5rem 0.7rem;
+  background: var(--bg);
+  border-left: 3px solid var(--accent-yellow, #f3c623);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+.idea-task strong { color: var(--ink); }
+.idea-why {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #555;
+  font-style: italic;
+}
+.idea-why strong { font-style: normal; color: var(--ink); }
+
+.htmx-indicator { display: none; color: #555; font-style: italic; margin-right: 0.6rem; }
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator { display: inline; }
+
 .calendar-header {
   display: flex;
   justify-content: space-between;
