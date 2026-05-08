@@ -6,9 +6,15 @@ mixin courseCard(course)
     .card-header
       .card-titles
         h3
+          if course.title_2
+            span.session-label 1st:
+            |
           a(href=`/courses/${course.id}`)= course.title
         if course.title_2
-          p.card-subtitle= course.title_2
+          p.card-subtitle
+            span.session-label 2nd:
+            |
+            span= ' ' + course.title_2
       a.edit-link(href=`/courses/${course.id}/edit`) Edit
     p.meta
       strong= course.presenter

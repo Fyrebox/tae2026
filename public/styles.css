@@ -285,6 +285,18 @@ h2 small {
   color: #555;
   font-style: italic;
 }
+.session-label {
+  display: inline-block;
+  margin-right: 0.25rem;
+  font-size: 0.75em;
+  font-weight: 700;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #777;
+  vertical-align: 0.1em;
+}
+.card h3 .session-label { color: #555; }
 .schedule-subtitle {
   margin-left: 0.4rem;
   font-size: 0.9em;
