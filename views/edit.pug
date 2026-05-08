@@ -63,12 +63,15 @@ block content
           + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
       });
       // Submit UTC ISO so the server doesn't reinterpret the local string in its own TZ.
+      // Switch to hidden first — datetime-local rejects the UTC-suffixed ISO format and would blank the value.
       document.getElementById('edit-form').addEventListener('submit', function() {
         this.querySelectorAll('input[type="datetime-local"]').forEach(function(input) {
           if (!input.value) return;
           var d = new Date(input.value);
           if (isNaN(d.getTime())) return;
-          input.value = d.toISOString();
+          var iso = d.toISOString();
+          input.type = 'hidden';
+          input.value = iso;
         });
       }, { capture: true });
     })();

@@ -46,6 +46,8 @@ block content
         if (!input.value) return;
         var d = new Date(input.value);
         if (isNaN(d.getTime())) return;
-        input.value = d.toISOString();
+        var iso = d.toISOString();
+        input.type = 'hidden';
+        input.value = iso;
       });
     }, { capture: true });
