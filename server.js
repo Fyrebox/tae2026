@@ -346,6 +346,38 @@ app.post("/ideas", async (req, res) => {
   }
 });
 
+app.get("/chatgpt", (req, res) => {
+  res.render("chatgpt", { title: "Ask ChatGPT", prompt: "", answer: null, errorMessage: null });
+});
+
+app.post("/chatgpt", async (req, res) => {
+  const prompt = (req.body.prompt || "").trim();
+  const isHtmx = req.get("HX-Request") === "true";
+
+  if (!prompt) {
+    const payload = { title: "Ask ChatGPT", prompt: "", answer: null, errorMessage: "Please enter a prompt." };
+    return isHtmx ? res.render("_chatgpt_output", payload) : res.render("chatgpt", payload);
+  }
+
+  try {
+    const response = await getOpenAI().chat.completions.create({
+      model: OPENAI_MODEL,
+      messages: [{ role: "user", content: prompt }],
+    });
+    const answer = response.choices[0]?.message?.content?.trim() || "";
+    const payload = { title: "Ask ChatGPT", prompt, answer, errorMessage: null };
+    return isHtmx ? res.render("_chatgpt_output", payload) : res.render("chatgpt", payload);
+  } catch (err) {
+    console.error("ChatGPT request failed:", err);
+    const isAuth = err.code === "NO_API_KEY" || err?.status === 401;
+    const errorMessage = isAuth
+      ? "The server is missing a valid OPENAI_API_KEY. Add it to your .env and restart."
+      : "Could not get an answer right now. Please try again.";
+    const payload = { title: "Ask ChatGPT", prompt, answer: null, errorMessage };
+    return isHtmx ? res.render("_chatgpt_output", payload) : res.render("chatgpt", payload);
+  }
+});
+
 app.get("/calendar", async (req, res) => {
   // Month query param: YYYY-MM. Default to current month.
   const now = new Date();

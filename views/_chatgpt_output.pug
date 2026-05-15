@@ -1,0 +1,7 @@
+if errorMessage
+  .error-banner= errorMessage
+else if answer
+  h2 Answer
+  .chatgpt-answer
+    each para in answer.split(/\n\n+/)
+      p= para
