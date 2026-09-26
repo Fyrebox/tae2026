@@ -9,26 +9,9 @@ html(lang="en")
     script(defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js")
   body
     header
-      a.brand(href="/") TAE Assignments Sign-Up Sheets
+      a.brand(href="/") How an AI writes
       nav
-        a(href="/calendar") Calendar
         a(href="/ideas") Need ideas?
         //a(href="/chatgpt") ChatGPT
-        a(href="/courses/new") + Add Course
     main
       block content
-    script.
-      function formatLocalTimes(root) {
-        (root || document).querySelectorAll('time[data-iso]').forEach(function(el) {
-          var d = new Date(el.dataset.iso);
-          if (isNaN(d.getTime())) return;
-          var fmt = el.dataset.fmt || 'datetime';
-          if (fmt === 'time') {
-            el.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          } else {
-            el.textContent = d.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
-          }
-        });
-      }
-      formatLocalTimes();
-      document.body.addEventListener('htmx:afterSwap', function(e) { formatLocalTimes(e.target); });

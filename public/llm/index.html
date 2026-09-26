@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How an AI Writes</title>
+  <link rel="stylesheet" href="/llm/styles.css?v={{cssVersion}}">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%235a48d6%22/%3E%3Ctext x=%2216%22 y=%2223%22 font-size=%2218%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22%3EAI%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+  <header class="top">
+    <h1>How an AI writes, one piece at a time</h1>
+    <p class="lede">Type the start of a sentence. Watch the AI split it up, think about it, and guess what comes next, over and over.</p>
+  </header>
+
+  <section class="controls">
+    <div class="prompt-row">
+      <textarea id="prompt" rows="2" spellcheck="false">The cat sat on the</textarea>
+      <div class="buttons">
+        <button id="btnStep" class="btn primary" title="Shortcut: right arrow">Next step ▸</button>
+        <button id="btnPlay" class="btn" title="Shortcut: P">▶ Play</button>
+        <button id="btnReset" class="btn ghost">Reset</button>
+      </div>
+    </div>
+    <div class="examples">
+      <span>Try:</span>
+      <button class="chip-btn">The cat sat on the</button>
+      <button class="chip-btn">Once upon a time</button>
+      <button class="chip-btn">The capital of France is</button>
+      <button class="chip-btn">My favourite food is</button>
+      <button class="chip-btn">The best thing about school is</button>
+    </div>
+    <div class="settings">
+      <label class="setting">
+        <span>Creativity <small>(temperature)</small></span>
+        <input id="temp" type="range" min="0" max="2" step="0.1" value="1">
+        <output id="tempOut">1.0 · normal</output>
+      </label>
+      <label class="setting">
+        <span>Tokens to write</span>
+        <input id="maxTokens" type="number" min="1" max="100" value="15">
+      </label>
+      <div class="setting">
+        <span>Speed</span>
+        <div class="seg" id="speed">
+          <button data-speed="slow">Slow</button>
+          <button data-speed="normal" class="on">Normal</button>
+          <button data-speed="fast">Fast</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="error" class="error" hidden></div>
+
+  <div class="dock">
+  <section class="output">
+    <div class="output-head">
+      <h2>The text so far</h2>
+      <span id="status" class="status">Press “Next step” to begin</span>
+    </div>
+    <div id="outputText" class="output-text"></div>
+  </section>
+
+  <nav class="pipeline" aria-label="Steps">
+    <ol>
+      <li data-stage="tokens"><b>1</b> Split into tokens</li>
+      <li data-stage="embed"><b>2</b> Turn into numbers</li>
+      <li data-stage="transformer"><b>3</b> Transformer thinks</li>
+      <li data-stage="probs"><b>4</b> Score every option</li>
+      <li data-stage="pick"><b>5</b> Pick one &amp; repeat</li>
+    </ol>
+    <p id="narration" class="narration">An AI language model writes by predicting the next small piece of text, again and again.</p>
+  </nav>
+  </div>
+
+  <main class="panels">
+    <section class="panel" data-panel="tokens">
+      <header><b>1</b><h3>Split into tokens</h3><span id="tokenCount" class="meta"></span></header>
+      <p class="explain">The AI can’t read letters or words directly. Text is chopped into <em>tokens</em>: whole words or pieces of words. Each one has an ID number in a dictionary of about 200,000 tokens.</p>
+      <div id="tokens" class="tokens"></div>
+      <p class="legend"><span class="swatch gen"></span> written by the AI &nbsp; <span class="dot">·</span> = a space</p>
+    </section>
+
+    <section class="panel" data-panel="embed">
+      <header><b>2</b><h3>Turn each token into numbers</h3><span id="embedMeta" class="meta"></span></header>
+      <p class="explain">Each token becomes a long list of numbers called an <em>embedding</em>. Tokens with similar meanings get similar numbers, so they land close together on the meaning map.</p>
+      <div class="embed-body">
+        <div id="embedRows" class="embed-rows"></div>
+        <figure class="map">
+          <svg id="meaningMap" viewBox="0 0 320 240" role="img" aria-label="Meaning map of tokens"></svg>
+          <figcaption>Meaning map (3,072 numbers squashed into 2)</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="transformer">
+      <header><b>3</b><h3>The transformer thinks</h3><span class="meta">simplified picture</span></header>
+      <p class="explain">The numbers flow up through many layers. In each layer, tokens <em>pay attention</em> to each other to understand the context, then a <em>neural network</em> updates what each one means. Thicker lines = more attention.</p>
+      <svg id="transformer" viewBox="0 0 640 330" role="img" aria-label="Transformer layers"></svg>
+    </section>
+
+    <section class="panel" data-panel="probs">
+      <header><b>4</b><h3>Score every possible next token</h3><span id="probMeta" class="meta"></span></header>
+      <p class="explain">The model gives every token in its dictionary a probability of coming next. Here are the top choices. Then it picks one, a bit like spinning a weighted wheel.</p>
+      <div id="probs" class="probs"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span id="modelInfo"></span>
+    <span>Keys: <kbd>→</kbd> next step · <kbd>P</kbd> play/pause · <kbd>R</kbd> reset</span>
+  </footer>
+
+  <script type="module" src="/llm/app.js?v={{jsVersion}}"></script>
+</body>
+</html>
