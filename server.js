@@ -115,6 +115,22 @@ app.set("views", path.join(__dirname, "views"));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// "Read the Numbers" learning module (public/submission). One hash of its styles, engine and content
+// goes on every asset URL, so Cloudflare serves fresh copies after a deploy. Registered before the
+// static middleware, which would otherwise serve index.html with the placeholder still in it.
+const submissionDir = path.join(__dirname, "public", "submission");
+const submissionHash = crypto.createHash("md5");
+for (const dir of ["css", "js", "content"]) {
+  for (const file of fs.readdirSync(path.join(submissionDir, dir)).sort()) {
+    submissionHash.update(fs.readFileSync(path.join(submissionDir, dir, file)));
+  }
+}
+const submissionPage = fs
+  .readFileSync(path.join(submissionDir, "index.html"), "utf8")
+  .replaceAll("{{version}}", submissionHash.digest("hex").slice(0, 8));
+app.get(["/submission", "/submission/"], (req, res) => res.type("html").send(submissionPage));
+
 app.use(express.static(path.join(__dirname, "public")));
 
 // Hash styles.css at boot so the URL changes whenever the file does, busting Cloudflare/browser caches.
