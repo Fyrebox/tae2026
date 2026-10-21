@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Rule or AI? Host</title>
+  <link rel="stylesheet" href="/sort/styles.css?v={{v}}">
+</head>
+<body class="host">
+  <main class="hostapp">
+    <section id="gate" class="gate">
+      <h1>Host view</h1>
+      <form id="pinForm">
+        <label for="pin">Host PIN</label>
+        <input id="pin" type="password" inputmode="numeric" autocomplete="off" required>
+        <button class="btn primary" type="submit">Open</button>
+        <p id="pinError" class="error" hidden>Wrong PIN.</p>
+      </form>
+    </section>
+
+    <section id="dash" hidden>
+      <header class="hosthead">
+        <h1>Rule or AI?</h1>
+        <p class="joinline">Join on your phone: <strong id="joinUrl"></strong></p>
+      </header>
+
+      <div class="stats">
+        <div class="stat"><span id="joined" class="big">0</span><span>in the room</span></div>
+        <div class="stat"><span id="finished" class="big">0</span><span>finished</span></div>
+        <div class="stat"><span id="avg" class="big">–</span><span>average score</span></div>
+      </div>
+      <div class="finishbar" aria-hidden="true"><i id="finishBar"></i></div>
+
+      <div class="controls">
+        <button id="toggle" class="btn primary" type="button">Show results</button>
+        <button id="reset" class="btn" type="button">Reset for a new class</button>
+      </div>
+
+      <p id="hidden" class="lede">Results are hidden so learners are not influenced. Press “Show results” when most have finished.</p>
+      <ol id="results" class="results" hidden></ol>
+      <p id="offline" class="error" hidden>Lost contact with the server. Retrying…</p>
+    </section>
+  </main>
+  <script src="/sort/host.js?v={{v}}" defer></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1b2a41">
+  <title>Rule or AI?</title>
+  <link rel="stylesheet" href="/sort/styles.css?v={{v}}">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%230b5c7a%22/%3E%3Ctext x=%2216%22 y=%2223%22 font-size=%2218%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22%3EAI%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+  <main class="app">
+    <section id="intro" class="screen">
+      <p class="eyebrow">ICTAII401 · Session 1</p>
+      <h1>Rule or AI?</h1>
+      <p class="lede">Ten everyday technologies. For each one, decide: did a person write fixed rules, or did it learn from data?</p>
+      <ul class="how">
+        <li><span class="pill rule">← Swipe left</span><span><strong>Rule:</strong> a person wrote the rules</span></li>
+        <li><span class="pill ai">Swipe right →</span><span><strong>AI:</strong> it learned from data</span></li>
+      </ul>
+      <p class="small">No names and nothing personal are collected. You see your own results at the end.</p>
+      <button id="start" class="btn primary" type="button">Start</button>
+    </section>
+
+    <section id="play" class="screen" hidden>
+      <header class="bar">
+        <span id="count" class="count">1 / 10</span>
+        <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+      </header>
+      <div class="stack">
+        <div class="card back" aria-hidden="true"></div>
+        <div class="card front" id="card" role="group" aria-roledescription="swipeable card">
+          <span class="stamp left" aria-hidden="true">RULE</span>
+          <span class="stamp right" aria-hidden="true">AI</span>
+          <p id="cardText"></p>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="btnRule" class="btn rule" type="button">← Rule</button>
+        <button id="btnAi" class="btn ai" type="button">AI →</button>
+      </div>
+      <p class="hint">Swipe the card, tap a button, or use the ← → keys.</p>
+      <p id="live" class="sr" aria-live="polite"></p>
+    </section>
+
+    <section id="end" class="screen" hidden>
+      <p class="eyebrow">All done</p>
+      <h1 id="score"></h1>
+      <p id="endNote" class="lede">Watch the main screen for the class results.</p>
+      <ol id="review" class="review"></ol>
+      <button id="again" class="btn" type="button">Try again (practice, not counted)</button>
+    </section>
+  </main>
+
+  <script id="deck" type="application/json">{{deck}}</script>
+  <script src="/sort/app.js?v={{v}}" defer></script>
+</body>
+</html>

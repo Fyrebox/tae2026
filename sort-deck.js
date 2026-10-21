@@ -1,0 +1,24 @@
+// The ten cards for the "Rule or AI?" activity (ICTAII401, Session 1).
+// answer "rule": a person wrote fixed rules. answer "ai": it learned from data (ML, deep learning, LLMs).
+export const DECK = [
+  { id: "sum", text: "Excel SUM formula", answer: "rule",
+    why: "A person wrote the rule: add up these cells. Same input, same answer, every time." },
+  { id: "spam", text: "Spam filter in your email", answer: "ai",
+    why: "It learned what spam looks like from millions of examples (machine learning). Nobody wrote a rule for every spam email." },
+  { id: "traffic", text: "Traffic light on a timer", answer: "rule",
+    why: "A fixed timer. It is not learning anything from the traffic." },
+  { id: "playlist", text: "Music app's suggested playlist", answer: "ai",
+    why: "It learned your taste, and other people's, from listening data (machine learning)." },
+  { id: "approval", text: "Rule: orders over $5,000 need manager approval", answer: "rule",
+    why: "A rule someone wrote down. Nothing is learned." },
+  { id: "keyboard", text: "Phone keyboard suggesting your next word", answer: "ai",
+    why: "It learned which words usually follow others from lots of text." },
+  { id: "thermostat", text: "Thermostat set to 21°", answer: "rule",
+    why: "If it is below 21°, heat. A fixed rule." },
+  { id: "face", text: "Face unlock on a phone", answer: "ai",
+    why: "A deep learning network learned to recognise your face from images." },
+  { id: "autoreply", text: "Out-of-office auto-reply", answer: "rule",
+    why: "It sends the same message to everyone who emails. A fixed rule, even though it feels automatic." },
+  { id: "llm", text: "Copilot or ChatGPT drafting an email", answer: "ai",
+    why: "A large language model, a kind of deep learning, predicts likely text." },
+];
