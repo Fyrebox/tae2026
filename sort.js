@@ -1,4 +1,4 @@
-// API behind the "Rule or AI?" swipe activity (pages/sort.html) and the live host view (pages/host.html).
+// API behind the /session1 swipe activity and the /session1/host live host view.
 // Answers live in memory only: no names, no database. A restart or a reset starts a fresh class.
 import crypto from "crypto";
 import express from "express";
@@ -11,7 +11,7 @@ const RATE_MAX_CALLS = 600;
 const ID_PATTERN = /^[a-z0-9-]{8,40}$/i;
 
 const HOST_PIN = process.env.HOST_PIN || String(crypto.randomInt(1000, 10000));
-if (!process.env.HOST_PIN) console.log(`Host PIN for /host: ${HOST_PIN} (set HOST_PIN in .env to keep it)`);
+if (!process.env.HOST_PIN) console.log(`Host PIN for /session1/host: ${HOST_PIN} (set HOST_PIN in .env to keep it)`);
 
 const cardById = new Map(DECK.map((c) => [c.id, c]));
 const learners = new Map(); // learner id -> { answers: { cardId: "rule" | "ai" } }

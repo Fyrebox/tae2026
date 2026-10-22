@@ -6,7 +6,7 @@
   let revealed = false;
   let timer = null;
 
-  $("joinUrl").textContent = location.host;
+  $("joinUrl").textContent = location.host + "/session1";
 
   async function api(path, options = {}) {
     const res = await fetch("/api/sort/" + path, { ...options, headers: { "x-host-pin": pin } });

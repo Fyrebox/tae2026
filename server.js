@@ -20,7 +20,7 @@ const fileHash = (...parts) =>
 const fill = (html, vars) =>
   Object.entries(vars).reduce((out, [key, value]) => out.replaceAll(`{{${key}}}`, () => value), html);
 
-// Home page: "Rule or AI?" swipe activity. The deck is embedded in the page, so it
+// Session 1: "Rule or AI?" swipe activity. The deck is embedded in the page, so it
 // keeps working if the Wi-Fi drops after it has loaded. "<" is escaped so no card text can close the script tag.
 const sortVars = {
   v: fileHash("public", "sort", "app.js").slice(0, 4) + fileHash("public", "sort", "styles.css").slice(0, 4),
@@ -36,8 +36,10 @@ const llmPage = fill(read("public", "llm", "index.html"), {
   jsVersion: fileHash("public", "llm", "app.js"),
 });
 
-app.get("/", (req, res) => res.type("html").send(sortPage));
-app.get("/host", (req, res) => res.type("html").send(hostPage));
+app.get("/session1", (req, res) => res.type("html").send(sortPage));
+app.get("/session1/host", (req, res) => res.type("html").send(hostPage));
+app.get("/", (req, res) => res.redirect(302, "/session1"));
+app.get("/host", (req, res) => res.redirect(301, "/session1/host"));
 app.get("/how-ai-writes", (req, res) => res.type("html").send(llmPage));
 // Registered before the static middleware, which would serve the raw template with its placeholders.
 app.get(["/llm", "/llm/", "/llm/index.html"], (req, res) => res.redirect(301, "/how-ai-writes"));
