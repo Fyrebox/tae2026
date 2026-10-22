@@ -7,6 +7,8 @@ import { fileURLToPath } from "url";
 import llmExplainer from "./llm-explainer.js";
 import sortRouter from "./sort.js";
 import { DECK } from "./sort-deck.js";
+import { createScheduleStore } from "./schedule-db.js";
+import { createScheduleRouter } from "./schedule.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -38,7 +40,10 @@ const llmPage = fill(read("public", "llm", "index.html"), {
 
 app.get("/session1", (req, res) => res.type("html").send(sortPage));
 app.get("/session1/host", (req, res) => res.type("html").send(hostPage));
-app.get("/", (req, res) => res.redirect(302, "/session1"));
+const schedulePage = fill(read("pages", "schedule.html"), {
+  v: fileHash("public", "schedule", "app.js") + fileHash("public", "schedule", "styles.css"),
+});
+app.get("/", (req, res) => res.type("html").set("Cache-Control", "no-cache").send(schedulePage));
 app.get("/host", (req, res) => res.redirect(301, "/session1/host"));
 app.get("/how-ai-writes", (req, res) => res.type("html").send(llmPage));
 // Registered before the static middleware, which would serve the raw template with its placeholders.
@@ -48,6 +53,14 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/api/llm", llmExplainer);
 app.use("/api/sort", sortRouter);
+
+if (process.env.DATABASE_URL) {
+  const scheduleStore = await createScheduleStore(process.env.DATABASE_URL, process.env.NODE_ENV === "test" ? process.env.SCHEDULE_DB_SCHEMA || "class_schedule_test" : "class_schedule");
+  app.use("/api/schedule", createScheduleRouter(scheduleStore));
+} else {
+  console.warn("DATABASE_URL is missing: the class schedule cannot be loaded or saved.");
+  app.use("/api/schedule", (req, res) => res.status(503).json({ error: "The schedule database is not configured yet." }));
+}
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);

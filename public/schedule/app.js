@@ -1,0 +1,162 @@
+(() => {
+  const $ = id => document.getElementById(id);
+  let state = null, group = 1, selected = null, editing = null, toastTimer;
+  const dateLabel = (date, weekday = true) => new Intl.DateTimeFormat('en-AU', {timeZone:'Australia/Melbourne',...(weekday?{weekday:'short'}:{}),day:'numeric',month:'short'}).format(new Date(date+'T12:00:00+11:00'));
+  const timeLabel = value => { if (!value) return ''; const [h,m]=value.split(':').map(Number); return `${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'am':'pm'}`; };
+  const timeRange = p => p.startTime ? `${timeLabel(p.startTime)} – ${timeLabel(p.endTime)}` : 'Time TBC';
+  function el(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node;}
+  function button(label,className,fn){const b=el('button',className,label);b.type='button';b.addEventListener('click',fn);return b;}
+  function showError(id,message){$(id).textContent=message||'';$(id).hidden=!message;}
+  function toast(message){clearTimeout(toastTimer);$('toast').textContent=message;$('toast').classList.add('visible');toastTimer=setTimeout(()=>$('toast').classList.remove('visible'),4500);}
+  async function api(path='',options={}){
+    const response=await fetch('/api/schedule'+path,{...options,headers:{'Content-Type':'application/json',...options.headers},...(options.body?{body:JSON.stringify(options.body)}:{})});
+    const data=await response.json().catch(()=>({error:'The server could not be reached. Please try again.'}));
+    if(!response.ok)throw Object.assign(new Error(data.error||'Unable to save. Please try again.'),data,{status:response.status});
+    return data;
+  }
+  function countBadge(count){return el('span','count-badge'+(count===3?' complete':''),count===3?'3 of 3 scheduled':count<3?`${count} of 3 scheduled`:`${count} scheduled · needs review`);}
+  const presentationsFor = id => state.presentations.filter(p=>p.studentId===id);
+  function applyAdmin(){
+    document.body.classList.toggle('admin-on',state.admin);
+    $('editSchedule').textContent=state.admin?'Editing unlocked ✓':'Edit schedule ↗';
+    $('lockSchedule').hidden=!state.admin;$('history').hidden=!state.admin;
+  }
+  async function load({report=true}={}){
+    try{
+      state=await api();applyAdmin();
+      const oldDate=$('dateFilter').value;
+      $('dateFilter').replaceChildren(new Option('All delivery dates',''),...state.dates.map(d=>new Option(dateLabel(d),d)));
+      if(state.dates.includes(oldDate))$('dateFilter').value=oldDate;
+      $('studentCount').textContent=state.students.length;
+      const reviewCount=state.students.filter(s=>presentationsFor(s.id).length!==3).length;
+      $('reviewSummary').textContent=reviewCount?`Original dates kept. ${reviewCount} students’ presentation counts need a check.`:'All students have three presentations scheduled.';
+      showError('loadError','');$('retry').hidden=true;render();
+      return true;
+    }catch(err){if(report){showError('loadError',err.message);$('retry').hidden=false;}return false;}
+    finally{$('tableWrap').setAttribute('aria-busy','false');}
+  }
+  function render(){
+    if(!state)return;
+    const query=$('search').value.trim().toLowerCase(),date=$('dateFilter').value;
+    const groupStudents=state.students.filter(s=>s.group===group);
+    const students=groupStudents.filter(s=>(s.name+' '+s.unit).toLowerCase().includes(query)&&(!date||presentationsFor(s.id).some(p=>p.date===date)));
+    $('groupHeading').textContent='Group '+group;
+    $('groupDescription').textContent=`${groupStudents.length} students · Choose your name to add your course or unit.`;
+    for(const tab of $('groupTabs').querySelectorAll('button'))tab.setAttribute('aria-pressed',String(Number(tab.dataset.group)===group));
+    const wrap=$('tableWrap');wrap.replaceChildren();
+    if(!students.length){wrap.append(el('p','empty-state','No students match this filter in Group '+group+'.'));return;}
+    const dates=date?[date]:state.dates;
+    const table=el('table','schedule-table');
+    const caption=el('caption','sr-only',`Group ${group} presentation schedule. All times are Melbourne time.`);table.append(caption);
+    const head=el('thead'),headRow=el('tr');headRow.append(el('th','', 'Student / unit'));
+    for(const d of dates){const th=el('th');th.scope='col';th.append(el('span','',dateLabel(d).split(',')[0].split(' ')[0]),el('span','day-number',dateLabel(d,false)));headRow.append(th);}
+    head.append(headRow);table.append(head);
+    const body=el('tbody');
+    for(const student of students){
+      const row=el('tr'),nameCell=el('td'),assignments=presentationsFor(student.id);
+      nameCell.append(button(student.name,'student-name',()=>openStudent(student.id)),el('p','unit-preview'+(!student.unit?' empty':''),student.unit||'Add your course / unit'),countBadge(assignments.length));row.append(nameCell);
+      for(const d of dates){
+        const cell=el('td');cell.dataset.label=dateLabel(d);
+        const session=assignments.find(p=>p.date===d);
+        if(session){cell.append(el('span','presenting','Presenting'),el('span','slot-time',timeRange(session)));}
+        else{const dash=el('span','no-session','—');dash.setAttribute('aria-label','No presentation scheduled');cell.append(dash);if(student.id==='abbey'&&d==='2026-11-06')cell.append(el('span','absence','Away'));}
+        row.append(cell);
+      }
+      body.append(row);
+    }
+    table.append(body);wrap.append(table);
+  }
+  function openStudent(id){
+    selected=id;editing=null;renderStudent();
+    if(!$('studentDialog').open)$('studentDialog').showModal();
+  }
+  function renderStudent(){
+    const student=state.students.find(s=>s.id===selected);if(!student)return;
+    const assignments=presentationsFor(selected).sort((a,b)=>a.date.localeCompare(b.date)||(a.startTime||'').localeCompare(b.startTime||''));
+    $('studentTitle').textContent=student.name;$('studentGroup').textContent=`GROUP ${student.group} · STUDENT DETAILS`;
+    $('studentNote').textContent=student.notes;$('studentNote').hidden=!student.notes;
+    $('unit').value=student.unit;showError('unitError','');showError('sessionError','');
+    $('studentCountBadge').replaceChildren(countBadge(assignments.length));
+    $('studentScheduleHelp').textContent=assignments.length===3?'All three presentations are scheduled.':assignments.length<3?'The target is three. An organiser needs to confirm the remaining presentation date.':'The target is three. An organiser needs to review these photographed assignments.';
+    $('studentSessions').replaceChildren();
+    for(const p of assignments){
+      const row=el('div','session-row'),info=el('div');info.append(el('strong','',dateLabel(p.date)),el('p','',timeRange(p)));row.append(info);
+      if(state.admin){const actions=el('div','session-actions');actions.append(button('Edit','text-button',()=>openEditor(p)),button('Remove','text-button danger',()=>removePresentation(p)));row.append(actions);}
+      $('studentSessions').append(row);
+    }
+    if(!assignments.length)$('studentSessions').append(el('p','field-hint','No presentations scheduled yet.'));
+    $('addPresentation').hidden=!state.admin;$('studentEditHint').hidden=state.admin;$('sessionForm').hidden=true;
+  }
+  function openEditor(p=null){
+    editing=p;
+    $('sessionFormTitle').textContent=p?'Edit presentation':'Add a presentation';
+    $('sessionDate').value=p?.date||$('dateFilter').value||'';
+    $('startTime').value=p?.startTime||'';$('endTime').value=p?.endTime||'';
+    showError('sessionError','');$('sessionForm').hidden=false;$('sessionDate').focus();
+  }
+  async function removePresentation(p){
+    if(!confirm(`Remove ${dateLabel(p.date)} from ${state.students.find(s=>s.id===selected).name}’s schedule? This changes their presentation count.`))return;
+    try{await api('/presentations/'+p.id,{method:'DELETE',body:{version:p.version}});if(await load())renderStudent();toast('Presentation removed.');}
+    catch(err){showError('unitError',err.message);}
+  }
+  async function busy(form,fn){const submit=form.querySelector('[type=submit]');submit.disabled=true;try{await fn();}finally{submit.disabled=false;}}
+  $('unitForm').addEventListener('submit',e=>{
+    e.preventDefault();busy(e.currentTarget,async()=>{
+      showError('unitError','');
+      try{const student=state.students.find(s=>s.id===selected);await api('/students/'+selected,{method:'PATCH',body:{unit:$('unit').value,version:student.version}});if(await load())renderStudent();toast('Unit name saved for all presentations.');}
+      catch(err){showError('unitError',err.message);}
+    });
+  });
+  $('sessionForm').addEventListener('submit',e=>{
+    e.preventDefault();busy(e.currentTarget,async()=>{
+      showError('sessionError','');
+      const payload={studentId:selected,date:$('sessionDate').value,startTime:$('startTime').value,endTime:$('endTime').value,...(editing?{version:editing.version}:{})};
+      const path='/presentations'+(editing?'/'+editing.id:''),method=editing?'PATCH':'POST';
+      try{
+        try{await api(path,{method,body:payload});}
+        catch(err){
+          if(err.code!=='overlap')throw err;
+          const details=err.conflicts.map(c=>`${c.name}: ${timeLabel(c.start)} – ${timeLabel(c.finish)}`).join('\n');
+          if(!confirm(`This overlaps a presentation in this group:\n\n${details}\n\nSave this time anyway?`))return;
+          await api(path,{method,body:{...payload,allowOverlap:true}});
+        }
+        if(await load())renderStudent();toast('Presentation saved.');
+      }catch(err){showError('sessionError',err.message);}
+    });
+  });
+  function openPin(){showError('pinError','');$('schedulePin').value='';$('pinDialog').showModal();}
+  $('editSchedule').addEventListener('click',()=>{if(state?.admin)toast('Editing is unlocked. Click a student to change their presentations.');else openPin();});
+  $('unlockFromStudent').addEventListener('click',openPin);
+  $('pinForm').addEventListener('submit',e=>{
+    e.preventDefault();busy(e.currentTarget,async()=>{
+      try{await api('/admin/login',{method:'POST',body:{pin:$('schedulePin').value}});$('schedulePin').value='';$('pinDialog').close();if(await load()&&$('studentDialog').open)renderStudent();toast('Schedule editing unlocked for this browser.');}
+      catch(err){showError('pinError',err.message);}
+    });
+  });
+  $('lockSchedule').addEventListener('click',async()=>{
+    try{await api('/admin/logout',{method:'POST'});if(await load()&&$('studentDialog').open)renderStudent();toast('Schedule editing locked.');}catch(err){toast(err.message);}
+  });
+  $('history').addEventListener('click',async()=>{
+    $('historyList').replaceChildren(el('p','field-hint','Loading changes…'));$('historyDialog').showModal();
+    try{
+      const changes=await api('/admin/history');$('historyList').replaceChildren();
+      if(!changes.length)$('historyList').append(el('p','field-hint','No changes yet. Original photographed dates are imported.'));
+      for(const c of changes){
+        const entry=el('div','history-entry');entry.append(el('strong','',c.name+' · '+c.action));
+        const value=x=>!x?'':('unit'in x?x.unit||'(unit cleared)':dateLabel(x.date)+' · '+timeRange(x));
+        const before=value(c.before),after=value(c.after);
+        entry.append(el('p','',before&&after?before+' → '+after:after||before));
+        entry.append(el('p','',new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',dateStyle:'medium',timeStyle:'short'}).format(new Date(c.createdAt))));
+        $('historyList').append(entry);
+      }
+    }catch(err){$('historyList').replaceChildren(el('p','error',err.message));}
+  });
+  for(const b of document.querySelectorAll('[data-close]'))b.addEventListener('click',()=>$(b.dataset.close).close());
+  $('groupTabs').addEventListener('click',e=>{const target=e.target.closest('[data-group]');if(target){group=Number(target.dataset.group);render();}});
+  $('search').addEventListener('input',render);$('dateFilter').addEventListener('change',render);$('retry').addEventListener('click',()=>load());
+  $('addPresentation').addEventListener('click',()=>openEditor());$('cancelSession').addEventListener('click',()=>{$('sessionForm').hidden=true;});
+  // Refresh between interactions without replacing a student's unfinished edits.
+  setInterval(()=>{if(!document.hidden&&!document.querySelector('dialog[open]'))load({report:false});},30000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!document.querySelector('dialog[open]'))load({report:false});});
+  load();
+})();
