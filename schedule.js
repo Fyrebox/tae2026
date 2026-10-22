@@ -83,7 +83,9 @@ export function createScheduleRouter(store, { pin = process.env.SCHEDULE_ADMIN_P
     if(typeof body?.date!=='string'||!/^2026-\d{2}-\d{2}$/.test(body.date)||!Number.isFinite(parsed.getTime())||parsed.toISOString().slice(0,10)!==body.date) throw fail(400,'Choose a valid date in 2026.');
     const start=body.startTime||null,end=body.endTime||null;
     const time=/^(?:[01]\d|2[0-3]):[0-5]\d$/;
-    if((start||end)&&(typeof start!=='string'||typeof end!=='string'||!time.test(start)||!time.test(end)||end<=start)) throw fail(400,'Enter both times, with the finish after the start, or leave both blank.');
+    if(typeof start!=='string'||typeof end!=='string'||!time.test(start)||!time.test(end)) throw fail(400,'Enter a start and finish time for the 30-minute presentation.');
+    const minutes = value => Number(value.slice(0,2))*60+Number(value.slice(3));
+    if(start<'09:00'||end>'13:00'||minutes(end)-minutes(start)!==30) throw fail(400,'Presentations must be 30 minutes, between 9 am and 1 pm.');
     return {date:body.date,startTime:start,endTime:end};
   }
   async function checkOverlap(query,data,studentId,id,allow) {
@@ -91,8 +93,8 @@ export function createScheduleRouter(store, { pin = process.env.SCHEDULE_ADMIN_P
     const conflicts=await query(`SELECT s.name,to_char(p.start_time,'HH24:MI') AS start,to_char(p.end_time,'HH24:MI') AS finish
       FROM schedule.presentations p JOIN schedule.students s ON s.id=p.student_id
       WHERE s.group_number=(SELECT group_number FROM schedule.students WHERE id=$1)
-      AND p.day=$2 AND p.id<>$3 AND p.start_time<$5::time AND p.end_time>$4::time`,[studentId,data.date,id||'',data.startTime,data.endTime]);
-    if(conflicts.rowCount)throw fail(409,'This time overlaps another presentation in the group.',{code:'overlap',conflicts:conflicts.rows});
+      AND p.day=$2 AND p.id<>$3 AND p.start_time<($5::time+interval '10 minutes') AND p.end_time>($4::time-interval '10 minutes')`,[studentId,data.date,id||'',data.startTime,data.endTime]);
+    if(conflicts.rowCount)throw fail(409,'This time overlaps another presentation or leaves less than a 10-minute break in the group.',{code:'overlap',conflicts:conflicts.rows});
   }
   router.post('/presentations',requireAdmin,async(req,res,next)=>{
     try{

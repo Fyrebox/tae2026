@@ -1,5 +1,6 @@
 import pg from 'pg';
 import { SCHEDULE_STUDENTS } from './schedule-data.js';
+import { rebalanceSchedule } from './schedule-rebalance.js';
 
 // A separate schema leaves the former course site's tables untouched.
 export async function createScheduleStore(connectionString, schema = 'class_schedule') {
@@ -11,6 +12,7 @@ export async function createScheduleStore(connectionString, schema = 'class_sche
   try {
     await client.query('BEGIN');
     await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [schema]);
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [schema+'-edit']);
     await client.query(`CREATE SCHEMA IF NOT EXISTS ${schema}`);
     await client.query(`CREATE TABLE IF NOT EXISTS ${schema}.students (
       id text PRIMARY KEY, name text NOT NULL, group_number integer NOT NULL,
@@ -32,6 +34,7 @@ export async function createScheduleStore(connectionString, schema = 'class_sche
       }
       await client.query(`INSERT INTO ${schema}.imports(id) VALUES('photos-november-2026')`);
     }
+    await rebalanceSchedule((sql, values) => client.query(sql.replaceAll('schedule.', `${schema}.`), values));
     await client.query('COMMIT');
   } catch (err) { await client.query('ROLLBACK'); initializationError = err; }
   finally { client.release(); }

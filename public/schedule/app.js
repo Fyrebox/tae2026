@@ -29,7 +29,9 @@
       if(state.dates.includes(oldDate))$('dateFilter').value=oldDate;
       $('studentCount').textContent=state.students.length;
       const reviewCount=state.students.filter(s=>presentationsFor(s.id).length!==3).length;
-      $('reviewSummary').textContent=reviewCount?`Original dates kept. ${reviewCount} students’ presentation counts need a check.`:'All students have three presentations scheduled.';
+      document.querySelector('.source-note').classList.toggle('balanced',reviewCount===0);
+      document.querySelector('.note-icon').textContent=reviewCount?'!':'✓';
+      $('reviewSummary').textContent=reviewCount?`${reviewCount} students’ presentation counts need a check.`:'All students have three presentations scheduled · 30 minutes each.';
       showError('loadError','');$('retry').hidden=true;render();
       return true;
     }catch(err){if(report){showError('loadError',err.message);$('retry').hidden=false;}return false;}
@@ -40,8 +42,9 @@
     const query=$('search').value.trim().toLowerCase(),date=$('dateFilter').value;
     const groupStudents=state.students.filter(s=>s.group===group);
     const students=groupStudents.filter(s=>(s.name+' '+s.unit).toLowerCase().includes(query)&&(!date||presentationsFor(s.id).some(p=>p.date===date)));
+    if(date)students.sort((a,b)=>(presentationsFor(a.id).find(p=>p.date===date)?.startTime||'').localeCompare(presentationsFor(b.id).find(p=>p.date===date)?.startTime||''));
     $('groupHeading').textContent='Group '+group;
-    $('groupDescription').textContent=`${groupStudents.length} students · Choose your name to add your course or unit.`;
+    $('groupDescription').textContent=date?`${students.length} presentations · 30 minutes each · 10+ min breaks`:`${groupStudents.length} students · Choose your name to add your course or unit.`;
     for(const tab of $('groupTabs').querySelectorAll('button'))tab.setAttribute('aria-pressed',String(Number(tab.dataset.group)===group));
     const wrap=$('tableWrap');wrap.replaceChildren();
     if(!students.length){wrap.append(el('p','empty-state','No students match this filter in Group '+group+'.'));return;}
@@ -77,7 +80,7 @@
     $('studentNote').textContent=student.notes;$('studentNote').hidden=!student.notes;
     $('unit').value=student.unit;showError('unitError','');showError('sessionError','');
     $('studentCountBadge').replaceChildren(countBadge(assignments.length));
-    $('studentScheduleHelp').textContent=assignments.length===3?'All three presentations are scheduled.':assignments.length<3?'The target is three. An organiser needs to confirm the remaining presentation date.':'The target is three. An organiser needs to review these photographed assignments.';
+    $('studentScheduleHelp').textContent=assignments.length===3?'All three presentations are scheduled.':assignments.length<3?'The target is three. An organiser needs to confirm the remaining presentation date.':'The target is three. An organiser needs to review these assignments.';
     $('studentSessions').replaceChildren();
     for(const p of assignments){
       const row=el('div','session-row'),info=el('div');info.append(el('strong','',dateLabel(p.date)),el('p','',timeRange(p)));row.append(info);
@@ -91,7 +94,7 @@
     editing=p;
     $('sessionFormTitle').textContent=p?'Edit presentation':'Add a presentation';
     $('sessionDate').value=p?.date||$('dateFilter').value||'';
-    $('startTime').value=p?.startTime||'';$('endTime').value=p?.endTime||'';
+    $('startTime').value=p?.startTime||'09:00';$('endTime').value=p?.endTime||'09:30';
     showError('sessionError','');$('sessionForm').hidden=false;$('sessionDate').focus();
   }
   async function removePresentation(p){
@@ -117,7 +120,7 @@
         catch(err){
           if(err.code!=='overlap')throw err;
           const details=err.conflicts.map(c=>`${c.name}: ${timeLabel(c.start)} – ${timeLabel(c.finish)}`).join('\n');
-          if(!confirm(`This overlaps a presentation in this group:\n\n${details}\n\nSave this time anyway?`))return;
+          if(!confirm(`This overlaps a presentation or leaves less than a 10-minute break in this group:\n\n${details}\n\nSave this time anyway?`))return;
           await api(path,{method,body:{...payload,allowOverlap:true}});
         }
         if(await load())renderStudent();toast('Presentation saved.');
@@ -140,7 +143,7 @@
     $('historyList').replaceChildren(el('p','field-hint','Loading changes…'));$('historyDialog').showModal();
     try{
       const changes=await api('/admin/history');$('historyList').replaceChildren();
-      if(!changes.length)$('historyList').append(el('p','field-hint','No changes yet. Original photographed dates are imported.'));
+      if(!changes.length)$('historyList').append(el('p','field-hint','No changes yet. The balanced class schedule is imported.'));
       for(const c of changes){
         const entry=el('div','history-entry');entry.append(el('strong','',c.name+' · '+c.action));
         const value=x=>!x?'':('unit'in x?x.unit||'(unit cleared)':dateLabel(x.date)+' · '+timeRange(x));
@@ -154,6 +157,11 @@
   for(const b of document.querySelectorAll('[data-close]'))b.addEventListener('click',()=>$(b.dataset.close).close());
   $('groupTabs').addEventListener('click',e=>{const target=e.target.closest('[data-group]');if(target){group=Number(target.dataset.group);render();}});
   $('search').addEventListener('input',render);$('dateFilter').addEventListener('change',render);$('retry').addEventListener('click',()=>load());
+  $('startTime').addEventListener('change',()=>{
+    const value=$('startTime').value;if(!value)return;
+    const minutes=Number(value.slice(0,2))*60+Number(value.slice(3))+30;
+    $('endTime').value=`${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;
+  });
   $('addPresentation').addEventListener('click',()=>openEditor());$('cancelSession').addEventListener('click',()=>{$('sessionForm').hidden=true;});
   // Refresh between interactions without replacing a student's unfinished edits.
   setInterval(()=>{if(!document.hidden&&!document.querySelector('dialog[open]'))load({report:false});},30000);
