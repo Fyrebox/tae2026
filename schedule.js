@@ -1,6 +1,6 @@
 import express from 'express';
 import crypto from 'node:crypto';
-import { SCHEDULE_DATES } from './schedule-data.js';
+import { DELIVERY_DATES } from './schedule-data.js';
 
 const studentFields = 'id, name, group_number AS "group", unit, notes, version';
 const presentationFields = `id, student_id AS "studentId", day::text AS date,
@@ -43,7 +43,7 @@ export function createScheduleRouter(store, { pin = process.env.SCHEDULE_ADMIN_P
         const presentations = await query(`SELECT ${presentationFields} FROM schedule.presentations ORDER BY day,start_time NULLS LAST,id`);
         return {students:students.rows,presentations:presentations.rows};
       });
-      res.json({...data,dates:[...new Set([...SCHEDULE_DATES,...data.presentations.map(p=>p.date)])].sort(),timezone:'Australia/Melbourne',admin:req.scheduleAdmin});
+      res.json({...data,dates:[...new Set([...DELIVERY_DATES,...data.presentations.map(p=>p.date)])].sort(),timezone:'Australia/Melbourne',admin:req.scheduleAdmin});
     } catch(err) { next(err); }
   });
   router.post('/admin/login', (req,res,next) => {
@@ -88,6 +88,13 @@ export function createScheduleRouter(store, { pin = process.env.SCHEDULE_ADMIN_P
     if(start<'09:00'||end>'13:00'||minutes(end)-minutes(start)!==30) throw fail(400,'Presentations must be 30 minutes, between 9 am and 1 pm.');
     return {date:body.date,startTime:start,endTime:end};
   }
+  async function checkCapacity(query,date,studentId,id='') {
+    const result=await query(`SELECT count(*)::int AS count FROM schedule.presentations p
+      JOIN schedule.students s ON s.id=p.student_id
+      WHERE s.group_number=(SELECT group_number FROM schedule.students WHERE id=$1)
+      AND p.day=$2 AND p.id<>$3`,[studentId,date,id]);
+    if(result.rows[0].count>=6)throw fail(409,'This group already has six presentations on that date. Choose another delivery date.');
+  }
   async function checkOverlap(query,data,studentId,id,allow) {
     if(!data.startTime||allow===true)return;
     const conflicts=await query(`SELECT s.name,to_char(p.start_time,'HH24:MI') AS start,to_char(p.end_time,'HH24:MI') AS finish
@@ -102,6 +109,7 @@ export function createScheduleRouter(store, { pin = process.env.SCHEDULE_ADMIN_P
       const result=await store.transaction(async query=>{
         const student=await query('SELECT id FROM schedule.students WHERE id=$1',[req.body.studentId]);
         if(!student.rowCount)throw fail(404,'Student not found.');
+        await checkCapacity(query,data.date,req.body.studentId);
         await checkOverlap(query,data,req.body.studentId,null,req.body.allowOverlap);
         const inserted=await query(`INSERT INTO schedule.presentations(id,student_id,day,start_time,end_time) VALUES($1,$2,$3,$4,$5) RETURNING ${presentationFields}`,[crypto.randomUUID(),req.body.studentId,data.date,data.startTime,data.endTime]);
         await audit(query,'presentation added',req.body.studentId,null,inserted.rows[0]); return inserted.rows[0];
@@ -115,6 +123,7 @@ export function createScheduleRouter(store, { pin = process.env.SCHEDULE_ADMIN_P
         const old=await query(`SELECT ${presentationFields} FROM schedule.presentations WHERE id=$1`,[req.params.id]);
         if(!old.rowCount)throw fail(404,'Presentation not found.');
         if(old.rows[0].version!==req.body.version)throw fail(409,'This presentation changed elsewhere. Close and reopen the student details.');
+        await checkCapacity(query,data.date,old.rows[0].studentId,req.params.id);
         await checkOverlap(query,data,old.rows[0].studentId,req.params.id,req.body.allowOverlap);
         const updated=await query(`UPDATE schedule.presentations SET day=$1,start_time=$2,end_time=$3,version=version+1 WHERE id=$4 RETURNING ${presentationFields}`,[data.date,data.startTime,data.endTime,req.params.id]);
         await audit(query,'presentation updated',old.rows[0].studentId,old.rows[0],updated.rows[0]);return updated.rows[0];

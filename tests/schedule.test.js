@@ -22,6 +22,12 @@ test('schedule import, persistence, editing, authentication and conflicts', { sk
   }
   try {
     const initial=await request();assert.equal(initial.status,200);assert.equal(initial.data.students.length,19);assert.equal(initial.data.presentations.length,57);assert.equal(initial.data.admin,false);
+    assert.ok(initial.data.dates.includes('2026-12-04'));
+    assert.equal(initial.data.presentations.filter(p=>p.date==='2026-12-04').length,0);
+    const liam=initial.data.presentations.find(p=>p.studentId==='liam');
+    const olivia=initial.data.presentations.find(p=>p.studentId==='olivia');
+    const move=(presentation,date,startTime,endTime,version=presentation.version)=>request('/presentations/'+presentation.id,'PATCH',{date,startTime,endTime,version});
+    assert.equal((await move(liam,'2026-12-04','09:00','09:30')).status,401);
     for(const s of SCHEDULE_STUDENTS)assert.deepEqual(initial.data.presentations.filter(p=>p.studentId===s.id).map(p=>p.date).sort(),BALANCED_PRESENTATIONS.filter(p=>p.studentId===s.id).map(p=>p.date).sort());
     assert.equal(initial.data.students.find(s=>s.id==='abbey').notes,'Away on 6 November.');
     assert.equal((await request('/presentations','POST',{studentId:'rachel',date:'2026-11-13'})).status,401);
@@ -33,6 +39,25 @@ test('schedule import, persistence, editing, authentication and conflicts', { sk
     assert.equal((await request('/admin/login','POST',{pin:'wrong'})).status,401);
     const login=await request('/admin/login','POST',{pin:'573829'});assert.equal(login.status,200);assert.ok(login.cookie.includes('HttpOnly'));assert.ok(login.cookie.includes('SameSite=Strict'));cookie=login.cookie.split(';')[0];
     assert.equal((await request()).data.admin,true);
+    // Moving a December delivery updates the same record and preserves all counts/units.
+    const movedLiam=await move(liam,'2026-12-04','09:00','09:30');assert.equal(movedLiam.status,200);assert.equal(movedLiam.data.id,liam.id);
+    assert.equal((await move(liam,'2026-12-04','09:40','10:10')).status,409);
+    const tooClose=await move(olivia,'2026-12-04','09:35','10:05');assert.equal(tooClose.status,409);assert.equal(tooClose.data.code,'overlap');
+    const movedOlivia=await move(olivia,'2026-12-04','09:40','10:10');assert.equal(movedOlivia.status,200);
+    const anotherLiam=initial.data.presentations.find(p=>p.studentId==='liam'&&p.id!==liam.id);
+    const duplicate=await move(anotherLiam,'2026-12-04','10:20','10:50');assert.equal(duplicate.status,409);assert.match(duplicate.data.error,/already has a presentation/);
+    const moved=await request();assert.equal(moved.data.presentations.length,57);
+    for(const s of moved.data.students)assert.equal(moved.data.presentations.filter(p=>p.studentId===s.id).length,3,s.id);
+    assert.ok(!moved.data.presentations.some(p=>p.studentId===liam.studentId&&p.date===liam.date));
+    assert.equal(moved.data.students.find(s=>s.id==='cyril').unit,'ICTAII401 · <script>example</script>');
+    assert.equal((await move(olivia,olivia.date,olivia.startTime,olivia.endTime,movedOlivia.data.version)).status,200);
+    assert.equal((await move(liam,liam.date,liam.startTime,liam.endTime,movedLiam.data.version)).status,200);
+    const restored=await request();assert.ok(restored.data.dates.includes('2026-12-04'));assert.ok(!restored.data.presentations.some(p=>p.date==='2026-12-04'));
+    // A full six-person day cannot accept a seventh, even with a time override.
+    const abbey=initial.data.presentations.find(p=>p.studentId==='abbey');
+    const full=await request('/presentations/'+abbey.id,'PATCH',{date:'2026-11-06',startTime:'09:00',endTime:'09:30',version:abbey.version,allowOverlap:true});
+    assert.equal(full.status,409);assert.match(full.data.error,/six presentations/);
+    assert.equal((await request('/presentations','POST',{studentId:'abbey',date:'2026-11-06',startTime:'09:00',endTime:'09:30',allowOverlap:true})).status,409);
     const session=initial.data.presentations.find(p=>p.studentId==='rachel');
     const updated=await request('/presentations/'+session.id,'PATCH',{date:session.date,startTime:'09:00',endTime:'09:30',version:session.version});assert.equal(updated.status,200);
     assert.equal((await request('/presentations/'+session.id,'PATCH',{date:session.date,startTime:'09:00',endTime:'09:30',version:session.version})).status,409);

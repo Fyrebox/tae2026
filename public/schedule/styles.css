@@ -4,3 +4,12 @@
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}@media print{.header-actions,.toolbar,.source-note,footer,.date-filter,dialog,.toast{display:none!important}.page{padding:0}.hero{padding:15px 0}.hero h1{font-size:35px}.schedule-table tr{break-inside:avoid}}
 
 .source-note.balanced{background:var(--mint);border-color:#cddfce;color:var(--teal)}.source-note.balanced .note-icon{border-color:#90b49c}
+
+/* Additional calendar dates retain the existing text sizes and mobile cards. */
+.date-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:12px}
+.calendar-overflow{overflow-x:auto;overscroll-behavior-x:contain}
+.calendar-overflow:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
+.schedule-table.extended{min-width:1100px}
+#moveForm select{width:100%}
+@media(max-width:720px){.date-actions{max-width:145px;gap:8px}.date-actions .button{width:100%;font-size:12px;padding:8px}.calendar-overflow{overflow-x:visible}.schedule-table.extended{min-width:0}}
+@media print{#movePresentation{display:none!important}}

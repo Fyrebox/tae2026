@@ -1,8 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SCHEDULE_STUDENTS, SCHEDULE_DATES } from '../schedule-data.js';
+import { SCHEDULE_STUDENTS, SCHEDULE_DATES, DELIVERY_DATES } from '../schedule-data.js';
 import { BALANCED_PRESENTATIONS } from '../schedule-plan.js';
 const minutes = time => Number(time.slice(0,2))*60+Number(time.slice(3));
+
+test('4 December is an extra calendar date without changing the November import',()=>{
+  assert.deepEqual(DELIVERY_DATES,[...SCHEDULE_DATES,'2026-12-04']);
+  assert.equal(SCHEDULE_DATES.length,4);
+  assert.ok(!BALANCED_PRESENTATIONS.some(p=>p.date==='2026-12-04'));
+});
 
 test('everyone has three deliveries with only the minimum changes to photographed days',()=>{
   assert.equal(BALANCED_PRESENTATIONS.length,57);

@@ -1,9 +1,11 @@
 (() => {
   const $ = id => document.getElementById(id);
-  let state = null, group = 1, selected = null, editing = null, toastTimer;
+  let state = null, group = 1, selected = null, editing = null, toastTimer, pendingMove = false, moveDate = null, moveGroup = null;
   const dateLabel = (date, weekday = true) => new Intl.DateTimeFormat('en-AU', {timeZone:'Australia/Melbourne',...(weekday?{weekday:'short'}:{}),day:'numeric',month:'short'}).format(new Date(date+'T12:00:00+11:00'));
   const timeLabel = value => { if (!value) return ''; const [h,m]=value.split(':').map(Number); return `${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'am':'pm'}`; };
   const timeRange = p => p.startTime ? `${timeLabel(p.startTime)} – ${timeLabel(p.endTime)}` : 'Time TBC';
+  const minutes = value => Number(value.slice(0,2))*60+Number(value.slice(3));
+  const clock = value => `${String(Math.floor(value/60)).padStart(2,'0')}:${String(value%60).padStart(2,'0')}`;
   function el(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node;}
   function button(label,className,fn){const b=el('button',className,label);b.type='button';b.addEventListener('click',fn);return b;}
   function showError(id,message){$(id).textContent=message||'';$(id).hidden=!message;}
@@ -44,12 +46,24 @@
     const students=groupStudents.filter(s=>(s.name+' '+s.unit).toLowerCase().includes(query)&&(!date||presentationsFor(s.id).some(p=>p.date===date)));
     if(date)students.sort((a,b)=>(presentationsFor(a.id).find(p=>p.date===date)?.startTime||'').localeCompare(presentationsFor(b.id).find(p=>p.date===date)?.startTime||''));
     $('groupHeading').textContent='Group '+group;
-    $('groupDescription').textContent=date?`${students.length} presentations · 30 minutes each · 10+ min breaks`:`${groupStudents.length} students · Choose your name to add your course or unit.`;
+    $('groupDescription').textContent=date?`${students.length} presentation${students.length===1?'':'s'} · 30 minutes each · 10+ min breaks`:`${groupStudents.length} students · Choose your name to add your course or unit.`;
     for(const tab of $('groupTabs').querySelectorAll('button'))tab.setAttribute('aria-pressed',String(Number(tab.dataset.group)===group));
     const wrap=$('tableWrap');wrap.replaceChildren();
-    if(!students.length){wrap.append(el('p','empty-state','No students match this filter in Group '+group+'.'));return;}
+    const dayCount=date?state.presentations.filter(p=>p.date===date&&groupStudents.some(s=>s.id===p.studentId)).length:0;
+    $('movePresentation').hidden=!date;
+    $('movePresentation').disabled=!!date&&dayCount>=6;
+    $('movePresentation').title=dayCount>=6?'This group already has six presentations on this date.':'';
+    const extended=!date&&state.dates.length>4;
+    wrap.classList.toggle('calendar-overflow',extended);wrap.tabIndex=extended?0:-1;
+    if(!students.length){
+      const empty=el('div','empty-state');
+      if(date&&!query&&dayCount===0){
+        empty.append(el('p','',`No presentations scheduled for ${dateLabel(date)} in Group ${group} yet.`),el('p','field-hint','Use “Move a presentation here” to move an existing session. Organiser PIN required.'));
+      }else empty.append(el('p','','No students match this filter in Group '+group+'.'));
+      wrap.append(empty);return;
+    }
     const dates=date?[date]:state.dates;
-    const table=el('table','schedule-table');
+    const table=el('table','schedule-table'+(extended?' extended':''));
     const caption=el('caption','sr-only',`Group ${group} presentation schedule. All times are Melbourne time.`);table.append(caption);
     const head=el('thead'),headRow=el('tr');headRow.append(el('th','', 'Student / unit'));
     for(const d of dates){const th=el('th');th.scope='col';th.append(el('span','',dateLabel(d).split(',')[0].split(' ')[0]),el('span','day-number',dateLabel(d,false)));headRow.append(th);}
@@ -68,6 +82,45 @@
       body.append(row);
     }
     table.append(body);wrap.append(table);
+  }
+  function requestMove(){
+    if(!state||!$('dateFilter').value)return;
+    if(!state.admin){pendingMove=true;openPin();return;}
+    openMove();
+  }
+  function openMove(){
+    moveDate=$('dateFilter').value;moveGroup=group;
+    if(!moveDate||!state.admin)return;
+    const candidates=state.students.filter(s=>s.group===moveGroup&&presentationsFor(s.id).length&&!presentationsFor(s.id).some(p=>p.date===moveDate));
+    if(!candidates.length){toast('Every student in this group already presents on this date.');return;}
+    $('moveGroup').textContent=`GROUP ${moveGroup} · ORGANISER EDITING`;
+    $('moveTarget').textContent='New delivery date: '+new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',dateStyle:'full'}).format(new Date(moveDate+'T12:00:00+11:00'));
+    $('moveStudent').replaceChildren(...candidates.map(s=>new Option(s.name,s.id)));
+    showError('moveError','');updateMoveSessions();$('moveDialog').showModal();
+  }
+  function updateMoveSessions(){
+    const sessions=presentationsFor($('moveStudent').value).filter(p=>p.date!==moveDate).sort((a,b)=>a.date.localeCompare(b.date));
+    $('moveSession').replaceChildren(...sessions.map(p=>new Option(dateLabel(p.date)+' · '+timeRange(p),p.id)));
+    suggestMoveTime();
+  }
+  function suggestMoveTime(){
+    const session=state.presentations.find(p=>p.id===$('moveSession').value);
+    if(!session)return;
+    const ids=state.students.filter(s=>s.group===moveGroup).map(s=>s.id);
+    const booked=state.presentations.filter(p=>p.date===moveDate&&ids.includes(p.studentId)&&p.id!==session.id&&p.startTime&&p.endTime);
+    const choices=[minutes(session.startTime||'09:00'),...Array.from({length:43},(_,i)=>540+i*5)];
+    const start=choices.find(start=>start>=540&&start<=750&&booked.every(p=>start+30+10<=minutes(p.startTime)||start>=minutes(p.endTime)+10));
+    $('moveStart').value=clock(start??540);$('moveEnd').value=clock((start??540)+30);
+    showError('moveError',start===undefined?'No free 30-minute slot with a 10-minute break is available. Choose another delivery date.':'');
+  }
+  async function saveTimedPresentation(path,method,payload){
+    try{await api(path,{method,body:payload});return true;}
+    catch(err){
+      if(err.code!=='overlap')throw err;
+      const details=err.conflicts.map(c=>`${c.name}: ${timeLabel(c.start)} – ${timeLabel(c.finish)}`).join('\n');
+      if(!confirm(`This overlaps a presentation or leaves less than a 10-minute break in this group:\n\n${details}\n\nSave this time anyway?`))return false;
+      await api(path,{method,body:{...payload,allowOverlap:true}});return true;
+    }
   }
   function openStudent(id){
     selected=id;editing=null;renderStudent();
@@ -116,13 +169,7 @@
       const payload={studentId:selected,date:$('sessionDate').value,startTime:$('startTime').value,endTime:$('endTime').value,...(editing?{version:editing.version}:{})};
       const path='/presentations'+(editing?'/'+editing.id:''),method=editing?'PATCH':'POST';
       try{
-        try{await api(path,{method,body:payload});}
-        catch(err){
-          if(err.code!=='overlap')throw err;
-          const details=err.conflicts.map(c=>`${c.name}: ${timeLabel(c.start)} – ${timeLabel(c.finish)}`).join('\n');
-          if(!confirm(`This overlaps a presentation or leaves less than a 10-minute break in this group:\n\n${details}\n\nSave this time anyway?`))return;
-          await api(path,{method,body:{...payload,allowOverlap:true}});
-        }
+        if(!await saveTimedPresentation(path,method,payload))return;
         if(await load())renderStudent();toast('Presentation saved.');
       }catch(err){showError('sessionError',err.message);}
     });
@@ -132,12 +179,36 @@
   $('unlockFromStudent').addEventListener('click',openPin);
   $('pinForm').addEventListener('submit',e=>{
     e.preventDefault();busy(e.currentTarget,async()=>{
-      try{await api('/admin/login',{method:'POST',body:{pin:$('schedulePin').value}});$('schedulePin').value='';$('pinDialog').close();if(await load()&&$('studentDialog').open)renderStudent();toast('Schedule editing unlocked for this browser.');}
+      try{
+        await api('/admin/login',{method:'POST',body:{pin:$('schedulePin').value}});
+        const shouldMove=pendingMove;pendingMove=false;$('schedulePin').value='';$('pinDialog').close();
+        if(await load()){
+          if($('studentDialog').open)renderStudent();
+          if(shouldMove)openMove();
+        }
+        toast('Schedule editing unlocked for this browser.');
+      }
       catch(err){showError('pinError',err.message);}
     });
   });
   $('lockSchedule').addEventListener('click',async()=>{
     try{await api('/admin/logout',{method:'POST'});if(await load()&&$('studentDialog').open)renderStudent();toast('Schedule editing locked.');}catch(err){toast(err.message);}
+  });
+  $('movePresentation').addEventListener('click',requestMove);
+  $('pinDialog').addEventListener('close',()=>{if(!state?.admin)pendingMove=false;});
+  $('moveStudent').addEventListener('change',updateMoveSessions);
+  $('moveSession').addEventListener('change',suggestMoveTime);
+  $('moveStart').addEventListener('change',()=>{if($('moveStart').value)$('moveEnd').value=clock(minutes($('moveStart').value)+30);});
+  $('moveForm').addEventListener('submit',e=>{
+    e.preventDefault();busy(e.currentTarget,async()=>{
+      showError('moveError','');
+      const presentation=state.presentations.find(p=>p.id===$('moveSession').value);
+      if(!presentation){showError('moveError','Choose a presentation to move.');return;}
+      try{
+        if(!await saveTimedPresentation('/presentations/'+presentation.id,'PATCH',{date:moveDate,startTime:$('moveStart').value,endTime:$('moveEnd').value,version:presentation.version}))return;
+        $('moveDialog').close();await load();toast('Presentation moved. The student’s presentation count is unchanged.');
+      }catch(err){showError('moveError',err.message);}
+    });
   });
   $('history').addEventListener('click',async()=>{
     $('historyList').replaceChildren(el('p','field-hint','Loading changes…'));$('historyDialog').showModal();

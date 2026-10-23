@@ -23,9 +23,20 @@ presentations and breaks of at least 10 minutes (10–40 minutes in the plan).
 All times are Australia/Melbourne local time. Filtering by date lists students
 in presentation order.
 
+Friday 4 December 2026 is an additional delivery date, initially empty. Select
+that date and choose **Move a presentation here**, enter the organiser PIN,
+then choose a student, an existing presentation and a new start time. Moving
+updates that assignment rather than adding one, preserving its ID, the student's
+presentation count and their shared unit name. The finish time is set 30 minutes
+later, and a free slot with the minimum break is suggested. The same move control
+is available for any selected date. Five-column calendars scroll horizontally on
+smaller desktop screens; phones retain the existing student cards.
+
 The server checks 30-minute durations within 09:00–13:00 and warns if an edit
 overlaps another presentation or leaves less than a 10-minute break. An
 organiser can explicitly confirm a conflicting time if an exception is needed.
+Each group is limited to six presentations on a date, including when a time
+conflict is overridden. Groups can present in parallel.
 
 ## Configuration
 
@@ -56,7 +67,8 @@ Organiser access expires after eight hours or a restart. Lock editing when done.
 create and drop schemas. Run `npm test` with that environment variable set.
 The integration test creates a randomly named schema, validates the original
 assignments, the one-time rebalance, saves, persistence, authentication,
-stale-edit conflicts, invalid inputs, session durations, breaks and overlap handling, then drops only its test schema. Without the
+stale-edit conflicts, invalid inputs, session durations, breaks, overlap handling,
+December moves, preserved counts and daily capacity, then drops only its test schema. Without the
 variable, the database integration test is skipped.
 
 For a local UI preview with an isolated schema, set `NODE_ENV=test` and
