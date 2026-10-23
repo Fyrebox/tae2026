@@ -21,7 +21,7 @@ test('schedule import, persistence, editing, authentication and conflicts', { sk
     return {status:response.status,data:await response.json(),cookie:response.headers.get('set-cookie')};
   }
   try {
-    const initial=await request();assert.equal(initial.status,200);assert.equal(initial.data.students.length,19);assert.equal(initial.data.presentations.length,57);assert.equal(initial.data.admin,false);
+    const initial=await request();assert.equal(initial.status,200);assert.equal(initial.data.students.length,19);assert.equal(initial.data.presentations.length,57);assert.equal(initial.data.admin,false);assert.deepEqual(initial.data.conflicts,[]);
     assert.ok(initial.data.dates.includes('2026-12-04'));
     assert.equal(initial.data.presentations.filter(p=>p.date==='2026-12-04').length,0);
     const liam=initial.data.presentations.find(p=>p.studentId==='liam');
@@ -67,9 +67,14 @@ test('schedule import, persistence, editing, authentication and conflicts', { sk
     const ali=initial.data.presentations.find(p=>p.studentId==='ali'&&p.date===session.date);
     const shortBreak=await request('/presentations/'+ali.id,'PATCH',{date:ali.date,startTime:'09:35',endTime:'10:05',version:ali.version});assert.equal(shortBreak.status,409);assert.equal(shortBreak.data.code,'overlap');
     const overlap=await request('/presentations/'+ali.id,'PATCH',{date:ali.date,startTime:'09:15',endTime:'09:45',version:ali.version});assert.equal(overlap.status,409);assert.equal(overlap.data.code,'overlap');
-    assert.equal((await request('/presentations/'+ali.id,'PATCH',{date:ali.date,startTime:'09:15',endTime:'09:45',version:ali.version,allowOverlap:true})).status,200);
+    const savedOverlap=await request('/presentations/'+ali.id,'PATCH',{date:ali.date,startTime:'09:15',endTime:'09:45',version:ali.version,allowOverlap:true});assert.equal(savedOverlap.status,200);
+    const reported=(await request()).data.conflicts;assert.equal(reported.length,1);assert.equal(reported[0].group,1);assert.equal(reported[0].date,ali.date);
+    assert.deepEqual(reported[0].presentationIds,[ali.id,session.id].sort());assert.equal(reported[0].startTime,'09:15');assert.equal(reported[0].endTime,'09:30');
     const otherGroup=initial.data.presentations.find(p=>p.studentId==='carly'&&p.date===session.date);
     assert.equal((await request('/presentations/'+otherGroup.id,'PATCH',{date:otherGroup.date,startTime:'09:00',endTime:'09:30',version:otherGroup.version})).status,200);
+    assert.equal((await request()).data.conflicts.length,1,'simultaneous presentations in another group are allowed');
+    assert.equal((await request('/presentations/'+ali.id,'PATCH',{date:ali.date,startTime:ali.startTime,endTime:ali.endTime,version:savedOverlap.data.version})).status,200);
+    assert.deepEqual((await request()).data.conflicts,[],'the warning clears once the clash is corrected');
     for(const [startTime,endTime] of [['08:30','09:00'],['12:45','13:15'],['09:00','09:45']])assert.equal((await request('/presentations','POST',{studentId:'rachel',date:'2026-11-27',startTime,endTime})).status,400);
     const added=await request('/presentations','POST',{studentId:'rachel',date:'2026-11-27',startTime:'09:00',endTime:'09:30',allowOverlap:true});assert.equal(added.status,201);
     assert.equal((await request()).data.presentations.filter(p=>p.studentId==='rachel').length,4);

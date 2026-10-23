@@ -18,6 +18,35 @@
     return data;
   }
   function countBadge(count){return el('span','count-badge'+(count===3?' complete':''),count===3?'3 of 3 scheduled':count<3?`${count} of 3 scheduled`:`${count} scheduled · needs review`);}
+  const conflictsFor = id => (state.conflicts||[]).filter(c=>c.presentationIds.includes(id));
+  function conflictLabel(p){
+    const others=[...new Set(conflictsFor(p.id).flatMap(c=>c.presentations.filter(x=>x.id!==p.id).map(x=>x.name)))];
+    const label=el('span','conflict-label','Time conflict');
+    label.title='Overlaps '+others.join(', ');label.setAttribute('aria-label','Time conflict with '+others.join(', '));return label;
+  }
+  function viewConflict(conflict){
+    group=conflict.group;$('dateFilter').value=conflict.date;$('search').value='';render();
+    const target=[...$('tableWrap').querySelectorAll('[data-presentation-id]')].find(cell=>conflict.presentationIds.includes(cell.dataset.presentationId));
+    if(target){target.tabIndex=-1;target.focus({preventScroll:true});target.scrollIntoView({block:'center',inline:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
+  }
+  function renderConflictStatus(){
+    const conflicts=(state.conflicts||[]).filter(c=>c.group===group);
+    const status=$('conflictStatus'),signature=JSON.stringify({group,conflicts});
+    if(status.dataset.signature===signature)return;
+    status.dataset.signature=signature;status.hidden=false;status.classList.toggle('has-conflicts',!!conflicts.length);status.replaceChildren();
+    status.append(el('strong','',conflicts.length?`${conflicts.length} timing conflict${conflicts.length===1?'':'s'} in Group ${group}`:`No overlapping presentations in Group ${group}.`));
+    if(!conflicts.length)return;
+    status.append(el('p','conflict-scope','Across all delivery dates in this group, including sessions hidden by your filters.'));
+    const list=el('ul','conflict-list');
+    for(const conflict of conflicts){
+      const item=el('li'),details=el('div');
+      details.append(el('strong','',dateLabel(conflict.date)),el('p','',conflict.presentations.map(p=>`${p.name}: ${timeRange(p)}`).join(' · ')));
+      const view=button('View conflict','text-button',()=>viewConflict(conflict));
+      view.setAttribute('aria-label',`View conflict on ${dateLabel(conflict.date)} between ${conflict.presentations.map(p=>p.name).join(' and ')}`);
+      item.append(details,view);list.append(item);
+    }
+    status.append(list);
+  }
   const groupDay = (date,groupNumber=group) => state.groupDays.find(d=>d.group===groupNumber&&d.date===date);
   function supervisionBadge(p){
     const badge=el('span','presenting supervision '+p.supervision,supervisionLabels[p.supervision]);
@@ -59,7 +88,15 @@
     if(date)students.sort((a,b)=>(presentationsFor(a.id).find(p=>p.date===date)?.startTime||'').localeCompare(presentationsFor(b.id).find(p=>p.date===date)?.startTime||''));
     $('groupHeading').textContent='Group '+group;
     $('groupDescription').textContent=date?`${students.length} presentation${students.length===1?'':'s'} · 30 minutes each · 10+ min breaks`:`${groupStudents.length} students · Choose your name to add your course or unit.`;
-    for(const tab of $('groupTabs').querySelectorAll('button'))tab.setAttribute('aria-pressed',String(Number(tab.dataset.group)===group));
+    for(const tab of $('groupTabs').querySelectorAll('button')){
+      const tabGroup=Number(tab.dataset.group),count=(state.conflicts||[]).filter(c=>c.group===tabGroup).length;
+      tab.setAttribute('aria-pressed',String(tabGroup===group));
+      tab.setAttribute('aria-label',`Group ${tabGroup}, ${state.students.filter(s=>s.group===tabGroup).length} students, ${count} timing conflict${count===1?'':'s'}`);
+      let indicator=tab.querySelector('.tab-conflict');
+      if(!indicator){indicator=el('span','tab-conflict','!');indicator.setAttribute('aria-hidden','true');tab.append(indicator);}
+      indicator.hidden=!count;tab.title=count?`${count} timing conflict${count===1?'':'s'}`:'No overlapping presentations';
+    }
+    renderConflictStatus();
     $('selectedDayLabel').replaceChildren(...(date?[dayBadge(date)]:[]));
     const wrap=$('tableWrap');wrap.replaceChildren();
     const dayCount=date?state.presentations.filter(p=>p.date===date&&groupStudents.some(s=>s.id===p.studentId)).length:0;
@@ -88,7 +125,12 @@
       for(const d of dates){
         const cell=el('td');cell.dataset.label=dateLabel(d);
         const session=assignments.find(p=>p.date===d);
-        if(session){const mobileLabel=dayBadge(d);mobileLabel.classList.add('mobile-day-label');cell.append(el('span','presenting presentation-indicator','Presenting'),mobileLabel,el('span','slot-time',timeRange(session)));}
+        if(session){
+          cell.dataset.presentationId=session.id;
+          const mobileLabel=dayBadge(d);mobileLabel.classList.add('mobile-day-label');
+          cell.append(el('span','presenting presentation-indicator','Presenting'),mobileLabel,el('span','slot-time',timeRange(session)));
+          if(conflictsFor(session.id).length){cell.classList.add('timing-conflict');cell.append(conflictLabel(session));}
+        }
         else{const dash=el('span','no-session','—');dash.setAttribute('aria-label','No presentation scheduled');cell.append(dash);if(student.id==='abbey'&&d==='2026-11-06')cell.append(el('span','absence','Away'));}
         row.append(cell);
       }
@@ -179,6 +221,7 @@
     $('studentSessions').replaceChildren();
     for(const p of assignments){
       const row=el('div','session-row'),info=el('div');info.append(el('strong','',dateLabel(p.date)),el('p','',timeRange(p)),supervisionBadge(p));row.append(info);
+      if(conflictsFor(p.id).length){row.classList.add('timing-conflict');info.append(conflictLabel(p));}
       if(state.admin){const actions=el('div','session-actions');actions.append(button('Edit','text-button',()=>openEditor(p)),button('Remove','text-button danger',()=>removePresentation(p)));row.append(actions);}
       $('studentSessions').append(row);
     }

@@ -2,6 +2,7 @@ import express from 'express';
 import crypto from 'node:crypto';
 import { DELIVERY_DATES } from './schedule-data.js';
 import { SUPERVISION, groupDayFields, inheritSupervision, ensureGroupDays, auditGroupDay } from './schedule-supervision.js';
+import { scheduleConflicts } from './schedule-conflicts.js';
 
 const studentFields = 'id, name, group_number AS "group", unit, notes, version';
 const presentationFields = `id, student_id AS "studentId", day::text AS date,
@@ -45,7 +46,7 @@ export function createScheduleRouter(store, { pin = process.env.SCHEDULE_ADMIN_P
         const groupDays=await query(`SELECT ${groupDayFields} FROM schedule.group_days ORDER BY day,group_number`);
         return {students:students.rows,presentations:inheritSupervision(presentations.rows,students.rows,groupDays.rows),groupDays:groupDays.rows};
       });
-      res.json({...data,dates:[...new Set([...DELIVERY_DATES,...data.presentations.map(p=>p.date),...data.groupDays.map(d=>d.date)])].sort(),timezone:'Australia/Melbourne',admin:req.scheduleAdmin});
+      res.json({...data,conflicts:scheduleConflicts(data.presentations,data.students),dates:[...new Set([...DELIVERY_DATES,...data.presentations.map(p=>p.date),...data.groupDays.map(d=>d.date)])].sort(),timezone:'Australia/Melbourne',admin:req.scheduleAdmin});
     } catch(err) { next(err); }
   });
   router.post('/admin/login', (req,res,next) => {

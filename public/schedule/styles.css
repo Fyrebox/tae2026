@@ -26,3 +26,18 @@
 .schedule-table .mobile-day-label{display:none}
 #selectedDayLabel:empty{display:none}
 @media(max-width:720px){.schedule-table .mobile-day-label{display:inline-flex}.schedule-table .presentation-indicator{display:none}}
+.group-tabs button{position:relative}
+.group-tabs button .tab-conflict,.group-tabs button[aria-pressed=true] .tab-conflict{position:absolute;right:-5px;top:-5px;display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;padding:0;background:#a23e26;color:#fff;font-size:12px;line-height:1;border:2px solid var(--paper)}
+.conflict-status{margin:0 0 22px;padding:15px 18px;border:1px solid #cddfce;border-radius:8px;background:var(--mint);color:var(--teal);font-size:14px;line-height:1.6}
+.conflict-status.has-conflicts{background:#fff3eb;border-color:#e2b69d;color:#813c25}
+.conflict-scope{font-size:13px;margin-top:3px}
+.conflict-list{list-style:none;padding:0;margin:10px 0 0}
+.conflict-list li{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:9px 0;border-top:1px solid #e8cbbb}
+.conflict-list p{font-size:13px}
+.conflict-list .text-button{color:inherit;white-space:nowrap;font-size:13px}
+.schedule-table td.timing-conflict,.session-row.timing-conflict{background:#fff3eb;box-shadow:inset 3px 0 0 #a23e26}
+.timing-conflict:focus{outline:2px solid #a23e26;outline-offset:-2px}
+.conflict-label{display:block;color:#913b25;font-size:12px;font-weight:700;line-height:1.5;margin-top:5px}
+.session-row.timing-conflict{padding-left:12px}
+@media(max-width:720px){.conflict-status{padding:13px 14px;font-size:13px}.conflict-list li{align-items:flex-start;flex-direction:column;gap:5px}.conflict-label{margin-top:2px}}
+@media print{.tab-conflict,.conflict-list button{display:none!important}}

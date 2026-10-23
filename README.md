@@ -40,6 +40,17 @@ New custom dates start with all groups Recorded until an organiser assigns
 instructors. Empty dates keep their labels so future moved presentations inherit
 them too.
 
+The server reports actual time overlaps within the same group and date. Every
+group tab has a status banner listing dates, students and full time ranges, or a
+clear no-overlap message. A warning marker on each affected tab stays visible
+while browsing other groups. Conflicting calendar cells and student details show
+**Time conflict** labels. **View conflict** selects its date, clears the student
+search and focuses a highlighted session. The banner covers every date in the
+group even when filters hide a clash. It updates after edits/moves and the existing
+30-second refresh. Different groups use separate rooms and never conflict with
+each other. Adjacent presentations and short breaks are not overlap warnings;
+the existing editor still checks the 10-minute break rule separately.
+
 The original photographic import has been corrected to 57 assignments: exactly
 three per student. Five extra assignments were transferred and nine additional
 slots were added, preserving original delivery days wherever possible. Abbey
@@ -106,7 +117,9 @@ variable, the database integration test is skipped.
 Group/day tests cover the rotation, inherited labels, protected edits, atomic
 swaps, stale versions, instructor uniqueness, recorded groups in parallel, empty
 and custom dates, inherited moves, audit history and one-time migration of an
-already edited timetable.
+already edited timetable. Conflict tests cover exact, partial and multiple overlaps,
+adjacent sessions, separate groups/dates, missing times, and warnings appearing
+and clearing through the schedule API.
 
 For a local UI preview with an isolated schema, set `NODE_ENV=test` and
 `SCHEDULE_DB_SCHEMA=class_schedule_preview`; production always uses
