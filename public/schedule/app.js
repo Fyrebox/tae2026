@@ -24,29 +24,6 @@
     const label=el('span','conflict-label','Time conflict');
     label.title='Overlaps '+others.join(', ');label.setAttribute('aria-label','Time conflict with '+others.join(', '));return label;
   }
-  function viewConflict(conflict){
-    group=conflict.group;$('dateFilter').value=conflict.date;$('search').value='';render();
-    const target=[...$('tableWrap').querySelectorAll('[data-presentation-id]')].find(cell=>conflict.presentationIds.includes(cell.dataset.presentationId));
-    if(target){target.tabIndex=-1;target.focus({preventScroll:true});target.scrollIntoView({block:'center',inline:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
-  }
-  function renderConflictStatus(){
-    const conflicts=(state.conflicts||[]).filter(c=>c.group===group);
-    const status=$('conflictStatus'),signature=JSON.stringify({group,conflicts});
-    if(status.dataset.signature===signature)return;
-    status.dataset.signature=signature;status.hidden=false;status.classList.toggle('has-conflicts',!!conflicts.length);status.replaceChildren();
-    status.append(el('strong','',conflicts.length?`${conflicts.length} timing conflict${conflicts.length===1?'':'s'} in Group ${group}`:`No overlapping presentations in Group ${group}.`));
-    if(!conflicts.length)return;
-    status.append(el('p','conflict-scope','Across all delivery dates in this group, including sessions hidden by your filters.'));
-    const list=el('ul','conflict-list');
-    for(const conflict of conflicts){
-      const item=el('li'),details=el('div');
-      details.append(el('strong','',dateLabel(conflict.date)),el('p','',conflict.presentations.map(p=>`${p.name}: ${timeRange(p)}`).join(' · ')));
-      const view=button('View conflict','text-button',()=>viewConflict(conflict));
-      view.setAttribute('aria-label',`View conflict on ${dateLabel(conflict.date)} between ${conflict.presentations.map(p=>p.name).join(' and ')}`);
-      item.append(details,view);list.append(item);
-    }
-    status.append(list);
-  }
   const groupDay = (date,groupNumber=group) => state.groupDays.find(d=>d.group===groupNumber&&d.date===date);
   function supervisionBadge(p){
     const badge=el('span','presenting supervision '+p.supervision,supervisionLabels[p.supervision]);
@@ -96,7 +73,6 @@
       if(!indicator){indicator=el('span','tab-conflict','!');indicator.setAttribute('aria-hidden','true');tab.append(indicator);}
       indicator.hidden=!count;tab.title=count?`${count} timing conflict${count===1?'':'s'}`:'No overlapping presentations';
     }
-    renderConflictStatus();
     $('selectedDayLabel').replaceChildren(...(date?[dayBadge(date)]:[]));
     const wrap=$('tableWrap');wrap.replaceChildren();
     const dayCount=date?state.presentations.filter(p=>p.date===date&&groupStudents.some(s=>s.id===p.studentId)).length:0;

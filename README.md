@@ -40,16 +40,13 @@ New custom dates start with all groups Recorded until an organiser assigns
 instructors. Empty dates keep their labels so future moved presentations inherit
 them too.
 
-The server reports actual time overlaps within the same group and date. Every
-group tab has a status banner listing dates, students and full time ranges, or a
-clear no-overlap message. A warning marker on each affected tab stays visible
-while browsing other groups. Conflicting calendar cells and student details show
-**Time conflict** labels. **View conflict** selects its date, clears the student
-search and focuses a highlighted session. The banner covers every date in the
-group even when filters hide a clash. It updates after edits/moves and the existing
-30-second refresh. Different groups use separate rooms and never conflict with
-each other. Adjacent presentations and short breaks are not overlap warnings;
-the existing editor still checks the 10-minute break rule separately.
+The server reports actual time overlaps within the same group and date. A warning
+marker on each affected group tab stays visible while browsing other groups and
+regardless of the selected date/search filters. Conflicting calendar cells and
+student details show **Time conflict** labels. These indicators update after
+edits/moves and the existing 30-second refresh. Different groups use separate
+rooms and never conflict with each other. Adjacent presentations and short breaks
+are not overlap warnings; the editor checks the 10-minute break rule separately.
 
 The original photographic import has been corrected to 57 assignments: exactly
 three per student. Five extra assignments were transferred and nine additional
