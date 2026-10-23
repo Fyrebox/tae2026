@@ -1,6 +1,7 @@
 import pg from 'pg';
 import { SCHEDULE_STUDENTS } from './schedule-data.js';
 import { rebalanceSchedule } from './schedule-rebalance.js';
+import { importSupervision } from './schedule-supervision.js';
 
 // A separate schema leaves the former course site's tables untouched.
 export async function createScheduleStore(connectionString, schema = 'class_schedule') {
@@ -26,6 +27,8 @@ export async function createScheduleStore(connectionString, schema = 'class_sche
       id bigserial PRIMARY KEY, created_at timestamptz NOT NULL DEFAULT now(),
       action text NOT NULL, student_id text NOT NULL, before_data jsonb, after_data jsonb
     ); CREATE TABLE IF NOT EXISTS ${schema}.imports (id text PRIMARY KEY);`);
+    await client.query(`ALTER TABLE ${schema}.presentations ADD COLUMN IF NOT EXISTS supervision text
+      CHECK (supervision IN ('matt','david','recorded'))`);
     const imported = await client.query(`SELECT id FROM ${schema}.imports WHERE id = 'photos-november-2026'`);
     if (!imported.rowCount) {
       for (const s of SCHEDULE_STUDENTS) {
@@ -35,6 +38,7 @@ export async function createScheduleStore(connectionString, schema = 'class_sche
       await client.query(`INSERT INTO ${schema}.imports(id) VALUES('photos-november-2026')`);
     }
     await rebalanceSchedule((sql, values) => client.query(sql.replaceAll('schedule.', `${schema}.`), values));
+    await importSupervision((sql, values) => client.query(sql.replaceAll('schedule.', `${schema}.`), values));
     await client.query('COMMIT');
   } catch (err) { await client.query('ROLLBACK'); initializationError = err; }
   finally { client.release(); }

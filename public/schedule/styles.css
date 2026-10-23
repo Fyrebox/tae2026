@@ -13,3 +13,12 @@
 #moveForm select{width:100%}
 @media(max-width:720px){.date-actions{max-width:145px;gap:8px}.date-actions .button{width:100%;font-size:12px;padding:8px}.calendar-overflow{overflow-x:visible}.schedule-table.extended{min-width:0}}
 @media print{#movePresentation{display:none!important}}
+.supervision.matt{background:#e3eee6;color:#235e53}
+.supervision.david{background:#e5edf8;color:#254c7d}
+.supervision.recorded{background:#f4ead5;color:#73501c}
+.supervision.unassigned,.schedule-warning{background:#fff0df;color:#794719}
+.supervision:before{background:currentColor}
+.supervision.staff-conflict{outline:2px solid #a5482e;outline-offset:2px}
+.supervision-key{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.schedule-warning{border:1px solid #e1c5a1;border-radius:6px;padding:12px 16px;margin:0 0 18px;font-size:13px;line-height:1.6}
+#sessionSupervision{width:100%}

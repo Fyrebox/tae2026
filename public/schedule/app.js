@@ -4,6 +4,7 @@
   const dateLabel = (date, weekday = true) => new Intl.DateTimeFormat('en-AU', {timeZone:'Australia/Melbourne',...(weekday?{weekday:'short'}:{}),day:'numeric',month:'short'}).format(new Date(date+'T12:00:00+11:00'));
   const timeLabel = value => { if (!value) return ''; const [h,m]=value.split(':').map(Number); return `${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'am':'pm'}`; };
   const timeRange = p => p.startTime ? `${timeLabel(p.startTime)} – ${timeLabel(p.endTime)}` : 'Time TBC';
+  const supervisionLabels={matt:'Matt',david:'David',recorded:'Recorded'};
   const minutes = value => Number(value.slice(0,2))*60+Number(value.slice(3));
   const clock = value => `${String(Math.floor(value/60)).padStart(2,'0')}:${String(value%60).padStart(2,'0')}`;
   function el(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node;}
@@ -17,6 +18,12 @@
     return data;
   }
   function countBadge(count){return el('span','count-badge'+(count===3?' complete':''),count===3?'3 of 3 scheduled':count<3?`${count} of 3 scheduled`:`${count} scheduled · needs review`);}
+  function supervisionBadge(p){
+    const conflict=state.supervisionIssues?.conflicts.some(c=>c.presentationIds.includes(p.id));
+    const badge=el('span','presenting supervision '+(p.supervision||'unassigned')+(conflict?' staff-conflict':''),(supervisionLabels[p.supervision]||'To assign')+(conflict?' !':''));
+    badge.title=conflict?'Instructor timing conflict: '+supervisionLabels[p.supervision]+' is assisting another presentation at this time.':p.supervision==='recorded'?'This presentation will be recorded.':p.supervision?'Assisted by '+supervisionLabels[p.supervision]:'An organiser needs to assign Matt, David or Recorded.';
+    return badge;
+  }
   const presentationsFor = id => state.presentations.filter(p=>p.studentId===id);
   function applyAdmin(){
     document.body.classList.toggle('admin-on',state.admin);
@@ -43,6 +50,9 @@
     if(!state)return;
     const query=$('search').value.trim().toLowerCase(),date=$('dateFilter').value;
     const groupStudents=state.students.filter(s=>s.group===group);
+    const coverage=(state.supervisionIssues?.coverage||[]).filter(c=>groupStudents.some(s=>s.id===c.studentId));
+    const conflicts=(state.supervisionIssues?.conflicts||[]).filter(c=>c.studentIds.some(id=>groupStudents.some(s=>s.id===id))&&(!date||c.date===date));
+    showError('supervisionWarning',[coverage.length?`Check Matt / David / Recorded coverage for ${coverage.map(c=>state.students.find(s=>s.id===c.studentId).name).join(', ')}.`:'',conflicts.length?`${conflicts.length} instructor timing conflict${conflicts.length===1?'':'s'} — see the marked labels.`:''].filter(Boolean).join(' '));
     const students=groupStudents.filter(s=>(s.name+' '+s.unit).toLowerCase().includes(query)&&(!date||presentationsFor(s.id).some(p=>p.date===date)));
     if(date)students.sort((a,b)=>(presentationsFor(a.id).find(p=>p.date===date)?.startTime||'').localeCompare(presentationsFor(b.id).find(p=>p.date===date)?.startTime||''));
     $('groupHeading').textContent='Group '+group;
@@ -75,7 +85,7 @@
       for(const d of dates){
         const cell=el('td');cell.dataset.label=dateLabel(d);
         const session=assignments.find(p=>p.date===d);
-        if(session){cell.append(el('span','presenting','Presenting'),el('span','slot-time',timeRange(session)));}
+        if(session){cell.append(supervisionBadge(session),el('span','slot-time',timeRange(session)));}
         else{const dash=el('span','no-session','—');dash.setAttribute('aria-label','No presentation scheduled');cell.append(dash);if(student.id==='abbey'&&d==='2026-11-06')cell.append(el('span','absence','Away'));}
         row.append(cell);
       }
@@ -100,7 +110,7 @@
   }
   function updateMoveSessions(){
     const sessions=presentationsFor($('moveStudent').value).filter(p=>p.date!==moveDate).sort((a,b)=>a.date.localeCompare(b.date));
-    $('moveSession').replaceChildren(...sessions.map(p=>new Option(dateLabel(p.date)+' · '+timeRange(p),p.id)));
+    $('moveSession').replaceChildren(...sessions.map(p=>new Option(dateLabel(p.date)+' · '+timeRange(p)+' · '+(supervisionLabels[p.supervision]||'To assign'),p.id)));
     suggestMoveTime();
   }
   function suggestMoveTime(){
@@ -114,13 +124,26 @@
     showError('moveError',start===undefined?'No free 30-minute slot with a 10-minute break is available. Choose another delivery date.':'');
   }
   async function saveTimedPresentation(path,method,payload){
-    try{await api(path,{method,body:payload});return true;}
-    catch(err){
-      if(err.code!=='overlap')throw err;
-      const details=err.conflicts.map(c=>`${c.name}: ${timeLabel(c.start)} – ${timeLabel(c.finish)}`).join('\n');
-      if(!confirm(`This overlaps a presentation or leaves less than a 10-minute break in this group:\n\n${details}\n\nSave this time anyway?`))return false;
-      await api(path,{method,body:{...payload,allowOverlap:true}});return true;
+    let body={...payload};
+    for(let attempt=0;attempt<4;attempt++){
+      try{await api(path,{method,body});return true;}
+      catch(err){
+        if(err.code==='supervision-swap'&&!body.swapWith){
+          const label=supervisionLabels[body.supervision],old=state.presentations.find(p=>p.id===editing?.id)?.supervision;
+          if(!confirm(`${label} is already assigned on ${dateLabel(err.swapTarget.date)}. Swap the labels so that presentation becomes ${supervisionLabels[old]||'unassigned'}? Dates and times stay as entered.`))return false;
+          body.swapWith={id:err.swapTarget.id,version:err.swapTarget.version};
+        }else if(err.code==='overlap'&&!body.allowOverlap){
+          const details=err.conflicts.map(c=>`${c.name}: ${timeLabel(c.start)} – ${timeLabel(c.finish)}`).join('\n');
+          if(!confirm(`This overlaps a presentation or leaves less than a 10-minute break in this group:\n\n${details}\n\nSave this time anyway?`))return false;
+          body.allowOverlap=true;
+        }else if(err.code==='instructor-conflict'&&!body.allowInstructorConflict){
+          const details=err.conflicts.map(c=>`${supervisionLabels[c.supervision]} · ${dateLabel(c.date)} · ${timeLabel(c.startTime)} – ${timeLabel(c.endTime)}\n${c.studentIds.map(id=>state.students.find(s=>s.id===id)?.name||id).join(' / ')}`).join('\n\n');
+          if(!confirm(`An instructor would be double-booked:\n\n${details}\n\nSave anyway and flag this conflict for correction?`))return false;
+          body.allowInstructorConflict=true;
+        }else throw err;
+      }
     }
+    throw new Error('Please close and reopen the presentation before saving again.');
   }
   function openStudent(id){
     selected=id;editing=null;renderStudent();
@@ -134,9 +157,12 @@
     $('unit').value=student.unit;showError('unitError','');showError('sessionError','');
     $('studentCountBadge').replaceChildren(countBadge(assignments.length));
     $('studentScheduleHelp').textContent=assignments.length===3?'All three presentations are scheduled.':assignments.length<3?'The target is three. An organiser needs to confirm the remaining presentation date.':'The target is three. An organiser needs to review these assignments.';
+    const coverage=state.supervisionIssues?.coverage.find(c=>c.studentId===selected);
+    const coverageText=coverage?[coverage.missing.length?'Missing: '+coverage.missing.map(x=>supervisionLabels[x]).join(', '):'',coverage.duplicates.length?'Repeated: '+coverage.duplicates.map(x=>supervisionLabels[x]).join(', '):'',coverage.unassigned?`${coverage.unassigned} to assign`:''].filter(Boolean).join(' · '):'Matt ✓ · David ✓ · Recorded ✓';
+    $('studentScheduleHelp').textContent+=' '+coverageText;
     $('studentSessions').replaceChildren();
     for(const p of assignments){
-      const row=el('div','session-row'),info=el('div');info.append(el('strong','',dateLabel(p.date)),el('p','',timeRange(p)));row.append(info);
+      const row=el('div','session-row'),info=el('div');info.append(el('strong','',dateLabel(p.date)),el('p','',timeRange(p)),supervisionBadge(p));row.append(info);
       if(state.admin){const actions=el('div','session-actions');actions.append(button('Edit','text-button',()=>openEditor(p)),button('Remove','text-button danger',()=>removePresentation(p)));row.append(actions);}
       $('studentSessions').append(row);
     }
@@ -148,6 +174,7 @@
     $('sessionFormTitle').textContent=p?'Edit presentation':'Add a presentation';
     $('sessionDate').value=p?.date||$('dateFilter').value||'';
     $('startTime').value=p?.startTime||'09:00';$('endTime').value=p?.endTime||'09:30';
+    $('sessionSupervision').value=p?.supervision||Object.keys(supervisionLabels).find(label=>!presentationsFor(selected).some(p=>p.supervision===label))||'recorded';
     showError('sessionError','');$('sessionForm').hidden=false;$('sessionDate').focus();
   }
   async function removePresentation(p){
@@ -166,7 +193,7 @@
   $('sessionForm').addEventListener('submit',e=>{
     e.preventDefault();busy(e.currentTarget,async()=>{
       showError('sessionError','');
-      const payload={studentId:selected,date:$('sessionDate').value,startTime:$('startTime').value,endTime:$('endTime').value,...(editing?{version:editing.version}:{})};
+      const payload={studentId:selected,date:$('sessionDate').value,startTime:$('startTime').value,endTime:$('endTime').value,supervision:$('sessionSupervision').value,...(editing?{version:editing.version}:{})};
       const path='/presentations'+(editing?'/'+editing.id:''),method=editing?'PATCH':'POST';
       try{
         if(!await saveTimedPresentation(path,method,payload))return;
@@ -217,7 +244,7 @@
       if(!changes.length)$('historyList').append(el('p','field-hint','No changes yet. The balanced class schedule is imported.'));
       for(const c of changes){
         const entry=el('div','history-entry');entry.append(el('strong','',c.name+' · '+c.action));
-        const value=x=>!x?'':('unit'in x?x.unit||'(unit cleared)':dateLabel(x.date)+' · '+timeRange(x));
+        const value=x=>!x?'':('unit'in x?x.unit||'(unit cleared)':dateLabel(x.date)+' · '+timeRange(x)+' · '+(supervisionLabels[x.supervision]||'To assign'));
         const before=value(c.before),after=value(c.after);
         entry.append(el('p','',before&&after?before+' → '+after:after||before));
         entry.append(el('p','',new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',dateStyle:'medium',timeStyle:'short'}).format(new Date(c.createdAt))));

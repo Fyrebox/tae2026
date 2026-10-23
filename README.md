@@ -14,6 +14,18 @@ Use **Edit schedule** and the separate organiser PIN to change dates/times or
 add/remove assignments. Overlaps within a group require explicit confirmation.
 Recent changes are visible while organiser editing is unlocked.
 
+Each presentation has a **Matt**, **David**, or **Recorded** badge. Each student's
+three presentations should have one of each. The PIN-protected presentation editor
+includes an assistance/recording selector; selecting a label already used by that
+student offers an atomic swap with their other presentation. Both versions are
+checked so concurrent edits cannot silently overwrite either session. A date/time
+move keeps the label. Swaps and all other label changes appear in recent changes.
+
+Instructor checks span all groups: Matt or David cannot assist two overlapping
+presentations without an explicit organiser override. Recordings may run in
+parallel. Overrides remain visibly flagged, and the group view and student details
+flag missing, repeated or unassigned labels after assignments are added or removed.
+
 The original photographic import has been corrected to 57 assignments: exactly
 three per student. Five extra assignments were transferred and nine additional
 slots were added, preserving original delivery days wherever possible. Abbey
@@ -57,6 +69,13 @@ untouched. The correction checks the original assignment set before applying,
 then records a migration marker. Subsequent starts preserve organiser edits;
 former course-site database tables are not changed.
 
+The `presentation-supervision-v1` import adds labels once against the actual saved
+timetable, using a constraint search to give each student one of each while avoiding
+instructor double-booking. It changes only labels and presentation versions and
+audits the allocation. Later restarts preserve edits. If an edited timetable has no
+conflict-free allocation, the initial labels still provide one of each for students
+with three sessions, and any conflicts are displayed for organiser correction.
+
 Do not commit `.env`. Railway stores production credentials as service variables.
 The schedule PIN is checked on the server and is never included in public files.
 Organiser access expires after eight hours or a restart. Lock editing when done.
@@ -70,6 +89,9 @@ assignments, the one-time rebalance, saves, persistence, authentication,
 stale-edit conflicts, invalid inputs, session durations, breaks, overlap handling,
 December moves, preserved counts and daily capacity, then drops only its test schema. Without the
 variable, the database integration test is skipped.
+Supervision tests cover allocation, concurrent recordings, protected edits, atomic
+swaps, stale versions, instructor overrides, label-preserving moves, audit history,
+and one-time migration of an already edited timetable.
 
 For a local UI preview with an isolated schema, set `NODE_ENV=test` and
 `SCHEDULE_DB_SCHEMA=class_schedule_preview`; production always uses

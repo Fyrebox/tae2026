@@ -1,10 +1,11 @@
 import express from 'express';
 import crypto from 'node:crypto';
 import { DELIVERY_DATES } from './schedule-data.js';
+import { SUPERVISION, instructorConflicts, supervisionIssues } from './schedule-supervision.js';
 
 const studentFields = 'id, name, group_number AS "group", unit, notes, version';
 const presentationFields = `id, student_id AS "studentId", day::text AS date,
-  to_char(start_time,'HH24:MI') AS "startTime", to_char(end_time,'HH24:MI') AS "endTime", version`;
+  to_char(start_time,'HH24:MI') AS "startTime", to_char(end_time,'HH24:MI') AS "endTime", supervision, version`;
 const fail = (status, message, extra = {}) => Object.assign(new Error(message), { status, ...extra });
 const digest = s => crypto.createHash('sha256').update(s).digest();
 
@@ -43,7 +44,7 @@ export function createScheduleRouter(store, { pin = process.env.SCHEDULE_ADMIN_P
         const presentations = await query(`SELECT ${presentationFields} FROM schedule.presentations ORDER BY day,start_time NULLS LAST,id`);
         return {students:students.rows,presentations:presentations.rows};
       });
-      res.json({...data,dates:[...new Set([...DELIVERY_DATES,...data.presentations.map(p=>p.date)])].sort(),timezone:'Australia/Melbourne',admin:req.scheduleAdmin});
+      res.json({...data,supervisionIssues:supervisionIssues(data.presentations,data.students),dates:[...new Set([...DELIVERY_DATES,...data.presentations.map(p=>p.date)])].sort(),timezone:'Australia/Melbourne',admin:req.scheduleAdmin});
     } catch(err) { next(err); }
   });
   router.post('/admin/login', (req,res,next) => {
@@ -79,6 +80,7 @@ export function createScheduleRouter(store, { pin = process.env.SCHEDULE_ADMIN_P
     } catch(err){next(err);}
   });
   function validatePresentation(body) {
+    if(body?.supervision!==undefined&&body.supervision!==null&&!SUPERVISION.includes(body.supervision))throw fail(400,'Choose Matt, David or Recorded.');
     const parsed = typeof body?.date === 'string' ? new Date(body.date+'T12:00:00Z') : new Date(NaN);
     if(typeof body?.date!=='string'||!/^2026-\d{2}-\d{2}$/.test(body.date)||!Number.isFinite(parsed.getTime())||parsed.toISOString().slice(0,10)!==body.date) throw fail(400,'Choose a valid date in 2026.');
     const start=body.startTime||null,end=body.endTime||null;
@@ -103,6 +105,16 @@ export function createScheduleRouter(store, { pin = process.env.SCHEDULE_ADMIN_P
       AND p.day=$2 AND p.id<>$3 AND p.start_time<($5::time+interval '10 minutes') AND p.end_time>($4::time-interval '10 minutes')`,[studentId,data.date,id||'',data.startTime,data.endTime]);
     if(conflicts.rowCount)throw fail(409,'This time overlaps another presentation or leaves less than a 10-minute break in the group.',{code:'overlap',conflicts:conflicts.rows});
   }
+  async function checkInstructor(query,changes,allow) {
+    if(allow===true)return;
+    const current=(await query(`SELECT ${presentationFields} FROM schedule.presentations`)).rows;
+    const key=c=>c.supervision+':'+c.presentationIds.join(':');
+    const existing=new Set(instructorConflicts(current).map(key));
+    const replacements=new Map(changes.map(p=>[p.id,p]));
+    const planned=current.filter(p=>!replacements.has(p.id)).concat(changes);
+    const conflicts=instructorConflicts(planned).filter(c=>c.presentationIds.some(id=>replacements.has(id))&&!existing.has(key(c)));
+    if(conflicts.length)throw fail(409,'Matt or David is already assisting another presentation at this time.',{code:'instructor-conflict',conflicts});
+  }
   router.post('/presentations',requireAdmin,async(req,res,next)=>{
     try{
       const data=validatePresentation(req.body);
@@ -111,7 +123,9 @@ export function createScheduleRouter(store, { pin = process.env.SCHEDULE_ADMIN_P
         if(!student.rowCount)throw fail(404,'Student not found.');
         await checkCapacity(query,data.date,req.body.studentId);
         await checkOverlap(query,data,req.body.studentId,null,req.body.allowOverlap);
-        const inserted=await query(`INSERT INTO schedule.presentations(id,student_id,day,start_time,end_time) VALUES($1,$2,$3,$4,$5) RETURNING ${presentationFields}`,[crypto.randomUUID(),req.body.studentId,data.date,data.startTime,data.endTime]);
+        const id=crypto.randomUUID(),supervision=req.body.supervision??null;
+        await checkInstructor(query,[{...data,id,studentId:req.body.studentId,supervision}],req.body.allowInstructorConflict);
+        const inserted=await query(`INSERT INTO schedule.presentations(id,student_id,day,start_time,end_time,supervision) VALUES($1,$2,$3,$4,$5,$6) RETURNING ${presentationFields}`,[id,req.body.studentId,data.date,data.startTime,data.endTime,supervision]);
         await audit(query,'presentation added',req.body.studentId,null,inserted.rows[0]); return inserted.rows[0];
       });res.status(201).json(result);
     }catch(err){next(err);}
@@ -125,7 +139,23 @@ export function createScheduleRouter(store, { pin = process.env.SCHEDULE_ADMIN_P
         if(old.rows[0].version!==req.body.version)throw fail(409,'This presentation changed elsewhere. Close and reopen the student details.');
         await checkCapacity(query,data.date,old.rows[0].studentId,req.params.id);
         await checkOverlap(query,data,old.rows[0].studentId,req.params.id,req.body.allowOverlap);
-        const updated=await query(`UPDATE schedule.presentations SET day=$1,start_time=$2,end_time=$3,version=version+1 WHERE id=$4 RETURNING ${presentationFields}`,[data.date,data.startTime,data.endTime,req.params.id]);
+        const previous=old.rows[0],supervision=req.body.supervision===undefined?previous.supervision:req.body.supervision;
+        let swap;
+        if(supervision&&supervision!==previous.supervision){
+          const matches=await query(`SELECT ${presentationFields} FROM schedule.presentations WHERE student_id=$1 AND supervision=$2 AND id<>$3 ORDER BY day,id`,[previous.studentId,supervision,previous.id]);
+          if(matches.rowCount){
+            swap=matches.rows.find(p=>p.id===req.body.swapWith?.id)||matches.rows[0];
+            if(!req.body.swapWith)throw fail(409,'This student already has that label. Swap the two presentation labels?',{code:'supervision-swap',swapTarget:swap});
+            if(swap.id!==req.body.swapWith.id||swap.version!==req.body.swapWith.version)throw fail(409,'The other presentation changed elsewhere. Close and reopen the student details.');
+          }else if(req.body.swapWith)throw fail(409,'The other presentation changed elsewhere. Close and reopen the student details.');
+        }
+        const changes=[{...previous,...data,supervision},...(swap?[{...swap,supervision:previous.supervision}]:[])];
+        await checkInstructor(query,changes,req.body.allowInstructorConflict);
+        if(swap){
+          const swapped=await query(`UPDATE schedule.presentations SET supervision=$1,version=version+1 WHERE id=$2 RETURNING ${presentationFields}`,[previous.supervision,swap.id]);
+          await audit(query,'supervision swapped',swap.studentId,swap,swapped.rows[0]);
+        }
+        const updated=await query(`UPDATE schedule.presentations SET day=$1,start_time=$2,end_time=$3,supervision=$4,version=version+1 WHERE id=$5 RETURNING ${presentationFields}`,[data.date,data.startTime,data.endTime,supervision,req.params.id]);
         await audit(query,'presentation updated',old.rows[0].studentId,old.rows[0],updated.rows[0]);return updated.rows[0];
       });res.json(result);
     }catch(err){next(err);}
@@ -147,7 +177,7 @@ export function createScheduleRouter(store, { pin = process.env.SCHEDULE_ADMIN_P
   router.use((err,req,res,next)=>{
     const status=err.code==='23505'?409:(err.status||500);
     if(status===500)console.error('Schedule request failed:',err.code||err.name);
-    res.status(status).json({error:err.code==='23505'?'This student already has a presentation on that date.':status===500?'The schedule could not be saved. Please try again.':err.message,...(err.code==='overlap'?{code:'overlap',conflicts:err.conflicts}:{})});
+    res.status(status).json({error:err.code==='23505'?'This student already has a presentation on that date.':status===500?'The schedule could not be saved. Please try again.':err.message,...(['overlap','instructor-conflict','supervision-swap'].includes(err.code)?{code:err.code,...(err.conflicts?{conflicts:err.conflicts}:{}),...(err.swapTarget?{swapTarget:err.swapTarget}:{})}:{})});
   });
   return router;
 }
