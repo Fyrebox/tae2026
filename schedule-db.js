@@ -1,7 +1,7 @@
 import pg from 'pg';
 import { SCHEDULE_STUDENTS } from './schedule-data.js';
 import { rebalanceSchedule } from './schedule-rebalance.js';
-import { importSupervision } from './schedule-supervision.js';
+import { importGroupDays } from './schedule-supervision.js';
 
 // A separate schema leaves the former course site's tables untouched.
 export async function createScheduleStore(connectionString, schema = 'class_schedule') {
@@ -25,10 +25,20 @@ export async function createScheduleStore(connectionString, schema = 'class_sche
       UNIQUE(student_id, day)
     ); CREATE TABLE IF NOT EXISTS ${schema}.changes (
       id bigserial PRIMARY KEY, created_at timestamptz NOT NULL DEFAULT now(),
-      action text NOT NULL, student_id text NOT NULL, before_data jsonb, after_data jsonb
+      action text NOT NULL, student_id text, before_data jsonb, after_data jsonb
     ); CREATE TABLE IF NOT EXISTS ${schema}.imports (id text PRIMARY KEY);`);
     await client.query(`ALTER TABLE ${schema}.presentations ADD COLUMN IF NOT EXISTS supervision text
       CHECK (supervision IN ('matt','david','recorded'))`);
+    // Keep legacy individual labels for historical records; group_days is authoritative.
+    await client.query(`ALTER TABLE ${schema}.changes ALTER COLUMN student_id DROP NOT NULL;
+      ALTER TABLE ${schema}.changes ADD COLUMN IF NOT EXISTS group_number integer;
+      CREATE TABLE IF NOT EXISTS ${schema}.group_days (
+        group_number integer NOT NULL CHECK(group_number BETWEEN 1 AND 3),day date NOT NULL,
+        supervision text NOT NULL CHECK(supervision IN ('matt','david','recorded')),
+        version integer NOT NULL DEFAULT 1,PRIMARY KEY(group_number,day)
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS one_instructor_per_day ON ${schema}.group_days(day,supervision)
+        WHERE supervision IN ('matt','david');`);
     const imported = await client.query(`SELECT id FROM ${schema}.imports WHERE id = 'photos-november-2026'`);
     if (!imported.rowCount) {
       for (const s of SCHEDULE_STUDENTS) {
@@ -38,7 +48,7 @@ export async function createScheduleStore(connectionString, schema = 'class_sche
       await client.query(`INSERT INTO ${schema}.imports(id) VALUES('photos-november-2026')`);
     }
     await rebalanceSchedule((sql, values) => client.query(sql.replaceAll('schedule.', `${schema}.`), values));
-    await importSupervision((sql, values) => client.query(sql.replaceAll('schedule.', `${schema}.`), values));
+    await importGroupDays((sql, values) => client.query(sql.replaceAll('schedule.', `${schema}.`), values));
     await client.query('COMMIT');
   } catch (err) { await client.query('ROLLBACK'); initializationError = err; }
   finally { client.release(); }

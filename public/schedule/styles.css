@@ -16,9 +16,13 @@
 .supervision.matt{background:#e3eee6;color:#235e53}
 .supervision.david{background:#e5edf8;color:#254c7d}
 .supervision.recorded{background:#f4ead5;color:#73501c}
-.supervision.unassigned,.schedule-warning{background:#fff0df;color:#794719}
 .supervision:before{background:currentColor}
-.supervision.staff-conflict{outline:2px solid #a5482e;outline-offset:2px}
 .supervision-key{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.schedule-warning{border:1px solid #e1c5a1;border-radius:6px;padding:12px 16px;margin:0 0 18px;font-size:13px;line-height:1.6}
-#sessionSupervision{width:100%}
+#groupDaySupervision{width:100%}
+.day-supervision{border:0;cursor:pointer;font-family:inherit}
+.day-supervision:hover{text-decoration:underline}
+.day-supervision:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+.schedule-table th .day-supervision{margin-top:8px}
+.schedule-table .mobile-day-label{display:none}
+#selectedDayLabel:empty{display:none}
+@media(max-width:720px){.schedule-table .mobile-day-label{display:inline-flex}.schedule-table .presentation-indicator{display:none}}

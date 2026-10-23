@@ -1,6 +1,6 @@
 (() => {
   const $ = id => document.getElementById(id);
-  let state = null, group = 1, selected = null, editing = null, toastTimer, pendingMove = false, moveDate = null, moveGroup = null;
+  let state = null, group = 1, selected = null, editing = null, toastTimer, pendingMove = false, moveDate = null, moveGroup = null, pendingDay = null, editingDay = null;
   const dateLabel = (date, weekday = true) => new Intl.DateTimeFormat('en-AU', {timeZone:'Australia/Melbourne',...(weekday?{weekday:'short'}:{}),day:'numeric',month:'short'}).format(new Date(date+'T12:00:00+11:00'));
   const timeLabel = value => { if (!value) return ''; const [h,m]=value.split(':').map(Number); return `${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'am':'pm'}`; };
   const timeRange = p => p.startTime ? `${timeLabel(p.startTime)} – ${timeLabel(p.endTime)}` : 'Time TBC';
@@ -18,11 +18,16 @@
     return data;
   }
   function countBadge(count){return el('span','count-badge'+(count===3?' complete':''),count===3?'3 of 3 scheduled':count<3?`${count} of 3 scheduled`:`${count} scheduled · needs review`);}
+  const groupDay = (date,groupNumber=group) => state.groupDays.find(d=>d.group===groupNumber&&d.date===date);
   function supervisionBadge(p){
-    const conflict=state.supervisionIssues?.conflicts.some(c=>c.presentationIds.includes(p.id));
-    const badge=el('span','presenting supervision '+(p.supervision||'unassigned')+(conflict?' staff-conflict':''),(supervisionLabels[p.supervision]||'To assign')+(conflict?' !':''));
-    badge.title=conflict?'Instructor timing conflict: '+supervisionLabels[p.supervision]+' is assisting another presentation at this time.':p.supervision==='recorded'?'This presentation will be recorded.':p.supervision?'Assisted by '+supervisionLabels[p.supervision]:'An organiser needs to assign Matt, David or Recorded.';
-    return badge;
+    const badge=el('span','presenting supervision '+p.supervision,supervisionLabels[p.supervision]);
+    badge.title='Assigned to the whole group on this date.';return badge;
+  }
+  function dayBadge(date,groupNumber=group){
+    const day=groupDay(date,groupNumber);
+    const badge=button(supervisionLabels[day?.supervision]||'Recorded','presenting supervision day-supervision '+(day?.supervision||'recorded'),()=>requestGroupDay(date,groupNumber));
+    badge.setAttribute('aria-label',`Group ${groupNumber}, ${dateLabel(date)}: ${badge.textContent}. Change group day label.`);
+    badge.title='Applies to the whole group on this date. Click to edit with the organiser PIN.';return badge;
   }
   const presentationsFor = id => state.presentations.filter(p=>p.studentId===id);
   function applyAdmin(){
@@ -50,14 +55,12 @@
     if(!state)return;
     const query=$('search').value.trim().toLowerCase(),date=$('dateFilter').value;
     const groupStudents=state.students.filter(s=>s.group===group);
-    const coverage=(state.supervisionIssues?.coverage||[]).filter(c=>groupStudents.some(s=>s.id===c.studentId));
-    const conflicts=(state.supervisionIssues?.conflicts||[]).filter(c=>c.studentIds.some(id=>groupStudents.some(s=>s.id===id))&&(!date||c.date===date));
-    showError('supervisionWarning',[coverage.length?`Check Matt / David / Recorded coverage for ${coverage.map(c=>state.students.find(s=>s.id===c.studentId).name).join(', ')}.`:'',conflicts.length?`${conflicts.length} instructor timing conflict${conflicts.length===1?'':'s'} — see the marked labels.`:''].filter(Boolean).join(' '));
     const students=groupStudents.filter(s=>(s.name+' '+s.unit).toLowerCase().includes(query)&&(!date||presentationsFor(s.id).some(p=>p.date===date)));
     if(date)students.sort((a,b)=>(presentationsFor(a.id).find(p=>p.date===date)?.startTime||'').localeCompare(presentationsFor(b.id).find(p=>p.date===date)?.startTime||''));
     $('groupHeading').textContent='Group '+group;
     $('groupDescription').textContent=date?`${students.length} presentation${students.length===1?'':'s'} · 30 minutes each · 10+ min breaks`:`${groupStudents.length} students · Choose your name to add your course or unit.`;
     for(const tab of $('groupTabs').querySelectorAll('button'))tab.setAttribute('aria-pressed',String(Number(tab.dataset.group)===group));
+    $('selectedDayLabel').replaceChildren(...(date?[dayBadge(date)]:[]));
     const wrap=$('tableWrap');wrap.replaceChildren();
     const dayCount=date?state.presentations.filter(p=>p.date===date&&groupStudents.some(s=>s.id===p.studentId)).length:0;
     $('movePresentation').hidden=!date;
@@ -76,7 +79,7 @@
     const table=el('table','schedule-table'+(extended?' extended':''));
     const caption=el('caption','sr-only',`Group ${group} presentation schedule. All times are Melbourne time.`);table.append(caption);
     const head=el('thead'),headRow=el('tr');headRow.append(el('th','', 'Student / unit'));
-    for(const d of dates){const th=el('th');th.scope='col';th.append(el('span','',dateLabel(d).split(',')[0].split(' ')[0]),el('span','day-number',dateLabel(d,false)));headRow.append(th);}
+    for(const d of dates){const th=el('th');th.scope='col';th.append(el('span','',dateLabel(d).split(',')[0].split(' ')[0]),el('span','day-number',dateLabel(d,false)),dayBadge(d));headRow.append(th);}
     head.append(headRow);table.append(head);
     const body=el('tbody');
     for(const student of students){
@@ -85,7 +88,7 @@
       for(const d of dates){
         const cell=el('td');cell.dataset.label=dateLabel(d);
         const session=assignments.find(p=>p.date===d);
-        if(session){cell.append(supervisionBadge(session),el('span','slot-time',timeRange(session)));}
+        if(session){const mobileLabel=dayBadge(d);mobileLabel.classList.add('mobile-day-label');cell.append(el('span','presenting presentation-indicator','Presenting'),mobileLabel,el('span','slot-time',timeRange(session)));}
         else{const dash=el('span','no-session','—');dash.setAttribute('aria-label','No presentation scheduled');cell.append(dash);if(student.id==='abbey'&&d==='2026-11-06')cell.append(el('span','absence','Away'));}
         row.append(cell);
       }
@@ -93,6 +96,34 @@
     }
     table.append(body);wrap.append(table);
   }
+  function requestGroupDay(date,groupNumber=group){
+    if(!state.admin){pendingDay={date,group:groupNumber};openPin();return;}
+    openGroupDay(date,groupNumber);
+  }
+  function openGroupDay(date,groupNumber){
+    const day=groupDay(date,groupNumber);
+    if(!day){toast('Refresh the page to load this group day.');return;}
+    editingDay={...day};
+    $('groupDayHeading').textContent=`GROUP ${groupNumber} · ORGANISER EDITING`;
+    $('groupDayDate').textContent=new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',dateStyle:'full'}).format(new Date(date+'T12:00:00+11:00'));
+    $('groupDaySupervision').value=day.supervision;showError('groupDayError','');$('groupDayDialog').showModal();
+  }
+  $('groupDayForm').addEventListener('submit',e=>{
+    e.preventDefault();busy(e.currentTarget,async()=>{
+      showError('groupDayError','');
+      const day=editingDay,payload={supervision:$('groupDaySupervision').value,version:day.version};
+      const path=`/group-days/${day.date}/${day.group}`;
+      try{
+        try{await api(path,{method:'PATCH',body:payload});}
+        catch(err){
+          if(err.code!=='group-supervision-swap')throw err;
+          if(!confirm(`${supervisionLabels[payload.supervision]} is assigned to Group ${err.swapTarget.group} on ${dateLabel(day.date)}. Swap the day labels? Group ${err.swapTarget.group} will get ${supervisionLabels[day.supervision]}. This applies to every presentation in both groups that day.`))return;
+          await api(path,{method:'PATCH',body:{...payload,swapWith:{group:err.swapTarget.group,version:err.swapTarget.version}}});
+        }
+        $('groupDayDialog').close();if(await load()&&$('studentDialog').open)renderStudent();toast('Group day label saved for all presentations on this date.');
+      }catch(err){showError('groupDayError',err.message);}
+    });
+  });
   function requestMove(){
     if(!state||!$('dateFilter').value)return;
     if(!state.admin){pendingMove=true;openPin();return;}
@@ -104,7 +135,7 @@
     const candidates=state.students.filter(s=>s.group===moveGroup&&presentationsFor(s.id).length&&!presentationsFor(s.id).some(p=>p.date===moveDate));
     if(!candidates.length){toast('Every student in this group already presents on this date.');return;}
     $('moveGroup').textContent=`GROUP ${moveGroup} · ORGANISER EDITING`;
-    $('moveTarget').textContent='New delivery date: '+new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',dateStyle:'full'}).format(new Date(moveDate+'T12:00:00+11:00'));
+    $('moveTarget').textContent='New delivery date: '+new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',dateStyle:'full'}).format(new Date(moveDate+'T12:00:00+11:00'))+' · Group '+moveGroup+': '+supervisionLabels[groupDay(moveDate,moveGroup)?.supervision||'recorded'];
     $('moveStudent').replaceChildren(...candidates.map(s=>new Option(s.name,s.id)));
     showError('moveError','');updateMoveSessions();$('moveDialog').showModal();
   }
@@ -124,26 +155,13 @@
     showError('moveError',start===undefined?'No free 30-minute slot with a 10-minute break is available. Choose another delivery date.':'');
   }
   async function saveTimedPresentation(path,method,payload){
-    let body={...payload};
-    for(let attempt=0;attempt<4;attempt++){
-      try{await api(path,{method,body});return true;}
-      catch(err){
-        if(err.code==='supervision-swap'&&!body.swapWith){
-          const label=supervisionLabels[body.supervision],old=state.presentations.find(p=>p.id===editing?.id)?.supervision;
-          if(!confirm(`${label} is already assigned on ${dateLabel(err.swapTarget.date)}. Swap the labels so that presentation becomes ${supervisionLabels[old]||'unassigned'}? Dates and times stay as entered.`))return false;
-          body.swapWith={id:err.swapTarget.id,version:err.swapTarget.version};
-        }else if(err.code==='overlap'&&!body.allowOverlap){
-          const details=err.conflicts.map(c=>`${c.name}: ${timeLabel(c.start)} – ${timeLabel(c.finish)}`).join('\n');
-          if(!confirm(`This overlaps a presentation or leaves less than a 10-minute break in this group:\n\n${details}\n\nSave this time anyway?`))return false;
-          body.allowOverlap=true;
-        }else if(err.code==='instructor-conflict'&&!body.allowInstructorConflict){
-          const details=err.conflicts.map(c=>`${supervisionLabels[c.supervision]} · ${dateLabel(c.date)} · ${timeLabel(c.startTime)} – ${timeLabel(c.endTime)}\n${c.studentIds.map(id=>state.students.find(s=>s.id===id)?.name||id).join(' / ')}`).join('\n\n');
-          if(!confirm(`An instructor would be double-booked:\n\n${details}\n\nSave anyway and flag this conflict for correction?`))return false;
-          body.allowInstructorConflict=true;
-        }else throw err;
-      }
+    try{await api(path,{method,body:payload});return true;}
+    catch(err){
+      if(err.code!=='overlap')throw err;
+      const details=err.conflicts.map(c=>`${c.name}: ${timeLabel(c.start)} – ${timeLabel(c.finish)}`).join('\n');
+      if(!confirm(`This overlaps a presentation or leaves less than a 10-minute break in this group:\n\n${details}\n\nSave this time anyway?`))return false;
+      await api(path,{method,body:{...payload,allowOverlap:true}});return true;
     }
-    throw new Error('Please close and reopen the presentation before saving again.');
   }
   function openStudent(id){
     selected=id;editing=null;renderStudent();
@@ -157,9 +175,7 @@
     $('unit').value=student.unit;showError('unitError','');showError('sessionError','');
     $('studentCountBadge').replaceChildren(countBadge(assignments.length));
     $('studentScheduleHelp').textContent=assignments.length===3?'All three presentations are scheduled.':assignments.length<3?'The target is three. An organiser needs to confirm the remaining presentation date.':'The target is three. An organiser needs to review these assignments.';
-    const coverage=state.supervisionIssues?.coverage.find(c=>c.studentId===selected);
-    const coverageText=coverage?[coverage.missing.length?'Missing: '+coverage.missing.map(x=>supervisionLabels[x]).join(', '):'',coverage.duplicates.length?'Repeated: '+coverage.duplicates.map(x=>supervisionLabels[x]).join(', '):'',coverage.unassigned?`${coverage.unassigned} to assign`:''].filter(Boolean).join(' · '):'Matt ✓ · David ✓ · Recorded ✓';
-    $('studentScheduleHelp').textContent+=' '+coverageText;
+    $('studentScheduleHelp').textContent+=' Assistance / recording follows your group on each delivery date.';
     $('studentSessions').replaceChildren();
     for(const p of assignments){
       const row=el('div','session-row'),info=el('div');info.append(el('strong','',dateLabel(p.date)),el('p','',timeRange(p)),supervisionBadge(p));row.append(info);
@@ -174,7 +190,6 @@
     $('sessionFormTitle').textContent=p?'Edit presentation':'Add a presentation';
     $('sessionDate').value=p?.date||$('dateFilter').value||'';
     $('startTime').value=p?.startTime||'09:00';$('endTime').value=p?.endTime||'09:30';
-    $('sessionSupervision').value=p?.supervision||Object.keys(supervisionLabels).find(label=>!presentationsFor(selected).some(p=>p.supervision===label))||'recorded';
     showError('sessionError','');$('sessionForm').hidden=false;$('sessionDate').focus();
   }
   async function removePresentation(p){
@@ -193,7 +208,7 @@
   $('sessionForm').addEventListener('submit',e=>{
     e.preventDefault();busy(e.currentTarget,async()=>{
       showError('sessionError','');
-      const payload={studentId:selected,date:$('sessionDate').value,startTime:$('startTime').value,endTime:$('endTime').value,supervision:$('sessionSupervision').value,...(editing?{version:editing.version}:{})};
+      const payload={studentId:selected,date:$('sessionDate').value,startTime:$('startTime').value,endTime:$('endTime').value,...(editing?{version:editing.version}:{})};
       const path='/presentations'+(editing?'/'+editing.id:''),method=editing?'PATCH':'POST';
       try{
         if(!await saveTimedPresentation(path,method,payload))return;
@@ -202,16 +217,17 @@
     });
   });
   function openPin(){showError('pinError','');$('schedulePin').value='';$('pinDialog').showModal();}
-  $('editSchedule').addEventListener('click',()=>{if(state?.admin)toast('Editing is unlocked. Click a student to change their presentations.');else openPin();});
+  $('editSchedule').addEventListener('click',()=>{if(state?.admin)toast('Editing is unlocked. Click a day label to change group supervision, or a student to change their presentations.');else openPin();});
   $('unlockFromStudent').addEventListener('click',openPin);
   $('pinForm').addEventListener('submit',e=>{
     e.preventDefault();busy(e.currentTarget,async()=>{
       try{
         await api('/admin/login',{method:'POST',body:{pin:$('schedulePin').value}});
-        const shouldMove=pendingMove;pendingMove=false;$('schedulePin').value='';$('pinDialog').close();
+        const shouldMove=pendingMove,shouldOpenDay=pendingDay;pendingMove=false;pendingDay=null;$('schedulePin').value='';$('pinDialog').close();
         if(await load()){
           if($('studentDialog').open)renderStudent();
           if(shouldMove)openMove();
+          if(shouldOpenDay)openGroupDay(shouldOpenDay.date,shouldOpenDay.group);
         }
         toast('Schedule editing unlocked for this browser.');
       }
@@ -222,7 +238,7 @@
     try{await api('/admin/logout',{method:'POST'});if(await load()&&$('studentDialog').open)renderStudent();toast('Schedule editing locked.');}catch(err){toast(err.message);}
   });
   $('movePresentation').addEventListener('click',requestMove);
-  $('pinDialog').addEventListener('close',()=>{if(!state?.admin)pendingMove=false;});
+  $('pinDialog').addEventListener('close',()=>{if(!state?.admin){pendingMove=false;pendingDay=null;}});
   $('moveStudent').addEventListener('change',updateMoveSessions);
   $('moveSession').addEventListener('change',suggestMoveTime);
   $('moveStart').addEventListener('change',()=>{if($('moveStart').value)$('moveEnd').value=clock(minutes($('moveStart').value)+30);});
@@ -233,7 +249,7 @@
       if(!presentation){showError('moveError','Choose a presentation to move.');return;}
       try{
         if(!await saveTimedPresentation('/presentations/'+presentation.id,'PATCH',{date:moveDate,startTime:$('moveStart').value,endTime:$('moveEnd').value,version:presentation.version}))return;
-        $('moveDialog').close();await load();toast('Presentation moved. The student’s presentation count is unchanged.');
+        $('moveDialog').close();await load();toast('Presentation moved. Assistance follows the group’s delivery day.');
       }catch(err){showError('moveError',err.message);}
     });
   });
@@ -244,7 +260,7 @@
       if(!changes.length)$('historyList').append(el('p','field-hint','No changes yet. The balanced class schedule is imported.'));
       for(const c of changes){
         const entry=el('div','history-entry');entry.append(el('strong','',c.name+' · '+c.action));
-        const value=x=>!x?'':('unit'in x?x.unit||'(unit cleared)':dateLabel(x.date)+' · '+timeRange(x)+' · '+(supervisionLabels[x.supervision]||'To assign'));
+        const value=x=>!x?'':('unit'in x?x.unit||'(unit cleared)':'group'in x?dateLabel(x.date)+' · '+(x.legacyLabels?'Individual presentation labels':supervisionLabels[x.supervision]||'To assign'):dateLabel(x.date)+' · '+timeRange(x)+' · '+(supervisionLabels[x.supervision]||'To assign'));
         const before=value(c.before),after=value(c.after);
         entry.append(el('p','',before&&after?before+' → '+after:after||before));
         entry.append(el('p','',new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',dateStyle:'medium',timeStyle:'short'}).format(new Date(c.createdAt))));

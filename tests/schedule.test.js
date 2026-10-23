@@ -67,7 +67,7 @@ test('schedule import, persistence, editing, authentication and conflicts', { sk
     const ali=initial.data.presentations.find(p=>p.studentId==='ali'&&p.date===session.date);
     const shortBreak=await request('/presentations/'+ali.id,'PATCH',{date:ali.date,startTime:'09:35',endTime:'10:05',version:ali.version});assert.equal(shortBreak.status,409);assert.equal(shortBreak.data.code,'overlap');
     const overlap=await request('/presentations/'+ali.id,'PATCH',{date:ali.date,startTime:'09:15',endTime:'09:45',version:ali.version});assert.equal(overlap.status,409);assert.equal(overlap.data.code,'overlap');
-    assert.equal((await request('/presentations/'+ali.id,'PATCH',{date:ali.date,startTime:'09:15',endTime:'09:45',version:ali.version,allowOverlap:true,allowInstructorConflict:true})).status,200);
+    assert.equal((await request('/presentations/'+ali.id,'PATCH',{date:ali.date,startTime:'09:15',endTime:'09:45',version:ali.version,allowOverlap:true})).status,200);
     const otherGroup=initial.data.presentations.find(p=>p.studentId==='carly'&&p.date===session.date);
     assert.equal((await request('/presentations/'+otherGroup.id,'PATCH',{date:otherGroup.date,startTime:'09:00',endTime:'09:30',version:otherGroup.version})).status,200);
     for(const [startTime,endTime] of [['08:30','09:00'],['12:45','13:15'],['09:00','09:45']])assert.equal((await request('/presentations','POST',{studentId:'rachel',date:'2026-11-27',startTime,endTime})).status,400);
