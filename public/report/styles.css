@@ -1,0 +1,41 @@
+/* Report form and host view: layered on /bellarine/styles.css. */
+h2.session { margin-top: 2rem; padding-bottom: 4px; border-bottom: 3px solid var(--accent); }
+.rsec { margin: 1rem 0 1.4rem; }
+.rsec h3 { font-size: 1.15rem; margin: .4rem 0; }
+.maps { color: var(--warm); font-size: .8rem; font-weight: 600; margin-left: 6px; }
+.progress { float: right; font-size: .85rem; color: var(--muted); font-weight: 600; }
+.progress.done { color: var(--ok); }
+.group { min-width: 0; border: 2px solid var(--line); border-radius: 12px; background: var(--panel); margin: 10px 0; padding: 8px 12px 12px; }
+.group legend { font-weight: 700; padding: 0 4px; }
+.field { display: grid; gap: 4px; margin-top: 8px; }
+.field > span { font-size: .85rem; color: var(--muted); font-weight: 600; }
+input[type=text], textarea, select { font: inherit; width: 100%; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); }
+textarea { resize: vertical; min-height: 4.2em; }
+input:focus-visible, textarea:focus-visible, select:focus-visible, .btn:focus-visible { outline: 3px solid var(--warm); outline-offset: 2px; }
+.saved { position: sticky; top: 0; z-index: 2; margin: 8px 0 0; padding: 4px 0; font-size: .85rem; color: var(--ok); background: var(--bg); min-height: 1.5em; }
+
+.rsubmit { margin-top: 2rem; border-top: 3px solid var(--accent); padding-top: .5rem; }
+.checklist { min-width: 0; border: 2px solid var(--line); border-radius: 12px; background: var(--panel); padding: 8px 12px; }
+.checklist legend { font-weight: 700; padding: 0 4px; }
+.check { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; }
+.check input { width: 22px; height: 22px; flex: none; margin-top: 2px; }
+.buttons { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+.btn { font: inherit; font-weight: 700; padding: 12px 18px; min-height: 50px; border-radius: 12px; border: 2px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+@media (prefers-color-scheme: dark) { .btn.primary { color: #121b29; } }
+.status { font-weight: 600; }
+
+/* Host */
+.gate { max-width: 360px; margin: 14vh auto 0; display: grid; gap: 12px; }
+.error { color: var(--bad); font-weight: 700; margin: 0; }
+.reports { list-style: none; padding: 0; display: grid; gap: 8px; }
+.reports button { width: 100%; text-align: left; }
+.viewer { background: var(--panel); border: 2px solid var(--line); border-radius: 12px; padding: 4px 18px 18px; margin-top: 16px; }
+.viewer .maps { margin-left: 0; display: block; }
+.viewer .rgroup p { margin: .15rem 0; } .viewer .flabel { font-weight: 600; } .viewer .empty { color: var(--muted); font-style: italic; }
+.viewer ul { list-style: none; padding: 0; }
+@media print {
+  body.host .page > :not(.viewer) { display: none !important; }
+  .viewer { border: 0; padding: 0; }
+}

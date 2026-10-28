@@ -7,6 +7,10 @@ import { fileURLToPath } from "url";
 import llmExplainer from "./llm-explainer.js";
 import sortRouter from "./sort.js";
 import { DECK } from "./sort-deck.js";
+import { createPickRouter } from "./pick.js";
+import { ACTIVITIES } from "./pick-decks.js";
+import { createReportRouter } from "./report.js";
+import { REPORT } from "./report-form.js";
 import { createScheduleStore } from "./schedule-db.js";
 import { createScheduleRouter } from "./schedule.js";
 
@@ -40,6 +44,39 @@ const llmPage = fill(read("public", "llm", "index.html"), {
 
 app.get("/session1", (req, res) => res.type("html").send(sortPage));
 app.get("/session1/host", (req, res) => res.type("html").send(hostPage));
+
+// Tap-to-choose activities (/session1/tech, /session2), each with a host view at <path>/host.
+const escHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const embed = (value) => JSON.stringify(value).replaceAll("<", "\\u003c");
+const pickV = fileHash("public", "pick", "app.js").slice(0, 3) + fileHash("public", "pick", "host.js").slice(0, 3) + fileHash("public", "pick", "styles.css").slice(0, 3);
+for (const [key, a] of Object.entries(ACTIVITIES)) {
+  const vars = { v: pickV, title: escHtml(a.title), eyebrow: escHtml(a.eyebrow), lede: escHtml(a.lede), activity: embed({ key, ...a }) };
+  const page = fill(read("pages", "pick.html"), vars);
+  const host = fill(read("pages", "pick-host.html"), vars);
+  app.get(a.path, (req, res) => res.type("html").send(page));
+  app.get(a.path + "/host", (req, res) => res.type("html").send(host));
+}
+
+// Bellarine Pathology scenario pages and the report form (with its host view for the trainer).
+const bellarineV = { v: fileHash("public", "bellarine", "styles.css") };
+const bellarinePages = {
+  "/bellarine": "bellarine.html",
+  "/bellarine/role-card": "bellarine-role-card.html",
+  "/bellarine/links": "bellarine-links.html",
+};
+for (const [route, file] of Object.entries(bellarinePages)) {
+  const page = fill(read("pages", file), bellarineV);
+  app.get(route, (req, res) => res.type("html").send(page));
+}
+const reportVars = {
+  v: fileHash("public", "report", "app.js").slice(0, 2) + fileHash("public", "report", "host.js").slice(0, 2)
+    + fileHash("public", "report", "render.js").slice(0, 2) + fileHash("public", "report", "styles.css").slice(0, 2),
+  report: embed(REPORT),
+};
+const reportPage = fill(read("pages", "report.html"), reportVars);
+const reportHostPage = fill(read("pages", "report-host.html"), reportVars);
+app.get("/report", (req, res) => res.type("html").send(reportPage));
+app.get("/report/host", (req, res) => res.type("html").send(reportHostPage));
 const schedulePage = fill(read("pages", "schedule.html"), {
   v: fileHash("public", "schedule", "app.js") + fileHash("public", "schedule", "styles.css"),
 });
@@ -53,6 +90,8 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/api/llm", llmExplainer);
 app.use("/api/sort", sortRouter);
+app.use("/api/pick", createPickRouter());
+app.use("/api/report", createReportRouter());
 
 if (process.env.DATABASE_URL) {
   const scheduleStore = await createScheduleStore(process.env.DATABASE_URL, process.env.NODE_ENV === "test" ? process.env.SCHEDULE_DB_SCHEMA || "class_schedule_test" : "class_schedule");

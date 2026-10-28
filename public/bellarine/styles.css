@@ -1,0 +1,31 @@
+/* Reading pages for the Bellarine Pathology scenario (/bellarine, /report). Same palette as the activities. */
+:root { --bg: #f4f7f9; --ink: #1b2a41; --muted: #5b6b7d; --panel: #ffffff; --line: #d3dde5; --accent: #0b5c7a; --warm: #c9650f; --ok: #1a7f4b; --bad: #b3261e; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #121b29; --ink: #eef3f7; --muted: #9db0c2; --panel: #1b2a41; --line: #33465e; --accent: #5fb4d4; --warm: #f2994a; --ok: #5ed39a; --bad: #ff8a80; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+[hidden] { display: none !important; }
+a { color: var(--accent); }
+.page { max-width: 760px; margin: 0 auto; padding: 20px 16px 48px; }
+.eyebrow { margin: 0; color: var(--muted); font-size: .85rem; letter-spacing: .08em; text-transform: uppercase; }
+h1 { font-size: 1.9rem; line-height: 1.15; margin: .2rem 0 .5rem; }
+h2 { font-size: 1.3rem; margin: 1.6rem 0 .5rem; }
+h3 { font-size: 1.05rem; margin: 1.1rem 0 .3rem; }
+.lede { color: var(--muted); margin: 0 0 .8rem; }
+.note { background: var(--panel); border: 2px solid var(--line); border-left: 6px solid var(--warm); border-radius: 12px; padding: 10px 14px; margin: 12px 0; }
+nav.jump { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+nav.jump a { text-decoration: none; padding: 8px 12px; border-radius: 999px; border: 2px solid var(--line); background: var(--panel); color: var(--ink); font-weight: 600; font-size: .9rem; }
+
+dl.facts { display: grid; grid-template-columns: minmax(8rem, 30%) 1fr; gap: 0; margin: 0; background: var(--panel); border: 2px solid var(--line); border-radius: 12px; overflow: hidden; }
+dl.facts dt, dl.facts dd { margin: 0; padding: 10px 12px; border-top: 1px solid var(--line); }
+dl.facts dt { font-weight: 700; background: color-mix(in srgb, var(--accent) 8%, var(--panel)); }
+dl.facts dt:first-of-type, dl.facts dt:first-of-type + dd { border-top: 0; }
+dl.facts ul, dl.facts ol { margin: 0; padding-left: 1.2rem; }
+@media (max-width: 560px) { dl.facts { grid-template-columns: 1fr; } dl.facts dd { border-top: 0; padding-top: 0; } }
+
+.cards { display: grid; gap: 10px; padding: 0; list-style: none; }
+.cards li { background: var(--panel); border: 2px solid var(--line); border-radius: 12px; padding: 10px 14px; }
+.cards strong { display: block; }
+.links li a { font-weight: 700; word-break: break-word; }
+.small { font-size: .85rem; color: var(--muted); }

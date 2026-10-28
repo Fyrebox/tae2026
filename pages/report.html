@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1b2a41">
+  <title>Bellarine AI Opportunities Report</title>
+  <link rel="stylesheet" href="/bellarine/styles.css?v={{v}}">
+  <link rel="stylesheet" href="/report/styles.css?v={{v}}">
+</head>
+<body>
+  <main class="page">
+    <p class="eyebrow">ICTAII401 · Bellarine Pathology · ICT Services</p>
+    <h1>AI Opportunities Report</h1>
+    <p class="lede">Fill in each section in the session shown. Short, clear entries are enough. Your work is saved on this device as you type.</p>
+    <p class="note">No real personal information about patients, staff or anyone else. Check the <a href="/bellarine">work brief</a> as you go.</p>
+    <nav class="jump" aria-label="Sessions">
+      <a href="#session1">Session 1 · sections 1–3</a><a href="#session2">Session 2 · 4–6</a><a href="#session3">Session 3 · 7–10</a>
+    </nav>
+    <p id="saved" class="saved" aria-live="polite"></p>
+
+    <form id="form" novalidate></form>
+
+    <section id="submit" class="rsubmit" aria-labelledby="s10">
+      <h2 id="s10">10. Submission <span class="maps">PC 3.3</span></h2>
+      <p>Submit to <strong id="submitTo"></strong>, your trainer.</p>
+      <fieldset class="checklist"><legend>Submission checklist</legend><div id="checklist"></div></fieldset>
+      <label class="field"><span>Your first name (so your trainer knows whose report this is)</span>
+        <input id="name" type="text" maxlength="60" autocomplete="given-name"></label>
+      <p id="missing" class="small"></p>
+      <div class="buttons">
+        <button id="send" class="btn primary" type="button" disabled>Submit report</button>
+        <button id="download" class="btn" type="button">Download a copy</button>
+      </div>
+      <p id="status" class="status" aria-live="polite"></p>
+    </section>
+  </main>
+  <script id="report" type="application/json">{{report}}</script>
+  <script src="/report/render.js?v={{v}}" defer></script>
+  <script src="/report/app.js?v={{v}}" defer></script>
+</body>
+</html>

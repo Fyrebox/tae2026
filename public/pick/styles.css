@@ -1,0 +1,26 @@
+/* Tap-to-choose activities: layered on /sort/styles.css. */
+:root { --o1: #0b5c7a; --o2: #c9650f; --o3: #6b4fa3; --o4: #1a7f4b; --o5: #8a6d1d; --o6: #b3261e; }
+@media (prefers-color-scheme: dark) {
+  :root { --o1: #5fb4d4; --o2: #f2994a; --o3: #b49be0; --o4: #5ed39a; --o5: #e0c46c; --o6: #ff8a80; }
+}
+a { color: var(--rule); }
+
+.legend { list-style: none; padding: 0; margin: 4px 0; display: grid; gap: 6px; }
+.legend li { color: var(--muted); } .legend strong { color: var(--ink); }
+
+.item { flex: 1; display: grid; place-items: center; min-height: 180px; padding: 24px; border-radius: 24px;
+  background: var(--panel); border: 2px solid var(--line); text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, .12); outline: none; }
+.item p { margin: 0; font-size: 1.5rem; font-weight: 700; line-height: 1.25; }
+
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.choices.long { grid-template-columns: 1fr; }
+.choices.long .btn { min-height: 48px; padding: 10px 14px; font-size: .95rem; text-align: left; }
+.btn.choice { border-color: var(--rule); color: var(--ink); }
+.btn.choice:active { background: color-mix(in srgb, var(--rule) 18%, var(--panel)); }
+
+/* Host bars with one colour per option */
+.part.o1 { background: var(--o1); } .part.o2 { background: var(--o2); } .part.o3 { background: var(--o3); }
+.part.o4 { background: var(--o4); } .part.o5 { background: var(--o5); } .part.o6 { background: var(--o6); }
+.key { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 0 0 14px; padding: 0; list-style: none; color: var(--muted); }
+.key i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; margin-right: 6px; vertical-align: -1px; }
+.rcorrect { color: var(--ok); font-weight: 700; }

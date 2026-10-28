@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Bellarine reports Host</title>
+  <link rel="stylesheet" href="/bellarine/styles.css?v={{v}}">
+  <link rel="stylesheet" href="/report/styles.css?v={{v}}">
+</head>
+<body class="host">
+  <main class="page">
+    <section id="gate" class="gate">
+      <h1>Host view</h1>
+      <form id="pinForm" class="gate">
+        <label for="pin">Host PIN</label>
+        <input id="pin" type="password" inputmode="numeric" autocomplete="off" required>
+        <button class="btn primary" type="submit">Open</button>
+        <p id="pinError" class="error" hidden>Wrong PIN.</p>
+      </form>
+    </section>
+
+    <section id="dash" hidden>
+      <p class="eyebrow">ICTAII401 · Session 3</p>
+      <h1>Submitted reports</h1>
+      <p class="lede">Learners submit from <strong id="formUrl"></strong>. Reports are kept in memory until a reset or a server restart; learners can also download their own copy.</p>
+      <div class="buttons">
+        <button id="refresh" class="btn" type="button">Refresh</button>
+        <button id="reset" class="btn" type="button">Reset for a new class</button>
+      </div>
+      <p id="empty" class="small">No reports yet.</p>
+      <ul id="reports" class="reports"></ul>
+      <p id="offline" class="error" hidden>Lost contact with the server. Retrying…</p>
+    </section>
+
+    <section id="viewer" class="viewer" hidden>
+      <div class="buttons"><button id="print" class="btn primary" type="button">Print or save as PDF</button><button id="close" class="btn" type="button">Close</button></div>
+      <div id="reportBody"></div>
+    </section>
+  </main>
+  <script id="report" type="application/json">{{report}}</script>
+  <script src="/report/render.js?v={{v}}" defer></script>
+  <script src="/report/host.js?v={{v}}" defer></script>
+</body>
+</html>

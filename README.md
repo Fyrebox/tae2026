@@ -7,7 +7,26 @@ An Express website for the TAE class delivery schedule and Session 1 activity.
 - `/`: shared delivery schedule, grouped by student group and date.
 - `/session1`: Rule or AI? activity.
 - `/session1/host`: PIN-protected activity host view.
+- `/session1/tech`: What does Bellarine already use? (fixed rule, ML, DL or manual).
+- `/session2`: What do organisations automate? (match six tasks to a technology).
+- `/session1/tech/host`, `/session2/host`: PIN-protected host views for those activities.
+- `/bellarine`: Bellarine Pathology work brief, AI use policy, fact sheet, glossary and question stems.
+- `/bellarine/role-card`, `/bellarine/links`: Operations Manager role card; vendor and policy links.
+- `/report`: Bellarine AI Opportunities Report form (Sessions 1–3).
+- `/report/host`: PIN-protected list of submitted reports, with a printable view.
 - `/how-ai-writes`: optional LLM explainer.
+
+### ICTAII401 class activities
+
+All activity host views use the same `HOST_PIN`. Like `/session1`, the tap-to-choose
+activities keep answers in memory only, with an anonymous device id and no names;
+**Reset for a new class** clears one activity. Decks live in `pick-decks.js`.
+
+The report form (`report-form.js` drives the form, server validation and host view)
+saves on the learner's device as they type. Submitting needs every checklist box
+ticked and a first name, and replaces that device's earlier submission. Submitted
+reports are held in memory until a reset or restart, so learners can also use
+**Download a copy**. Bellarine Pathology and everything in it is fictional.
 
 Click a student to save one course/unit name shared across their presentations.
 Use **Edit schedule** and the separate organiser PIN to change dates/times or
@@ -78,7 +97,7 @@ Copy `.env.example` to `.env` and configure:
 
 - `DATABASE_URL`: a PostgreSQL connection string.
 - `SCHEDULE_ADMIN_PIN`: a separate organiser PIN of at least six digits.
-- `HOST_PIN`: PIN for the Session 1 host, independent of the schedule PIN.
+- `HOST_PIN`: PIN for every activity host view and the report host, independent of the schedule PIN.
 - OpenAI variables are only needed for the LLM explainer.
 
 Run `npm ci` then `npm start` (or `npm run dev`). If `DATABASE_URL` is missing,
