@@ -12,7 +12,7 @@ An Express website for the TAE class delivery schedule and Session 1 activity.
 - `/session1/tech/host`, `/session2/host`: PIN-protected host views for those activities.
 - `/bellarine`: Bellarine Pathology work brief, AI use policy, fact sheet, glossary and question stems.
 - `/bellarine/role-card`, `/bellarine/links`: Operations Manager role card; vendor and policy links.
-- `/report`: Bellarine AI Opportunities Report form (Sessions 1–3).
+- `/report`: Bellarine AI Opportunities Report form (Sessions 1–3). `/report/1`, `/report/2` and `/report/3` show one session's sections; section 3 copies the learner's answers from `/session1/tech` on the same device.
 - `/report/host`: PIN-protected list of submitted reports, with a printable view.
 - `/how-ai-writes`: optional LLM explainer.
 
