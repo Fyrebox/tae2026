@@ -3,6 +3,8 @@
   const FORM = JSON.parse(document.getElementById("report").textContent);
   const $ = (id) => document.getElementById(id);
   const KEY = "bellarineReport";
+  // /report/1, /report/2 and /report/3 show one session's sections; /report shows them all.
+  const only = Number((location.pathname.match(/^\/report\/([123])\/?$/) || [])[1]) || 0;
 
   // Same anonymous id as the activities, so a resubmission replaces the learner's earlier report.
   function learnerId() {
@@ -52,9 +54,9 @@
   FORM.sections.forEach((s) => {
     if (s.session !== session) {
       session = s.session;
-      form.append(el("h2", { id: `session${session}`, className: "session" }, `Session ${session}`));
+      form.append(el("h2", { id: `session${session}`, className: "session", hidden: only && only !== session }, `Session ${session}`));
     }
-    const sec = el("section", { className: "rsec", id: `s${s.n}` });
+    const sec = el("section", { className: "rsec", id: `s${s.n}`, hidden: only && only !== s.session });
     const progress = el("span", { className: "progress" });
     sec.append(el("h3", {}, `${s.n}. ${s.title} `, el("span", { className: "maps" }, s.maps), progress));
     if (s.intro) sec.append(el("p", { className: "small" }, s.intro));
@@ -73,6 +75,7 @@
         } else {
           input = el("input", { id: f.id, type: "text", maxLength: 300 });
         }
+        if (f.placeholder) input.placeholder = f.placeholder;
         input.value = state.fields[f.id] || "";
         input.addEventListener("input", () => {
           state.fields[f.id] = input.value;
@@ -86,6 +89,29 @@
     sec.dataset.ids = ids.join(" ");
     sec.progress = progress;
     form.append(sec);
+  });
+
+  // Section 3: copy the learner's answers from /session1/tech into any empty "type" box.
+  function copyTechAnswers() {
+    let answers = null;
+    try { answers = JSON.parse(localStorage.getItem("pickAnswers:tech") || "null"); } catch { /* storage blocked */ }
+    if (!answers) return;
+    let changed = false;
+    for (const [item, label] of Object.entries(answers)) {
+      const input = $(`s3_${item}_class`);
+      if (input && !state.fields[input.id] && [...input.options].some((o) => o.value === label)) {
+        input.value = state.fields[input.id] = label;
+        changed = true;
+      }
+    }
+    if (changed) save();
+  }
+  copyTechAnswers();
+  window.addEventListener("storage", (e) => {
+    if (e.key === "pickAnswers:tech") {
+      copyTechAnswers();
+      updateProgress();
+    }
   });
 
   function filled(fid) { return Boolean((state.fields[fid] || "").trim()); }
@@ -154,6 +180,17 @@
     a.click();
     a.remove();
   });
+
+  // Session view: point the session links at /report/N and hide the submission until Session 3.
+  document.querySelectorAll("nav.jump a[data-session]").forEach((a) => {
+    if (Number(a.dataset.session) === only) a.setAttribute("aria-current", "page");
+  });
+  if (only) {
+    const first = FORM.sections.find((s) => s.session === only).n;
+    const last = only === 3 ? 10 : FORM.sections.filter((s) => s.session === only).at(-1).n;
+    $("lede").textContent = `Session ${only}: sections ${first}–${last}. Short, clear answers are enough. Your work is saved on this device as you type.`;
+    $("submit").hidden = only !== 3;
+  }
 
   updateProgress();
   showSubmitted();

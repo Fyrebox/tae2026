@@ -37,6 +37,15 @@ test('every activity item has a valid answer and an explanation', () => {
   }
 });
 
+test('every /session1/tech answer can be copied into report section 3', () => {
+  const labels = Object.fromEntries(ACTIVITIES.tech.options.map((o) => [o.id, o.label]));
+  for (const i of ACTIVITIES.tech.items) {
+    const field = FIELDS.get(`s3_${i.id}_class`);
+    assert.ok(field, i.id);
+    for (const label of Object.values(labels)) assert.ok(field.options.includes(label), `${i.id}: ${label}`);
+  }
+});
+
 test('pick activity counts first answers only and reports class results to the host', async () => {
   const { call, close } = await serve('/api/pick', createPickRouter());
   try {
@@ -74,8 +83,8 @@ test('pick activity counts first answers only and reports class results to the h
 });
 
 test('report submissions are validated', () => {
-  const ok = cleanSubmission({ name: ' Sam ', fields: { s1_task: 'Find AI options', s1_due: '  ', s3_junk_class: 'ML' }, checklist: ticks });
-  assert.deepEqual(ok, { name: 'Sam', fields: { s1_task: 'Find AI options', s3_junk_class: 'ML' }, checklist: ticks });
+  const ok = cleanSubmission({ name: ' Sam ', fields: { s1_task: 'Find AI options', s1_who: '  ', s3_junk_class: 'ML', s2_rank_missed: '2' }, checklist: ticks });
+  assert.deepEqual(ok, { name: 'Sam', fields: { s1_task: 'Find AI options', s3_junk_class: 'ML', s2_rank_missed: '2' }, checklist: ticks });
   const bad = [
     { name: '', fields: {}, checklist: ticks },
     { name: 'x'.repeat(61), fields: {}, checklist: ticks },
@@ -84,7 +93,8 @@ test('report submissions are validated', () => {
     { name: 'Sam', fields: {}, checklist: [false, ...ticks.slice(1)] },
     { name: 'Sam', fields: { unknown: 'x' }, checklist: ticks },
     { name: 'Sam', fields: { s1_task: 5 }, checklist: ticks },
-    { name: 'Sam', fields: { s1_due: 'x'.repeat(301) }, checklist: ticks },
+    { name: 'Sam', fields: { s1_who: 'x'.repeat(301) }, checklist: ticks },
+    { name: 'Sam', fields: { s2_rank_missed: '5' }, checklist: ticks },
     { name: 'Sam', fields: { s3_junk_class: 'Magic' }, checklist: ticks },
   ];
   for (const b of bad) assert.equal(cleanSubmission(b), null, JSON.stringify(b).slice(0, 80));

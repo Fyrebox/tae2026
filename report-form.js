@@ -10,38 +10,46 @@ const perOption = (section, rows) =>
   }));
 
 const TECH = [
-  ["sms", "SMS reminder 24 hours before every appointment"],
+  ["sms", "Text message reminder sent 24 hours before every appointment"],
   ["junk", "Outlook junk-mail filter"],
-  ["flags", "Lab system flags out-of-range results"],
-  ["barcode", "Barcode scanners at collection"],
+  ["flags", "Lab system marks any result outside the normal range"],
+  ["barcode", "Barcode scanners at the collection centres"],
   ["copilot", "Microsoft 365 Copilot Chat"],
-  ["enquiries", "Patient and GP enquiries answered by phone"],
-  ["slides", "Routine slides screened by eye"],
+  ["enquiries", "Staff answer patient and doctor questions by phone"],
+  ["slides", "Scientists check routine slides by eye"],
+];
+
+// Section 2: the four goals from the work brief, ranked by the learner after asking the Operations Manager.
+const GOALS = [
+  ["enquiries", "Less staff time on repeat patient and doctor questions"],
+  ["missed", "Fewer missed appointments"],
+  ["slides", "Faster routine slide checking in the lab"],
+  ["labels", "Fewer sample-labelling errors"],
 ];
 
 export const REPORT = {
   title: "AI Opportunities Report",
   submitTo: "Priya Raman, Operations Manager",
   sections: [
-    { n: 1, session: 1, title: "Work brief", maps: "PC 1.1", groups: [
-      { label: "Task", fields: [{ id: "s1_task", type: "textarea" }] },
-      { label: "Deliverable", fields: [{ id: "s1_deliverable", type: "text" }] },
-      { label: "Requested by / reporting to", fields: [{ id: "s1_requested", type: "text" }] },
-      { label: "Due date", fields: [{ id: "s1_due", type: "text" }] },
-      { label: "Policy constraints (at least 3)", fields: [{ id: "s1_constraints", type: "textarea" }] },
+    { n: 1, session: 1, title: "Work brief", maps: "PC 1.1", intro: "Answer from the work brief and AI use policy at taegordon.au/bellarine. Short answers are fine.", groups: [
+      { label: "What have I been asked to do?", hint: "One sentence in your own words, including what you hand in.", fields: [{ id: "s1_task", type: "textarea", placeholder: "Example from a different job: Compare three printers and recommend one in an email" }] },
+      { label: "Who wants it, and by when?", fields: [{ id: "s1_who", type: "text", placeholder: "Example: The office manager, by Friday" }] },
+      { label: "3 rules from the AI use policy I must follow", hint: "One rule per line.", fields: [{ id: "s1_constraints", type: "textarea", placeholder: "Example from a different policy: Never share your password" }] },
     ] },
-    { n: 2, session: 1, title: "Organisational goals", maps: "PC 1.2", intro: "Confirmed with the Operations Manager, in priority order.", groups: [
-      ...[1, 2, 3, 4].map((r) => ({ label: `Goal ranked ${r}`, fields: [
-        { id: `s2_goal${r}`, label: "Goal", type: "text" },
-        { id: `s2_measure${r}`, label: "How success will be measured", type: "text" },
-      ] })),
-      { label: "Budget and limits", fields: [{ id: "s2_budget", type: "textarea" }] },
-      { label: "Value of goal 1", hint: "Yearly cost of the staff time it takes now", fields: [{ id: "s2_value", type: "text" }] },
+    { n: 2, session: 1, title: "Organisational goals", maps: "PC 1.2", intro: "Ask the Operations Manager, then record what she says.", groups: [
+      { label: "Rank the four goals", hint: "1 = most important, as the Operations Manager tells you.", fields: GOALS.map(([key, label]) => (
+        { id: `s2_rank_${key}`, label, type: "select", options: ["1", "2", "3", "4"] })) },
+      { label: "How will we know the top goal worked?", fields: [{ id: "s2_measure", type: "text", placeholder: "Example for a printer: fewer paper jams each week" }] },
+      { label: "Budget and limits", hint: "What the Operations Manager said about money, and anything off limits.", fields: [{ id: "s2_budget", type: "textarea" }] },
+      { label: "Value of the top goal", hint: "Copy the trainer's worked example: the yearly cost of the staff time it takes now.", fields: [{ id: "s2_value", type: "text" }] },
     ] },
-    { n: 3, session: 1, title: "Current technology and processes", maps: "PC 1.3", groups: TECH.map(([key, label]) => ({ label, fields: [
-      { id: `s3_${key}_class`, label: "Type", type: "select", options: ["Fixed rule", "ML", "DL", "Manual"] },
-      { id: `s3_${key}_why`, label: "Why", type: "text" },
-    ] })) },
+    { n: 3, session: 1, title: "Current technology and processes", maps: "PC 1.3", intro: "Your answers from taegordon.au/session1/tech are copied here. Fix any that were wrong, then explain three of them.", groups: [
+      { label: "Type of each technology or process", fields: TECH.map(([key, label]) => (
+        { id: `s3_${key}_class`, label, type: "select", options: ["Fixed rule", "ML", "DL", "Manual"] })) },
+      { label: "Pick one fixed rule. What is it, and why is it a rule?", fields: [{ id: "s3_why_rule", type: "textarea", placeholder: "Example: The thermostat, because a person set the temperature" }] },
+      { label: "Pick one ML or DL item. What is it, and why?", fields: [{ id: "s3_why_ai", type: "textarea", placeholder: "Example: Face unlock, because it learned from photos" }] },
+      { label: "Pick one manual process. What is it, and could AI help?", fields: [{ id: "s3_why_manual", type: "textarea" }] },
+    ] },
     { n: 4, session: 2, title: "Application procedures", maps: "PC 1.4", intro: "How each option would be applied, from a vendor page.", groups: perOption(4, [
       ["source", "Source used and date"],
       ["prereq", "Prerequisites", "Data, licences, skills"],

@@ -75,7 +75,9 @@ const reportVars = {
 };
 const reportPage = fill(read("pages", "report.html"), reportVars);
 const reportHostPage = fill(read("pages", "report-host.html"), reportVars);
-app.get("/report", (req, res) => res.type("html").send(reportPage));
+for (const route of ["/report", "/report/1", "/report/2", "/report/3"]) {
+  app.get(route, (req, res) => res.type("html").send(reportPage));
+}
 app.get("/report/host", (req, res) => res.type("html").send(reportHostPage));
 const schedulePage = fill(read("pages", "schedule.html"), {
   v: fileHash("public", "schedule", "app.js") + fileHash("public", "schedule", "styles.css"),

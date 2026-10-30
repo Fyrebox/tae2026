@@ -12,6 +12,8 @@ h2.session { margin-top: 2rem; padding-bottom: 4px; border-bottom: 3px solid var
 input[type=text], textarea, select { font: inherit; width: 100%; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); }
 textarea { resize: vertical; min-height: 4.2em; }
 input:focus-visible, textarea:focus-visible, select:focus-visible, .btn:focus-visible { outline: 3px solid var(--warm); outline-offset: 2px; }
+nav.jump a[aria-current] { background: var(--accent); border-color: var(--accent); color: #fff; }
+@media (prefers-color-scheme: dark) { nav.jump a[aria-current] { color: #121b29; } }
 .saved { position: sticky; top: 0; z-index: 2; margin: 8px 0 0; padding: 4px 0; font-size: .85rem; color: var(--ok); background: var(--bg); min-height: 1.5em; }
 
 .rsubmit { margin-top: 2rem; border-top: 3px solid var(--accent); padding-top: .5rem; }
