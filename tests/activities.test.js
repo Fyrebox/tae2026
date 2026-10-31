@@ -4,6 +4,8 @@ import express from 'express';
 
 process.env.HOST_PIN = '424242';
 const { createPickRouter } = await import('../pick.js');
+const { default: sortRouter } = await import('../sort.js');
+const { DECK } = await import('../sort-deck.js');
 const { ACTIVITIES } = await import('../pick-decks.js');
 const { createReportRouter, cleanSubmission } = await import('../report.js');
 const { REPORT, FIELDS } = await import('../report-form.js');
@@ -40,7 +42,8 @@ test('every activity item has a valid answer and an explanation', () => {
 test('every /tech answer can be saved in report section 3', () => {
   const labels = Object.fromEntries(ACTIVITIES.tech.options.map((o) => [o.id, o.label]));
   const group = REPORT.sections.find((s) => s.n === 3).groups.find((g) => g.activity === 'tech');
-  assert.deepEqual(group.fields.map((f) => f.item).sort(), ACTIVITIES.tech.items.map((i) => i.id).sort());
+  assert.deepEqual(group.fields.filter((f) => f.item).map((f) => f.item).sort(), ACTIVITIES.tech.items.map((i) => i.id).sort());
+  assert.equal(group.fields.filter((f) => f.firstTry).length, 1);
   for (const i of ACTIVITIES.tech.items) {
     const field = FIELDS.get(`s3_${i.id}_class`);
     assert.ok(field, i.id);
@@ -49,7 +52,7 @@ test('every /tech answer can be saved in report section 3', () => {
   }
 });
 
-test('pick activity counts first answers only and reports class results to the host', async () => {
+test('pick activity counts the latest answer when retries are allowed, otherwise the first, and reports class results to the host', async () => {
   const { call, close } = await serve('/api/pick', createPickRouter());
   try {
     assert.equal((await call('/tech/join', { body: { id: ID } })).status, 200);
@@ -68,15 +71,21 @@ test('pick activity counts first answers only and reports class results to the h
     assert.equal(stats.finished, 0);
     assert.equal(stats.total, ACTIVITIES.tech.items.length);
     const junk = stats.items.find((i) => i.id === 'junk');
-    assert.deepEqual(junk.counts, { rule: 0, ml: 1, dl: 0, manual: 0 });
+    assert.deepEqual(junk.counts, { rule: 0, ml: 0, dl: 1, manual: 0 }); // tech allows retries: the latest answer counts
 
-    // Activities are separate: the Session 2 activity has no learners yet.
+    // Activities are separate: the Session 2 activity has no learners yet, and it keeps the first answer.
     assert.equal((await (await call('/tasks/host/stats', { pin: '424242' })).json()).joined, 0);
+    await call('/tasks/join', { body: { id: ID } });
+    await call('/tasks/answer', { body: { id: ID, item: 'email', answer: 'campaign' } });
+    await call('/tasks/answer', { body: { id: ID, item: 'email', answer: 'chatbot' } });
+    const email = (await (await call('/tasks/host/stats', { pin: '424242' })).json()).items.find((i) => i.id === 'email');
+    assert.equal(email.counts.campaign, 1);
+    assert.equal(email.counts.chatbot, 0);
 
     for (const i of ACTIVITIES.tech.items) await call('/tech/answer', { body: { id: ID, item: i.id, answer: i.answer } });
     const done = await (await call('/tech/host/stats', { pin: '424242' })).json();
     assert.equal(done.finished, 1);
-    assert.equal(done.avgScore, ACTIVITIES.tech.items.length); // junk was first answered correctly
+    assert.equal(done.avgScore, ACTIVITIES.tech.items.length); // the retry fixed junk
 
     assert.equal((await call('/tech/host/reset', { method: 'POST', pin: '424242' })).status, 200);
     assert.equal((await (await call('/tech/host/stats', { pin: '424242' })).json()).joined, 0);
@@ -141,4 +150,25 @@ test('each session page has its own brief, and it matches the full work brief', 
   const items = (html, cls) => [...html.slice(html.indexOf(cls)).split('</ol>')[0].matchAll(/<li>(.*?)<\/li>/g)].map((m) => m[1]);
   assert.deepEqual(items(report, '<ol class="policy">'), items(brief, '<h2 id="policy">'));
   for (const s of REPORT.sections) assert.ok(!/taegordon\.au/.test(s.intro || ''), `section ${s.n} intro sends learners off the page`);
+});
+
+test('Rule or AI? counts the latest answer, so retrying a wrong card improves the result', async () => {
+  const { call, close } = await serve('/api/sort', sortRouter);
+  try {
+    await call('/host/reset', { method: 'POST', pin: '424242' });
+    assert.equal((await call('/join', { body: { id: ID } })).status, 200);
+    const [first, ...rest] = DECK;
+    const wrong = first.answer === 'ai' ? 'rule' : 'ai';
+    await call('/answer', { body: { id: ID, card: first.id, answer: wrong } });
+    for (const c of rest) await call('/answer', { body: { id: ID, card: c.id, answer: c.answer } });
+    let stats = await (await call('/host/stats', { pin: '424242' })).json();
+    assert.equal(stats.avgScore, DECK.length - 1);
+    await call('/answer', { body: { id: ID, card: first.id, answer: first.answer } });
+    stats = await (await call('/host/stats', { pin: '424242' })).json();
+    assert.equal(stats.avgScore, DECK.length);
+    assert.equal(stats.cards.find((c) => c.id === first.id)[wrong], 0);
+  } finally {
+    await call('/host/reset', { method: 'POST', pin: '424242' });
+    await close();
+  }
 });

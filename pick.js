@@ -1,5 +1,5 @@
-// API behind the tap-to-choose activities (/session1/tech, /session2) and their host views.
-// Same rules as /session1: answers live in memory only, no names, and a reset starts a fresh class.
+// API behind the tap-to-choose activities (/tech, /session2) and their host views.
+// Same rules as /ruleorai: answers live in memory only, no names, and a reset starts a fresh class.
 import express from "express";
 import { ACTIVITIES } from "./pick-decks.js";
 import { ID_PATTERN, createRateLimit, jsonErrors, requireHost } from "./activity-common.js";
@@ -44,8 +44,8 @@ export function createPickRouter(activities = ACTIVITIES) {
     if (!l || !req.act.items.has(item) || !req.act.options.has(answer)) {
       return res.status(400).json({ error: "Bad request." });
     }
-    // The first answer to an item counts; practice rounds on the phone are never sent.
-    if (!l.answers[item]) l.answers[item] = answer;
+    // The first answer to an item counts, unless the activity allows retries: then the latest answer counts.
+    if (req.act.activity.retries || !l.answers[item]) l.answers[item] = answer;
     res.json({ ok: true });
   });
 

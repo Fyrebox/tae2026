@@ -70,9 +70,12 @@
         ids.push(...g.fields.map((f) => f.id));
         window.mountActivity(group, JSON.parse($(`${g.activity}Activity`).textContent), {
           learnerId: id,
-          saved: Object.fromEntries(g.fields.map((f) => [f.item, state.fields[f.id]])),
-          onDone: (answers) => {
-            g.fields.forEach((f) => { if (answers[f.item]) state.fields[f.id] = answers[f.item]; });
+          saved: Object.fromEntries(g.fields.filter((f) => f.item).map((f) => [f.item, state.fields[f.id]])),
+          onDone: (answers, firstTry) => {
+            g.fields.forEach((f) => {
+              if (f.item && answers[f.item]) state.fields[f.id] = answers[f.item];
+              if (f.firstTry && firstTry && !state.fields[f.id]) state.fields[f.id] = firstTry;
+            });
             updateProgress();
             save();
           },

@@ -5,6 +5,8 @@ export const ACTIVITIES = {
     path: "/tech",
     // Runs inside section 3 of the Session 1 page, so learners stay on one page; /tech redirects there.
     inPage: "/brief#s3",
+    // Learners can retry the items they got wrong; the latest answer counts in the report and on the host view.
+    retries: true,
     eyebrow: "ICTAII401 · Session 1",
     title: "What does Bellarine already use?",
     lede: "Seven things Bellarine uses or does now. For each one, choose: a fixed rule, ML, DL, or done by hand. Your answers are saved in section 3 of your report.",

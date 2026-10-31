@@ -43,10 +43,13 @@ export const REPORT = {
       { label: "Budget and limits", hint: "What the Operations Manager said about money, and anything off limits.", fields: [{ id: "s2_budget", type: "textarea" }] },
       { label: "Value of the top goal", hint: "Copy the trainer's worked example: the yearly cost of the staff time it takes now.", fields: [{ id: "s2_value", type: "text" }] },
     ] },
-    { n: 3, session: 1, title: "Current technology and processes", maps: "PC 1.3", intro: "Tap Start and sort Bellarine's seven technologies and processes. Your answers are saved here. Then explain three of them.", groups: [
-      // activity: the learner answers through the tap-to-choose activity (pick-decks.js), not drop-downs; item links each field to its card.
-      { label: "Type of each technology or process", activity: "tech", fields: TECH.map(([key, label]) => (
-        { id: `s3_${key}_class`, item: key, label, type: "select", options: ["Fixed rule", "ML", "DL", "Manual"] })) },
+    { n: 3, session: 1, title: "Current technology and processes", maps: "PC 1.3", intro: "Tap Start and sort Bellarine's seven technologies and processes. Got some wrong? Retry them: your latest answers are saved here. Then explain three of them.", groups: [
+      // activity: the learner answers through the tap-to-choose activity (pick-decks.js), not drop-downs; item links each field
+      // to its card. Retries replace wrong answers; firstTry keeps the score of the first round for the trainer.
+      { label: "Type of each technology or process", activity: "tech", fields: [
+        ...TECH.map(([key, label]) => ({ id: `s3_${key}_class`, item: key, label, type: "select", options: ["Fixed rule", "ML", "DL", "Manual"] })),
+        { id: "s3_first_try", firstTry: true, label: "First try score", type: "text" },
+      ] },
       { label: "Pick one fixed rule. What is it, and why is it a rule?", fields: [{ id: "s3_why_rule", type: "textarea", placeholder: "Example: The thermostat, because a person set the temperature" }] },
       { label: "Pick one ML or DL item. What is it, and why?", fields: [{ id: "s3_why_ai", type: "textarea", placeholder: "Example: Face unlock, because it learned from photos" }] },
       { label: "Pick one manual process. What is it, and could AI help?", fields: [{ id: "s3_why_manual", type: "textarea" }] },

@@ -38,8 +38,7 @@
 
   let order = [];
   let index = 0;
-  let given = [];
-  let practice = false;
+  let latest = {}; // card id -> the learner's latest answer; a retry replaces the wrong ones, and every answer counts
   let busy = false;
 
   const shuffle = (list) => {
@@ -56,15 +55,15 @@
     window.scrollTo(0, 0);
   }
 
-  function begin(isPractice) {
-    practice = isPractice;
-    order = shuffle(DECK);
+  // A retry replays only the cards still wrong.
+  function begin(retry) {
+    if (!retry) latest = {};
+    order = shuffle(retry ? DECK.filter((c) => latest[c.id] !== c.answer) : DECK);
     index = 0;
-    given = [];
     busy = false;
     show("play");
     renderCard();
-    if (!practice) send("join", {});
+    if (!retry) send("join", {});
   }
 
   function renderCard() {
@@ -88,8 +87,8 @@
     if (busy) return;
     busy = true;
     const c = order[index];
-    given.push(answer);
-    if (!practice) send("answer", { card: c.id, answer });
+    latest[c.id] = answer;
+    send("answer", { card: c.id, answer });
     const dir = answer === "ai" ? 1 : -1;
     card.style.setProperty(answer === "ai" ? "--r" : "--l", 1);
     card.style.transform = `translateX(${dir * window.innerWidth * 1.2}px) rotate(${dir * 18}deg)`;
@@ -103,15 +102,18 @@
 
   function finish() {
     $("bar").style.width = "100%";
-    const score = order.filter((c, i) => given[i] === c.answer).length;
-    $("score").textContent = `You got ${score} out of ${order.length}`;
-    $("endNote").textContent = practice
-      ? "Practice round: this one was not counted."
-      : "Watch the main screen for the class results.";
+    const score = DECK.filter((c) => latest[c.id] === c.answer).length;
+    $("score").textContent = `You got ${score} out of ${DECK.length}`;
+    const left = DECK.length - score;
+    $("endNote").textContent = left
+      ? "Read why, then retry the ones you got wrong: your latest answers count. Watch the main screen for the class results."
+      : "All correct. Watch the main screen for the class results.";
+    $("again").hidden = !left;
+    $("again").textContent = `Retry the ${left === 1 ? "one" : left} you got wrong`;
     const list = $("review");
     list.textContent = "";
-    order.forEach((c, i) => {
-      const right = given[i] === c.answer;
+    DECK.forEach((c) => {
+      const right = latest[c.id] === c.answer;
       const li = document.createElement("li");
       li.className = right ? "right" : "wrong";
       const head = document.createElement("p");
@@ -119,7 +121,7 @@
       head.textContent = `${right ? "✓ Correct" : "✗ Not quite"}: ${c.text}`;
       const ans = document.createElement("p");
       ans.className = "rans";
-      ans.textContent = right ? `Answer: ${LABEL[c.answer]}.` : `You said ${LABEL[given[i]]}. Answer: ${LABEL[c.answer]}.`;
+      ans.textContent = right ? `Answer: ${LABEL[c.answer]}.` : `You said ${LABEL[latest[c.id]]}. Answer: ${LABEL[c.answer]}.`;
       const why = document.createElement("p");
       why.className = "rwhy";
       why.textContent = c.why;

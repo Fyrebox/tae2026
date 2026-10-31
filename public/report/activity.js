@@ -1,7 +1,9 @@
 // A tap-to-choose activity run inside a report section, so learners stay on one page (section 3 runs /tech this way).
-// Same server API and host view as the stand-alone activities (/api/pick); the counted answers go into the report.
+// Same server API and host view as the stand-alone activities (/api/pick). Learners can retry the items they got wrong:
+// every answer counts, and onDone(latest answers, first-try score) hands them to the report after each round.
 window.mountActivity = (root, A, { learnerId, saved, onDone }) => {
   const LABEL = Object.fromEntries(A.options.map((o) => [o.id, o.label]));
+  const ID = Object.fromEntries(A.options.map((o) => [o.label, o.id]));
   const el = (tag, props = {}, ...kids) => {
     const n = Object.assign(document.createElement(tag), props);
     n.append(...kids);
@@ -48,14 +50,16 @@ window.mountActivity = (root, A, { learnerId, saved, onDone }) => {
   const score = el("p", { className: "act-score" });
   const note = el("p", { className: "small" });
   const review = el("ol", { className: "act-review" });
-  const again = el("button", { type: "button", className: "btn" }, "Try again (practice, not counted)");
+  const again = el("button", { type: "button", className: "btn primary" }, "Retry the ones you got wrong");
   const end = el("div", { className: "act-end", hidden: true }, score, note, review, again);
   root.append(intro, play, end);
 
   let order = [];
   let index = 0;
-  let given = [];
-  let practice = false;
+  let retrying = false;
+  // item id -> the learner's latest answer (option id), restored from the report on reload.
+  let latest = Object.fromEntries(A.items.filter((it) => ID[saved[it.id]]).map((it) => [it.id, ID[saved[it.id]]]));
+  const wrong = () => A.items.filter((it) => latest[it.id] !== it.answer);
 
   A.options.forEach((o) => {
     choices.append(el("button", { type: "button", className: "btn act-choice", onclick: () => commit(o.id) }, o.label));
@@ -68,14 +72,15 @@ window.mountActivity = (root, A, { learnerId, saved, onDone }) => {
     root.scrollIntoView({ block: "start", behavior: "smooth" });
   }
 
-  function begin(isPractice) {
-    practice = isPractice;
-    order = shuffle(A.items);
+  // A retry replays only the items still wrong.
+  function begin(retry) {
+    retrying = retry;
+    if (!retry) latest = {};
+    order = shuffle(retry ? wrong() : A.items);
     index = 0;
-    given = [];
     show(play);
     renderItem();
-    if (!practice) send("join", {});
+    if (!retry) send("join", {});
   }
 
   function renderItem() {
@@ -88,45 +93,47 @@ window.mountActivity = (root, A, { learnerId, saved, onDone }) => {
   }
 
   function commit(answer) {
-    given.push(answer);
-    if (!practice) send("answer", { item: order[index].id, answer });
+    latest[order[index].id] = answer;
+    send("answer", { item: order[index].id, answer });
     index += 1;
     if (index >= order.length) finish();
     else renderItem();
   }
 
-  // Review list: the learner's answer, the right one and why, item by item.
-  function showResults(items, answerOf, noteText) {
-    const right = items.filter((it) => answerOf(it) === it.answer).length;
-    score.textContent = `You got ${right} out of ${items.length}`;
-    note.textContent = noteText;
+  // Score, review list (the learner's answer, the right one and why) and the retry button.
+  function showResults() {
+    const right = A.items.length - wrong().length;
+    score.textContent = `You got ${right} out of ${A.items.length}`;
+    note.textContent = right < A.items.length
+      ? "Read why, then retry the ones you got wrong: your latest answers count. They are saved in your report."
+      : "All correct. Your answers are saved in your report.";
+    again.hidden = right === A.items.length;
+    const left = A.items.length - right;
+    again.textContent = `Retry the ${left === 1 ? "one" : left} you got wrong`;
     review.textContent = "";
-    items.forEach((it) => {
-      const ok = answerOf(it) === it.answer;
+    A.items.forEach((it) => {
+      const ok = latest[it.id] === it.answer;
       review.append(el("li", { className: ok ? "right" : "wrong" },
         el("p", { className: "rhead" }, `${ok ? "✓" : "✗"} ${it.text}`),
-        el("p", { className: "rans" }, ok ? `Answer: ${LABEL[it.answer]}.` : `You said ${LABEL[answerOf(it)] || "nothing"}. Answer: ${LABEL[it.answer]}.`),
+        el("p", { className: "rans" }, ok ? `Answer: ${LABEL[it.answer]}.` : `You said ${LABEL[latest[it.id]] || "nothing"}. Answer: ${LABEL[it.answer]}.`),
         el("p", { className: "rwhy" }, it.why)));
     });
   }
 
   function finish() {
     fill.style.width = "100%";
-    const answers = Object.fromEntries(order.map((it, i) => [it.id, given[i]]));
-    if (!practice) onDone(Object.fromEntries(Object.entries(answers).map(([item, opt]) => [item, LABEL[opt]])));
-    showResults(order, (it) => answers[it.id], practice
-      ? "Practice round: not counted. Your report keeps your first answers."
-      : "Your answers are saved in your report. Watch the main screen for the class results.");
+    const first = retrying ? null : `${A.items.length - wrong().length} of ${A.items.length}`;
+    onDone(Object.fromEntries(Object.entries(latest).map(([item, opt]) => [item, LABEL[opt]])), first);
+    showResults();
     show(end);
   }
 
   start.addEventListener("click", () => begin(false));
   again.addEventListener("click", () => begin(true));
 
-  // Already done on this device: show the saved answers instead of Start.
-  const ID = Object.fromEntries(A.options.map((o) => [o.label, o.id]));
-  if (A.items.every((it) => ID[saved[it.id]])) {
-    showResults(A.items, (it) => ID[saved[it.id]], "Your answers are saved in your report.");
+  // Already done on this device: show the saved answers (and any retry) instead of Start.
+  if (A.items.every((it) => latest[it.id])) {
+    showResults();
     intro.hidden = true;
     end.hidden = false;
   }

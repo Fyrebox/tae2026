@@ -1,4 +1,4 @@
-// API behind the /session1 swipe activity and the /session1/host live host view.
+// API behind the /ruleorai swipe activity and the /ruleorai/host live host view.
 // Answers live in memory only: no names, no database. A restart or a reset starts a fresh class.
 import express from "express";
 import { DECK } from "./sort-deck.js";
@@ -33,8 +33,8 @@ router.post("/answer", rateLimit, (req, res) => {
   if (!l || !cardById.has(card) || (answer !== "rule" && answer !== "ai")) {
     return res.status(400).json({ error: "Bad request." });
   }
-  // The first answer to a card counts; practice rounds on the phone are never sent.
-  if (!l.answers[card]) l.answers[card] = answer;
+  // The latest answer to a card counts, so a learner who retries the cards they got wrong improves their result.
+  l.answers[card] = answer;
   res.json({ ok: true });
 });
 

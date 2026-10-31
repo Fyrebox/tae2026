@@ -23,6 +23,9 @@ An Express website for the TAE class delivery schedule and Session 1 activity.
 All activity host views use the same `HOST_PIN`. Like `/ruleorai`, the tap-to-choose
 activities keep answers in memory only, with an anonymous device id and no names;
 **Reset for a new class** clears one activity. Decks live in `pick-decks.js`.
+In Rule or AI? and the Bellarine technology activity, learners can retry the items they
+got wrong and the latest answer counts (the report also keeps the first-try score);
+in the Session 2 matching the first answer counts.
 
 The report form (`report-form.js` drives the form, server validation and host view)
 saves on the learner's device as they type. Submitting needs every checklist box
