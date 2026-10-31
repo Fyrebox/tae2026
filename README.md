@@ -5,20 +5,22 @@ An Express website for the TAE class delivery schedule and Session 1 activity.
 ## Routes
 
 - `/`: shared delivery schedule, grouped by student group and date.
-- `/session1`: Rule or AI? activity.
-- `/session1/host`: PIN-protected activity host view.
-- `/session1/tech`: What does Bellarine already use? (fixed rule, ML, DL or manual).
+- `/ruleorai`: Rule or AI? activity (Session 1).
+- `/ruleorai/host`: PIN-protected activity host view.
+- `/tech`: What does Bellarine already use? (fixed rule, ML, DL or manual).
+- `/brief`: the Session 1 learner page (details below).
+- The old addresses `/session1`, `/session1/host`, `/session1/tech`, `/session1/tech/host`, `/report/1` and `/host` redirect to the new ones.
 - `/session2`: What do organisations automate? (match six tasks to a technology).
-- `/session1/tech/host`, `/session2/host`: PIN-protected host views for those activities.
+- `/tech/host`, `/session2/host`: PIN-protected host views for those activities.
 - `/bellarine`: Bellarine Pathology work brief, AI use policy, fact sheet, glossary and question stems.
 - `/bellarine/role-card`, `/bellarine/links`: Operations Manager role card; vendor and policy links.
-- `/report/1`, `/report/2` and `/report/3`: the learner page for each session, with that session's brief at the top and its report sections below (nothing from the other sessions). Section 3 copies the learner's answers from `/session1/tech` on the same device. `/report` is the whole report, for the trainer.
+- `/brief`, `/report/2` and `/report/3`: the learner page for each session, with that session's brief at the top and its report sections below (nothing from the other sessions). Section 3 copies the learner's answers from `/tech` on the same device. `/report` is the whole report, for the trainer.
 - `/report/host`: PIN-protected list of submitted reports, with a printable view.
 - `/how-ai-writes`: optional LLM explainer.
 
 ### ICTAII401 class activities
 
-All activity host views use the same `HOST_PIN`. Like `/session1`, the tap-to-choose
+All activity host views use the same `HOST_PIN`. Like `/ruleorai`, the tap-to-choose
 activities keep answers in memory only, with an anonymous device id and no names;
 **Reset for a new class** clears one activity. Decks live in `pick-decks.js`.
 

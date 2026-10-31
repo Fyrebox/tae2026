@@ -3,8 +3,8 @@
   const FORM = JSON.parse(document.getElementById("report").textContent);
   const $ = (id) => document.getElementById(id);
   const KEY = "bellarineReport";
-  // /report/1, /report/2 and /report/3 show one session's sections; /report shows them all.
-  const only = Number((location.pathname.match(/^\/report\/([123])\/?$/) || [])[1]) || 0;
+  // /brief (Session 1), /report/2 and /report/3 show one session's sections; /report shows them all.
+  const only = /^\/brief\/?$/.test(location.pathname) ? 1 : Number((location.pathname.match(/^\/report\/([23])\/?$/) || [])[1]) || 0;
 
   // Same anonymous id as the activities, so a resubmission replaces the learner's earlier report.
   function learnerId() {
@@ -91,7 +91,7 @@
     form.append(sec);
   });
 
-  // Section 3: copy the learner's answers from /session1/tech into any empty "type" box.
+  // Section 3: copy the learner's answers from /tech into any empty "type" box.
   function copyTechAnswers() {
     let answers = null;
     try { answers = JSON.parse(localStorage.getItem("pickAnswers:tech") || "null"); } catch { /* storage blocked */ }

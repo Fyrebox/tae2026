@@ -42,10 +42,13 @@ const llmPage = fill(read("public", "llm", "index.html"), {
   jsVersion: fileHash("public", "llm", "app.js"),
 });
 
-app.get("/session1", (req, res) => res.type("html").send(sortPage));
-app.get("/session1/host", (req, res) => res.type("html").send(hostPage));
+// Session 1 has short addresses learners can type: /ruleorai, /brief (the Session 1 report page) and /tech.
+app.get("/ruleorai", (req, res) => res.type("html").send(sortPage));
+app.get("/ruleorai/host", (req, res) => res.type("html").send(hostPage));
+const moved = { "/session1": "/ruleorai", "/session1/host": "/ruleorai/host", "/session1/tech": "/tech", "/session1/tech/host": "/tech/host", "/report/1": "/brief", "/host": "/ruleorai/host" };
+for (const [from, to] of Object.entries(moved)) app.get(from, (req, res) => res.redirect(301, to));
 
-// Tap-to-choose activities (/session1/tech, /session2), each with a host view at <path>/host.
+// Tap-to-choose activities (/tech, /session2), each with a host view at <path>/host.
 const escHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const embed = (value) => JSON.stringify(value).replaceAll("<", "\\u003c");
 const pickV = fileHash("public", "pick", "app.js").slice(0, 3) + fileHash("public", "pick", "host.js").slice(0, 3) + fileHash("public", "pick", "styles.css").slice(0, 3);
@@ -75,7 +78,7 @@ const reportVars = {
 };
 const reportPage = fill(read("pages", "report.html"), reportVars);
 const reportHostPage = fill(read("pages", "report-host.html"), reportVars);
-for (const route of ["/report", "/report/1", "/report/2", "/report/3"]) {
+for (const route of ["/report", "/brief", "/report/2", "/report/3"]) {
   app.get(route, (req, res) => res.type("html").send(reportPage));
 }
 app.get("/report/host", (req, res) => res.type("html").send(reportHostPage));
@@ -83,7 +86,6 @@ const schedulePage = fill(read("pages", "schedule.html"), {
   v: fileHash("public", "schedule", "app.js") + fileHash("public", "schedule", "styles.css"),
 });
 app.get("/", (req, res) => res.type("html").set("Cache-Control", "no-cache").send(schedulePage));
-app.get("/host", (req, res) => res.redirect(301, "/session1/host"));
 app.get("/how-ai-writes", (req, res) => res.type("html").send(llmPage));
 // Registered before the static middleware, which would serve the raw template with its placeholders.
 app.get(["/llm", "/llm/", "/llm/index.html"], (req, res) => res.redirect(301, "/how-ai-writes"));

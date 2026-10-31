@@ -37,7 +37,7 @@ test('every activity item has a valid answer and an explanation', () => {
   }
 });
 
-test('every /session1/tech answer can be copied into report section 3', () => {
+test('every /tech answer can be copied into report section 3', () => {
   const labels = Object.fromEntries(ACTIVITIES.tech.options.map((o) => [o.id, o.label]));
   for (const i of ACTIVITIES.tech.items) {
     const field = FIELDS.get(`s3_${i.id}_class`);

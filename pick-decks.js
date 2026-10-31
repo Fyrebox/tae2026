@@ -2,7 +2,7 @@
 // Each item has one correct option; "why" is shown to the learner after they finish.
 export const ACTIVITIES = {
   tech: {
-    path: "/session1/tech",
+    path: "/tech",
     eyebrow: "ICTAII401 · Session 1",
     title: "What does Bellarine already use?",
     lede: "Seven things Bellarine uses or does now. For each one, choose: a fixed rule, ML, DL, or done by hand. Your answers are copied into section 3 of your report.",

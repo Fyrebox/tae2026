@@ -105,7 +105,7 @@
 
   function finish() {
     $("bar").style.width = "100%";
-    // Keep the counted answers on the device, so the report form can copy them (section 3 for /session1/tech).
+    // Keep the counted answers on the device, so the report form can copy them (section 3 for /tech).
     if (!practice) {
       try {
         localStorage.setItem(`pickAnswers:${A.key}`, JSON.stringify(Object.fromEntries(order.map((it, i) => [it.id, LABEL[given[i]]]))));
