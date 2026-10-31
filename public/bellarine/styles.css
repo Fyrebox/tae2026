@@ -29,3 +29,9 @@ dl.facts ul, dl.facts ol { margin: 0; padding-left: 1.2rem; }
 .cards strong { display: block; }
 .links li a { font-weight: 700; word-break: break-word; }
 .small { font-size: .85rem; color: var(--muted); }
+
+details.panel { background: var(--panel); border: 2px solid var(--line); border-radius: 12px; margin: 10px 0; padding: 0 14px; }
+details.panel > summary { cursor: pointer; font-weight: 700; padding: 12px 0; min-height: 44px; }
+details.panel > summary span { color: var(--muted); font-weight: 600; font-size: .85rem; margin-left: 6px; }
+details.panel[open] { padding-bottom: 12px; }
+details.panel .cards li { background: var(--bg); }
