@@ -47,3 +47,22 @@ nav.jump a[aria-current] { background: var(--accent); border-color: var(--accent
 .brief ol.policy { padding-left: 1.4rem; }
 .brief .buttons .btn { text-decoration: none; display: inline-flex; align-items: center; }
 #yourReport { margin-top: 2.4rem; }
+
+/* Tap-to-choose activity inside a section (section 3). */
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.act-legend { list-style: none; padding: 0; margin: 6px 0 12px; display: grid; gap: 4px; color: var(--muted); }
+.act-legend strong { color: var(--ink); }
+.act-intro .btn, .act-end .btn { width: 100%; }
+.act-head { display: flex; align-items: center; gap: 12px; margin: 6px 0 10px; }
+.act-count { font-weight: 700; min-width: 3.5rem; }
+.act-bar { flex: 1; height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.act-bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+.act-item { display: grid; place-items: center; min-height: 150px; margin: 0 0 12px; padding: 18px; border-radius: 16px; background: var(--bg);
+  border: 2px solid var(--line); text-align: center; font-size: 1.35rem; font-weight: 700; line-height: 1.25; outline: none; }
+.act-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.act-choice { border-color: var(--accent); min-height: 56px; }
+.act-score { font-size: 1.3rem; font-weight: 700; margin: 6px 0 2px; }
+.act-review { list-style: none; padding: 0; display: grid; gap: 8px; margin: 10px 0 12px; }
+.act-review li { border: 2px solid var(--line); border-left-width: 6px; border-radius: 12px; padding: 8px 12px; background: var(--bg); }
+.act-review li.right { border-left-color: var(--ok); } .act-review li.wrong { border-left-color: var(--bad); }
+.act-review p { margin: .1rem 0; } .act-review .rhead { font-weight: 700; } .act-review .rwhy { color: var(--muted); font-size: .9rem; }

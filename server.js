@@ -42,13 +42,13 @@ const llmPage = fill(read("public", "llm", "index.html"), {
   jsVersion: fileHash("public", "llm", "app.js"),
 });
 
-// Session 1 has short addresses learners can type: /ruleorai, /brief (the Session 1 report page) and /tech.
+// Session 1 has short addresses learners can type: /ruleorai and /brief (the Session 1 report page, with the /tech activity in section 3).
 app.get("/ruleorai", (req, res) => res.type("html").send(sortPage));
 app.get("/ruleorai/host", (req, res) => res.type("html").send(hostPage));
 const moved = { "/session1": "/ruleorai", "/session1/host": "/ruleorai/host", "/session1/tech": "/tech", "/session1/tech/host": "/tech/host", "/report/1": "/brief", "/host": "/ruleorai/host" };
 for (const [from, to] of Object.entries(moved)) app.get(from, (req, res) => res.redirect(301, to));
 
-// Tap-to-choose activities (/tech, /session2), each with a host view at <path>/host.
+// Tap-to-choose activities (/tech, /session2), each with a host view at <path>/host. An activity with inPage runs inside that page instead.
 const escHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const embed = (value) => JSON.stringify(value).replaceAll("<", "\\u003c");
 const pickV = fileHash("public", "pick", "app.js").slice(0, 3) + fileHash("public", "pick", "host.js").slice(0, 3) + fileHash("public", "pick", "styles.css").slice(0, 3);
@@ -56,7 +56,8 @@ for (const [key, a] of Object.entries(ACTIVITIES)) {
   const vars = { v: pickV, title: escHtml(a.title), eyebrow: escHtml(a.eyebrow), lede: escHtml(a.lede), activity: embed({ key, ...a }) };
   const page = fill(read("pages", "pick.html"), vars);
   const host = fill(read("pages", "pick-host.html"), vars);
-  app.get(a.path, (req, res) => res.type("html").send(page));
+  if (a.inPage) app.get(a.path, (req, res) => res.redirect(301, a.inPage));
+  else app.get(a.path, (req, res) => res.type("html").send(page));
   app.get(a.path + "/host", (req, res) => res.type("html").send(host));
 }
 
@@ -73,8 +74,10 @@ for (const [route, file] of Object.entries(bellarinePages)) {
 }
 const reportVars = {
   v: fileHash("public", "report", "app.js").slice(0, 2) + fileHash("public", "report", "host.js").slice(0, 2)
-    + fileHash("public", "report", "render.js").slice(0, 2) + fileHash("public", "report", "styles.css").slice(0, 2),
+    + fileHash("public", "report", "render.js").slice(0, 2) + fileHash("public", "report", "styles.css").slice(0, 2)
+    + fileHash("public", "report", "activity.js").slice(0, 2),
   report: embed(REPORT),
+  tech: embed({ key: "tech", ...ACTIVITIES.tech }),
 };
 const reportPage = fill(read("pages", "report.html"), reportVars);
 const reportHostPage = fill(read("pages", "report-host.html"), reportVars);

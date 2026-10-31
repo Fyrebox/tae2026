@@ -3,9 +3,11 @@
 export const ACTIVITIES = {
   tech: {
     path: "/tech",
+    // Runs inside section 3 of the Session 1 page, so learners stay on one page; /tech redirects there.
+    inPage: "/brief#s3",
     eyebrow: "ICTAII401 · Session 1",
     title: "What does Bellarine already use?",
-    lede: "Seven things Bellarine uses or does now. For each one, choose: a fixed rule, ML, DL, or done by hand. Your answers are copied into section 3 of your report.",
+    lede: "Seven things Bellarine uses or does now. For each one, choose: a fixed rule, ML, DL, or done by hand. Your answers are saved in section 3 of your report.",
     options: [
       { id: "rule", label: "Fixed rule", hint: "a person wrote the steps" },
       { id: "ml", label: "ML", hint: "machine learning: it learned from examples" },

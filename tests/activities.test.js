@@ -37,11 +37,14 @@ test('every activity item has a valid answer and an explanation', () => {
   }
 });
 
-test('every /tech answer can be copied into report section 3', () => {
+test('every /tech answer can be saved in report section 3', () => {
   const labels = Object.fromEntries(ACTIVITIES.tech.options.map((o) => [o.id, o.label]));
+  const group = REPORT.sections.find((s) => s.n === 3).groups.find((g) => g.activity === 'tech');
+  assert.deepEqual(group.fields.map((f) => f.item).sort(), ACTIVITIES.tech.items.map((i) => i.id).sort());
   for (const i of ACTIVITIES.tech.items) {
     const field = FIELDS.get(`s3_${i.id}_class`);
     assert.ok(field, i.id);
+    assert.equal(field.item, i.id);
     for (const label of Object.values(labels)) assert.ok(field.options.includes(label), `${i.id}: ${label}`);
   }
 });

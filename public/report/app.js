@@ -65,6 +65,21 @@
       const group = el("fieldset", { className: "group" });
       group.append(el("legend", {}, g.label));
       if (g.hint) group.append(el("p", { className: "small" }, g.hint));
+      // Answered through an activity on the page (section 3): its answers fill the group's fields.
+      if (g.activity) {
+        ids.push(...g.fields.map((f) => f.id));
+        window.mountActivity(group, JSON.parse($(`${g.activity}Activity`).textContent), {
+          learnerId: id,
+          saved: Object.fromEntries(g.fields.map((f) => [f.item, state.fields[f.id]])),
+          onDone: (answers) => {
+            g.fields.forEach((f) => { if (answers[f.item]) state.fields[f.id] = answers[f.item]; });
+            updateProgress();
+            save();
+          },
+        });
+        sec.append(group);
+        return;
+      }
       g.fields.forEach((f) => {
         ids.push(f.id);
         let input;
@@ -89,29 +104,6 @@
     sec.dataset.ids = ids.join(" ");
     sec.progress = progress;
     form.append(sec);
-  });
-
-  // Section 3: copy the learner's answers from /tech into any empty "type" box.
-  function copyTechAnswers() {
-    let answers = null;
-    try { answers = JSON.parse(localStorage.getItem("pickAnswers:tech") || "null"); } catch { /* storage blocked */ }
-    if (!answers) return;
-    let changed = false;
-    for (const [item, label] of Object.entries(answers)) {
-      const input = $(`s3_${item}_class`);
-      if (input && !state.fields[input.id] && [...input.options].some((o) => o.value === label)) {
-        input.value = state.fields[input.id] = label;
-        changed = true;
-      }
-    }
-    if (changed) save();
-  }
-  copyTechAnswers();
-  window.addEventListener("storage", (e) => {
-    if (e.key === "pickAnswers:tech") {
-      copyTechAnswers();
-      updateProgress();
-    }
   });
 
   function filled(fid) { return Boolean((state.fields[fid] || "").trim()); }

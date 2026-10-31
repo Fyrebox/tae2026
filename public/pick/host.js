@@ -7,7 +7,7 @@
   let revealed = false;
   let timer = null;
 
-  $("joinUrl").textContent = location.host + A.path;
+  $("joinUrl").textContent = location.host + (A.inPage ? A.inPage.split("#")[0] : A.path);
   const colour = Object.fromEntries(A.options.map((o, i) => [o.id, "o" + (i + 1)]));
   const label = Object.fromEntries(A.options.map((o) => [o.id, o.label]));
   A.options.forEach((o) => {
