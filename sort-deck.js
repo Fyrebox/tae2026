@@ -1,4 +1,4 @@
-// The ten cards for the "Rule or AI?" activity (ICTAII401, Session 1).
+// The fifteen cards for the "Rule or AI?" activity (ICTAII401, Session 1).
 // answer "rule": a person wrote fixed rules. answer "ai": it learned from data (ML, deep learning, LLMs).
 export const DECK = [
   { id: "sum", text: "Excel SUM formula", answer: "rule",
@@ -21,4 +21,14 @@ export const DECK = [
     why: "It sends the same message to everyone who emails. A fixed rule, even though it feels automatic." },
   { id: "llm", text: "Copilot or ChatGPT drafting an email", answer: "ai",
     why: "A large language model, a kind of deep learning, predicts likely text." },
+  { id: "menuchat", text: "Website chat with buttons: \"Tap 1 for billing\"", answer: "rule",
+    why: "It looks like a chatbot, but it follows a script a person wrote. Each button leads to a fixed next step." },
+  { id: "fraud", text: "Bank texts you: \"Was this payment you?\"", answer: "ai",
+    why: "Fraud detection learned what normal and suspicious spending look like from millions of past transactions (machine learning)." },
+  { id: "password", text: "Rule: password must be 8+ characters with a number", answer: "rule",
+    why: "A rule someone wrote. The system just checks the length and looks for a number." },
+  { id: "translate", text: "Live translation in Google Translate", answer: "ai",
+    why: "It learned how languages match up from huge amounts of translated text (deep learning)." },
+  { id: "checkout", text: "Self-checkout: \"Unexpected item in bagging area\"", answer: "rule",
+    why: "It feels smart, but it only compares the weight on the scale with the weight it expects. A fixed rule." },
 ];
