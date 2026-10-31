@@ -10,13 +10,115 @@
 </head>
 <body>
   <main class="page">
-    <p class="eyebrow">ICTAII401 · Bellarine Pathology · ICT Services</p>
-    <h1>AI Opportunities Report</h1>
+    <p class="eyebrow">ICTAII401 · Bellarine Pathology</p>
+    <h1 id="title">AI Opportunities Report</h1>
     <p id="lede" class="lede">Fill in each section in the session shown. Short, clear entries are enough. Your work is saved on this device as you type.</p>
-    <p class="note">No real personal information about patients, staff or anyone else. Check the <a href="/bellarine">work brief</a> as you go.</p>
-    <nav class="jump" aria-label="Sessions">
-      <a href="/report/1" data-session="1">Session 1 · sections 1–3</a><a href="/report/2" data-session="2">Session 2 · 4–6</a><a href="/report/3" data-session="3">Session 3 · 7–10</a><a href="/report" data-session="0">Whole report</a>
+    <nav id="sessions" class="jump" aria-label="Sessions">
+      <a href="/report/1" data-session="1">Session 1 · sections 1–3</a><a href="/report/2" data-session="2">Session 2 · 4–6</a><a href="/report/3" data-session="3">Session 3 · 7–10</a><a href="/report" data-session="0">Whole report</a><a href="/bellarine">Work brief</a>
     </nav>
+
+    <!-- The brief for each session page (/report/1, /report/2, /report/3). data-sessions lists the pages that show the block. -->
+    <section class="brief" data-sessions="1 2 3" aria-labelledby="briefHead" hidden>
+      <h2 id="briefHead">The brief</h2>
+      <p class="small">Bellarine Pathology runs 6 collection centres and one laboratory, with about 40 staff. It is fictional: all names and details are made up.</p>
+      <dl class="facts">
+        <dt>Your role</dt><dd>ICT support officer at Bellarine.</dd>
+        <dt>Your task</dt><dd>Recommend at least one AI, one ML and one DL idea that helps Bellarine reach its goals.</dd>
+        <dt>Hand in</dt><dd>This report, with the Operations Manager's feedback acted on.</dd>
+        <dt>For</dt><dd>Priya Raman, Operations Manager.</dd>
+        <dt>Due</dt><dd>End of Session 3.</dd>
+        <dt>Budget</dt><dd>$10,000 to set up, plus up to $500 a month.</dd>
+        <dt>Laws</dt><dd>Privacy Act 1988 and Health Records Act 2001 (Vic).</dd>
+      </dl>
+      <h3>AI use policy: the 6 rules</h3>
+      <ol class="policy">
+        <li>Only approved, business-tier AI tools may be used for work tasks.</li>
+        <li>Never enter patient or staff personal information into public AI tools.</li>
+        <li>AI must not release, interpret or change a pathology result. A scientist signs off every result.</li>
+        <li>AI-generated content sent to patients or GPs must be reviewed by staff.</li>
+        <li>Any new AI tool needs a documented risk assessment and Operations Manager approval before use.</li>
+        <li>AI errors or incidents must be reported to the Operations Manager.</li>
+      </ol>
+    </section>
+
+    <section class="brief" data-sessions="1" hidden>
+      <h3>Fact sheet: check what an AI tool tells you</h3>
+      <ul>
+        <li>6 collection centres: Ocean Grove, Queenscliff, Portarlington, Drysdale, Leopold and Bellarine Central.</li>
+        <li>Ocean Grove is open 7:00 am to 3:00 pm, Monday to Friday, and closed on weekends.</li>
+        <li>Results go to the requesting doctor, usually within 2 business days.</li>
+        <li>The Operations Manager is Priya Raman.</li>
+      </ul>
+      <h3>Bellarine's goals</h3>
+      <ol>
+        <li>Less staff time on repeat patient and doctor (GP) questions.</li>
+        <li>Fewer missed appointments.</li>
+        <li>Faster routine slide checking in the lab.</li>
+        <li>Fewer sample-labelling errors.</li>
+      </ol>
+      <h3>Pick one question to ask Priya</h3>
+      <ul class="cards">
+        <li>Which goal matters most, and why?</li>
+        <li>How will we know it worked?</li>
+        <li>What is the budget, and is anything off limits?</li>
+      </ul>
+      <p class="buttons"><a class="btn" href="/session1/tech">Open the technology activity (section 3)</a></p>
+      <details class="panel">
+        <summary>Words, if you get stuck</summary>
+        <ul class="cards">
+          <li><strong>Fixed rule</strong>A person wrote the steps. Same input, same result, every time. Not AI. Example: a thermostat.</li>
+          <li><strong>Artificial intelligence (AI)</strong>Computers doing jobs that normally need a person to think. Simple test for everyday tools: did it learn from data?</li>
+          <li><strong>Machine learning (ML)</strong>A kind of AI that learns from lots of examples instead of following steps a person wrote. Example: a junk-mail filter.</li>
+          <li><strong>Deep learning (DL)</strong>A powerful kind of machine learning for language, pictures and sound. Example: face unlock.</li>
+          <li><strong>Large language model (LLM)</strong>Deep learning that writes text, like ChatGPT or Copilot. It can sound sure and still be wrong.</li>
+        </ul>
+      </details>
+    </section>
+
+    <section class="brief" data-sessions="2" hidden>
+      <h3>Bellarine's goals</h3>
+      <ol>
+        <li>Less staff time on repeat patient and doctor (GP) questions.</li>
+        <li>Fewer missed appointments.</li>
+        <li>Faster routine slide checking in the lab.</li>
+        <li>Fewer sample-labelling errors.</li>
+      </ol>
+      <h3>Products to name (sections 4 and 5)</h3>
+      <p class="note">Do not sign up for free trials or enter personal details on any of these sites.</p>
+      <ul class="cards links">
+        <li><a href="https://learn.microsoft.com/en-us/microsoft-copilot-studio/" target="_blank" rel="noopener">Microsoft Copilot Studio</a>Build assistants: scripted topics (rules written by experts) or generative answers from approved content (LLM).</li>
+        <li><a href="https://learn.microsoft.com/en-us/azure/machine-learning/concept-automated-ml" target="_blank" rel="noopener">Azure Machine Learning automated ML</a>Predict from historical data, e.g. which bookings are likely to be missed (ML).</li>
+        <li><a href="https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/" target="_blank" rel="noopener">Azure AI Document Intelligence</a>Read forms and documents, e.g. request forms (DL).</li>
+        <li><a href="https://learn.microsoft.com/en-us/copilot/microsoft-365/" target="_blank" rel="noopener">Microsoft 365 Copilot</a>LLM assistant inside Outlook, Word and Teams (DL).</li>
+        <li><a href="https://learn.microsoft.com/en-us/power-automate/" target="_blank" rel="noopener">Power Automate</a>Rule-based workflows. Useful, but not AI on its own.</li>
+      </ul>
+      <h3>Privacy and ethics (section 6)</h3>
+      <ul class="cards links">
+        <li><a href="https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/guidance-on-privacy-and-the-use-of-commercially-available-ai-products" target="_blank" rel="noopener">OAIC: privacy and commercially available AI products</a>How the Privacy Act 1988 applies when an organisation uses AI tools.</li>
+        <li><a href="https://www.industry.gov.au/publications/australias-artificial-intelligence-ethics-principles" target="_blank" rel="noopener">Australia's AI Ethics Principles</a>A further checklist for risks.</li>
+      </ul>
+      <p class="buttons"><a class="btn" href="/bellarine/role-card">Playing Priya? Open the role card</a></p>
+      <details class="panel">
+        <summary>Words, if you get stuck</summary>
+        <ul class="cards">
+          <li><strong>Expert system</strong>AI built from many rules written by experts. It does not learn, but it still counts as AI.</li>
+          <li><strong>Business-tier tool</strong>A paid, organisation-managed version of a tool, with privacy and data protections.</li>
+        </ul>
+      </details>
+    </section>
+
+    <section class="brief" data-sessions="3" hidden>
+      <h3>Paired feedback: questions to ask your partner</h3>
+      <ul class="cards">
+        <li>Which recommendation would you start with, and why?</li>
+        <li>How does this comply with our AI use policy?</li>
+        <li>What happens if it gets something wrong?</li>
+      </ul>
+      <p class="note">Then give one strength and one change. Your partner records it in section 9 of their report.</p>
+    </section>
+
+    <h2 id="yourReport" class="session" hidden>Your report</h2>
+    <p class="note">No real personal information about patients, staff or anyone else.</p>
     <p id="saved" class="saved" aria-live="polite"></p>
 
     <form id="form" novalidate></form>

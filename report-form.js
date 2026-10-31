@@ -31,7 +31,7 @@ export const REPORT = {
   title: "AI Opportunities Report",
   submitTo: "Priya Raman, Operations Manager",
   sections: [
-    { n: 1, session: 1, title: "Work brief", maps: "PC 1.1", intro: "Answer from the work brief and AI use policy at taegordon.au/bellarine. Short answers are fine.", groups: [
+    { n: 1, session: 1, title: "Work brief", maps: "PC 1.1", intro: "Answer from the brief and the AI use policy at the top of this page. Short answers are fine.", groups: [
       { label: "What have I been asked to do?", hint: "One sentence in your own words, including what you hand in.", fields: [{ id: "s1_task", type: "textarea", placeholder: "Example from a different job: Compare three printers and recommend one in an email" }] },
       { label: "Who wants it, and by when?", fields: [{ id: "s1_who", type: "text", placeholder: "Example: The office manager, by Friday" }] },
       { label: "3 rules from the AI use policy I must follow", hint: "One rule per line.", fields: [{ id: "s1_constraints", type: "textarea", placeholder: "Example from a different policy: Never share your password" }] },
@@ -43,14 +43,14 @@ export const REPORT = {
       { label: "Budget and limits", hint: "What the Operations Manager said about money, and anything off limits.", fields: [{ id: "s2_budget", type: "textarea" }] },
       { label: "Value of the top goal", hint: "Copy the trainer's worked example: the yearly cost of the staff time it takes now.", fields: [{ id: "s2_value", type: "text" }] },
     ] },
-    { n: 3, session: 1, title: "Current technology and processes", maps: "PC 1.3", intro: "Your answers from taegordon.au/session1/tech are copied here. Fix any that were wrong, then explain three of them.", groups: [
+    { n: 3, session: 1, title: "Current technology and processes", maps: "PC 1.3", intro: "Your answers from the technology activity are copied here. Fix any that were wrong, then explain three of them.", groups: [
       { label: "Type of each technology or process", fields: TECH.map(([key, label]) => (
         { id: `s3_${key}_class`, label, type: "select", options: ["Fixed rule", "ML", "DL", "Manual"] })) },
       { label: "Pick one fixed rule. What is it, and why is it a rule?", fields: [{ id: "s3_why_rule", type: "textarea", placeholder: "Example: The thermostat, because a person set the temperature" }] },
       { label: "Pick one ML or DL item. What is it, and why?", fields: [{ id: "s3_why_ai", type: "textarea", placeholder: "Example: Face unlock, because it learned from photos" }] },
       { label: "Pick one manual process. What is it, and could AI help?", fields: [{ id: "s3_why_manual", type: "textarea" }] },
     ] },
-    { n: 4, session: 2, title: "Application procedures", maps: "PC 1.4", intro: "How each option would be applied, from a vendor page.", groups: perOption(4, [
+    { n: 4, session: 2, title: "Application procedures", maps: "PC 1.4", intro: "How each option would be applied, from one of the product pages at the top of this page.", groups: perOption(4, [
       ["source", "Source used and date"],
       ["prereq", "Prerequisites", "Data, licences, skills"],
       ["steps", "Main steps (at least 2)"],

@@ -54,7 +54,7 @@
   FORM.sections.forEach((s) => {
     if (s.session !== session) {
       session = s.session;
-      form.append(el("h2", { id: `session${session}`, className: "session", hidden: only && only !== session }, `Session ${session}`));
+      form.append(el("h2", { id: `session${session}`, className: "session", hidden: Boolean(only) }, `Session ${session}`));
     }
     const sec = el("section", { className: "rsec", id: `s${s.n}`, hidden: only && only !== s.session });
     const progress = el("span", { className: "progress" });
@@ -181,15 +181,21 @@
     a.remove();
   });
 
-  // Session view: point the session links at /report/N and hide the submission until Session 3.
-  document.querySelectorAll("nav.jump a[data-session]").forEach((a) => {
-    if (Number(a.dataset.session) === only) a.setAttribute("aria-current", "page");
-  });
+  // Session page: that session's brief on top and its sections below, with nothing from the other sessions.
+  // The submission shows only in Session 3. /report (no session) is the whole report, for the trainer.
   if (only) {
     const first = FORM.sections.find((s) => s.session === only).n;
     const last = only === 3 ? 10 : FORM.sections.filter((s) => s.session === only).at(-1).n;
-    $("lede").textContent = `Session ${only}: sections ${first}–${last}. Short, clear answers are enough. Your work is saved on this device as you type.`;
+    document.title = `Session ${only} · Bellarine Pathology`;
+    $("title").textContent = `Session ${only}`;
+    $("lede").textContent = `Read the brief, then fill in sections ${first}–${last} of your report below. Short, clear answers are enough. Your work is saved on this device as you type.`;
+    $("sessions").hidden = true;
+    document.querySelectorAll("section.brief").forEach((b) => { b.hidden = !b.dataset.sessions.split(" ").includes(String(only)); });
+    $("yourReport").hidden = false;
+    $("yourReport").textContent = `Your report: sections ${first}–${last}`;
     $("submit").hidden = only !== 3;
+  } else {
+    document.querySelector('#sessions a[data-session="0"]').setAttribute("aria-current", "page");
   }
 
   updateProgress();

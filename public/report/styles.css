@@ -41,3 +41,9 @@ nav.jump a[aria-current] { background: var(--accent); border-color: var(--accent
   body.host .page > :not(.viewer) { display: none !important; }
   .viewer { border: 0; padding: 0; }
 }
+
+/* Session pages: the brief above the form. */
+.brief h3 { margin-top: 1.2rem; }
+.brief ol.policy { padding-left: 1.4rem; }
+.brief .buttons .btn { text-decoration: none; display: inline-flex; align-items: center; }
+#yourReport { margin-top: 2.4rem; }
