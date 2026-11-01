@@ -41,7 +41,6 @@ export const REPORT = {
         { id: `s2_rank_${key}`, label, type: "select", options: ["1", "2", "3", "4"] })) },
       { label: "How will we know the top goal worked?", fields: [{ id: "s2_measure", type: "text", placeholder: "Example for a printer: fewer paper jams each week" }] },
       { label: "Budget and limits", hint: "What the Operations Manager said about money, and anything off limits.", fields: [{ id: "s2_budget", type: "textarea" }] },
-      { label: "Value of the top goal", hint: "Copy the trainer's worked example: the yearly cost of the staff time it takes now.", fields: [{ id: "s2_value", type: "text" }] },
     ] },
     { n: 3, session: 1, title: "Current technology and processes", maps: "PC 1.3", intro: "Tap Start and sort Bellarine's seven technologies and processes. Got some wrong? Retry them: your latest answers are saved here. Then explain three of them.", groups: [
       // activity: the learner answers through the tap-to-choose activity (pick-decks.js), not drop-downs; item links each field
