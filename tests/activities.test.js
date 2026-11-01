@@ -106,7 +106,7 @@ test('report submissions are validated', () => {
     { name: 'Sam', fields: { unknown: 'x' }, checklist: ticks },
     { name: 'Sam', fields: { s1_task: 5 }, checklist: ticks },
     { name: 'Sam', fields: { s1_who: 'x'.repeat(301) }, checklist: ticks },
-    { name: 'Sam', fields: { s2_rank_missed: '5' }, checklist: ticks },
+    { name: 'Sam', fields: { s2_rank_missed: '4' }, checklist: ticks },
     { name: 'Sam', fields: { s3_junk_class: 'Magic' }, checklist: ticks },
   ];
   for (const b of bad) assert.equal(cleanSubmission(b), null, JSON.stringify(b).slice(0, 80));

@@ -16,15 +16,14 @@ const TECH = [
   ["barcode", "Barcode scanners at the collection centres"],
   ["copilot", "Microsoft 365 Copilot Chat"],
   ["enquiries", "Staff answer patient and doctor questions by phone"],
-  ["slides", "Scientists check routine slides by eye"],
+  ["slides", "Scientists check samples under the microscope by eye"],
 ];
 
-// Section 2: the four goals from the work brief, ranked by the learner after asking the Operations Manager.
+// Section 2: the three goals from the work brief, ranked by the learner after asking the Operations Manager.
 const GOALS = [
-  ["enquiries", "Less staff time on repeat patient and doctor questions"],
-  ["missed", "Fewer missed appointments"],
-  ["slides", "Faster routine slide checking in the lab"],
-  ["labels", "Fewer sample-labelling errors"],
+  ["enquiries", "Answer patients' questions faster"],
+  ["missed", "Fewer people miss their blood test"],
+  ["slides", "Check samples under the microscope faster"],
 ];
 
 export const REPORT = {
@@ -37,8 +36,8 @@ export const REPORT = {
       { label: "3 rules from the AI use policy I must follow", hint: "One rule per line.", fields: [{ id: "s1_constraints", type: "textarea", placeholder: "Example from a different policy: Never share your password" }] },
     ] },
     { n: 2, session: 1, title: "Organisational goals", maps: "PC 1.2", intro: "Ask the Operations Manager, then record what she says.", groups: [
-      { label: "Rank the four goals", hint: "1 = most important, as the Operations Manager tells you.", fields: GOALS.map(([key, label]) => (
-        { id: `s2_rank_${key}`, label, type: "select", options: ["1", "2", "3", "4"] })) },
+      { label: "Rank the three goals", hint: "1 = most important, as the Operations Manager tells you.", fields: GOALS.map(([key, label]) => (
+        { id: `s2_rank_${key}`, label, type: "select", options: ["1", "2", "3"] })) },
       { label: "How will we know the top goal worked?", fields: [{ id: "s2_measure", type: "text", placeholder: "Example for a printer: fewer paper jams each week" }] },
       { label: "Budget and limits", hint: "What the Operations Manager said about money, and anything off limits.", fields: [{ id: "s2_budget", type: "textarea" }] },
     ] },

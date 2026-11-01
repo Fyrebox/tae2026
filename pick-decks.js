@@ -29,7 +29,7 @@ export const ACTIVITIES = {
         why: "A large language model (LLM), a kind of deep learning that writes text. Staff check anything it writes, and never give it patient data." },
       { id: "enquiries", text: "Staff answer patient and doctor questions by phone", answer: "manual",
         why: "Done by hand by whoever is free: a chance for AI to help with goal 1." },
-      { id: "slides", text: "Scientists check routine slides by eye", answer: "manual",
+      { id: "slides", text: "Scientists check samples under the microscope by eye", answer: "manual",
         why: "Done by hand: deep learning could help with goal 3, with a scientist still signing off." },
     ],
   },
