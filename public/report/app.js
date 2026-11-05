@@ -189,10 +189,21 @@
     $("yourReport").hidden = false;
     $("yourReport").textContent = `Your report: sections ${first}–${last}`;
     $("submit").hidden = only !== 3;
+    // Feedback in Session 3 can change an earlier section, so section 9 links back to the earlier pages, and they link back here.
+    if (only === 3) {
+      $("s9").append(el("p", { className: "small" }, "Need to change an earlier section? Go to ",
+        el("a", { href: "/brief?from=3" }, "sections 1–3"), " or ", el("a", { href: "/report/2?from=3#s5" }, "sections 4–6"), "."));
+    } else if (new URLSearchParams(location.search).get("from") === "3") {
+      $("lede").after(el("p", {}, el("a", { href: "/report/3#s9" }, "← Back to Session 3")));
+    }
   } else {
     document.querySelector('#sessions a[data-session="0"]').setAttribute("aria-current", "page");
   }
 
   updateProgress();
   showSubmitted();
+  // Sections are built here, after the browser has looked for the #section in the address.
+  if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+  // The Back button can restore this page from memory with an old copy of the report: reload so a later save cannot undo newer work.
+  window.addEventListener("pageshow", (e) => { if (e.persisted) location.reload(); });
 })();
