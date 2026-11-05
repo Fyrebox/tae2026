@@ -27,6 +27,9 @@
     const saved = JSON.parse(localStorage.getItem(KEY) || "null");
     if (saved && saved.fields) state = { ...state, ...saved, checklist: FORM.checklist.map((_, i) => saved.checklist?.[i] === true) };
   } catch { /* storage blocked or corrupt: start empty */ }
+  // Drop answers to boxes that no longer exist: the server rejects a report with fields it does not know.
+  const known = new Set(FORM.sections.flatMap((s) => s.groups.flatMap((g) => g.fields.map((f) => f.id))));
+  state.fields = Object.fromEntries(Object.entries(state.fields).filter(([fid]) => known.has(fid)));
 
   let saveTimer = null;
   function save() {

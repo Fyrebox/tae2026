@@ -26,6 +26,7 @@ async function serve(path, router) {
 
 const ID = 'learner-0001';
 const ticks = REPORT.checklist.map(() => true);
+const GOAL = FIELDS.get('s2_goal').options.at(-1); // the longest goal name must fit the server's limit
 
 test('every activity item has a valid answer and an explanation', () => {
   for (const [key, a] of Object.entries(ACTIVITIES)) {
@@ -95,8 +96,8 @@ test('pick activity counts the latest answer when retries are allowed, otherwise
 });
 
 test('report submissions are validated', () => {
-  const ok = cleanSubmission({ name: ' Sam ', fields: { s1_task: 'Find AI options', s1_who: '  ', s3_junk_class: 'ML', s2_rank_missed: '2' }, checklist: ticks });
-  assert.deepEqual(ok, { name: 'Sam', fields: { s1_task: 'Find AI options', s3_junk_class: 'ML', s2_rank_missed: '2' }, checklist: ticks });
+  const ok = cleanSubmission({ name: ' Sam ', fields: { s1_task: 'Find AI options', s1_who: '  ', s3_junk_class: 'ML', s2_goal: GOAL }, checklist: ticks });
+  assert.deepEqual(ok, { name: 'Sam', fields: { s1_task: 'Find AI options', s3_junk_class: 'ML', s2_goal: GOAL }, checklist: ticks });
   const bad = [
     { name: '', fields: {}, checklist: ticks },
     { name: 'x'.repeat(61), fields: {}, checklist: ticks },
@@ -106,7 +107,8 @@ test('report submissions are validated', () => {
     { name: 'Sam', fields: { unknown: 'x' }, checklist: ticks },
     { name: 'Sam', fields: { s1_task: 5 }, checklist: ticks },
     { name: 'Sam', fields: { s1_who: 'x'.repeat(301) }, checklist: ticks },
-    { name: 'Sam', fields: { s2_rank_missed: '4' }, checklist: ticks },
+    { name: 'Sam', fields: { s2_goal: 'Not a goal' }, checklist: ticks },
+    { name: 'Sam', fields: { s2_rank_missed: '1' }, checklist: ticks },
     { name: 'Sam', fields: { s3_junk_class: 'Magic' }, checklist: ticks },
   ];
   for (const b of bad) assert.equal(cleanSubmission(b), null, JSON.stringify(b).slice(0, 80));
