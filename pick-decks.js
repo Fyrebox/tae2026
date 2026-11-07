@@ -36,7 +36,7 @@ export const ACTIVITIES = {
   tasks: {
     path: "/session2",
     // Runs at the top of the Session 2 page; /session2 redirects there. The six tasks are the ones the unit lists.
-    inPage: "/report/2#tasks",
+    inPage: "/brief2#tasks",
     retries: true,
     eyebrow: "ICTAII401 · Session 2",
     title: "What do organisations automate?",

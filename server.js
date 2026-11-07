@@ -46,7 +46,7 @@ const llmPage = fill(read("public", "llm", "index.html"), {
 // Session 1 has short addresses learners can type: /ruleorai and /brief (the Session 1 report page, with the /tech activity in section 3).
 app.get("/ruleorai", (req, res) => res.type("html").send(sortPage));
 app.get("/ruleorai/host", (req, res) => res.type("html").send(hostPage));
-const moved = { "/session1": "/ruleorai", "/session1/host": "/ruleorai/host", "/session1/tech": "/tech", "/session1/tech/host": "/tech/host", "/report/1": "/brief", "/host": "/ruleorai/host" };
+const moved = { "/session1": "/ruleorai", "/session1/host": "/ruleorai/host", "/session1/tech": "/tech", "/session1/tech/host": "/tech/host", "/report/1": "/brief", "/report/2": "/brief2", "/host": "/ruleorai/host" };
 for (const [from, to] of Object.entries(moved)) app.get(from, (req, res) => res.redirect(301, to));
 
 // Tap-to-choose activities (/tech, /session2), each with a host view at <path>/host. An activity with inPage runs inside that page instead.
@@ -84,7 +84,7 @@ const reportVars = {
 };
 const reportPage = fill(read("pages", "report.html"), reportVars);
 const reportHostPage = fill(read("pages", "report-host.html"), reportVars);
-for (const route of ["/report", "/brief", "/report/2", "/report/3"]) {
+for (const route of ["/report", "/brief", "/brief2", "/report/3"]) {
   app.get(route, (req, res) => res.type("html").send(reportPage));
 }
 app.get("/report/host", (req, res) => res.type("html").send(reportHostPage));

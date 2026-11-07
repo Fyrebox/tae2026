@@ -4,8 +4,8 @@
   const CARDS = JSON.parse(document.getElementById("optionCards").textContent);
   const $ = (id) => document.getElementById(id);
   const KEY = "bellarineReport";
-  // /brief (Session 1), /report/2 and /report/3 show one session's sections; /report shows them all.
-  const only = /^\/brief\/?$/.test(location.pathname) ? 1 : Number((location.pathname.match(/^\/report\/([23])\/?$/) || [])[1]) || 0;
+  // /brief (Session 1), /brief2 (Session 2) and /report/3 show one session's sections; /report shows them all.
+  const only = { "/brief": 1, "/brief2": 2, "/report/3": 3 }[location.pathname.replace(/\/$/, "")] || 0;
 
   // Same anonymous id as the activities, so a resubmission replaces the learner's earlier report.
   function learnerId() {
@@ -223,7 +223,8 @@
     const last = only === 3 ? 10 : FORM.sections.filter((s) => s.session === only).at(-1).n;
     document.title = `Session ${only} · Bellarine Pathology`;
     $("title").textContent = `Session ${only}`;
-    $("lede").textContent = `Read the brief, then fill in sections ${first}–${last} of your report below. Short, clear answers are enough. Your work is saved on this device as you type.`;
+    const hasBrief = $("briefHead").closest("section").dataset.sessions.split(" ").includes(String(only));
+    $("lede").textContent = `${hasBrief ? `Read the brief, then fill in sections ${first}–${last} of your report below.` : `Fill in sections ${first}–${last} of your report below.`} Short, clear answers are enough. Your work is saved on this device as you type.`;
     $("sessions").hidden = true;
     document.querySelectorAll("section.brief").forEach((b) => { b.hidden = !b.dataset.sessions.split(" ").includes(String(only)); });
     $("yourReport").hidden = false;
@@ -234,7 +235,7 @@
     // Feedback in Session 3 can change an earlier section, so section 9 links back to the earlier pages, and they link back here.
     if (only === 3) {
       $("s9").append(el("p", { className: "small" }, "Need to change an earlier section? Go to ",
-        el("a", { href: "/brief?from=3" }, "sections 1–3"), " or ", el("a", { href: "/report/2?from=3#s5" }, "sections 4–6"), "."));
+        el("a", { href: "/brief?from=3" }, "sections 1–3"), " or ", el("a", { href: "/brief2?from=3#s4" }, "sections 4–6"), "."));
     } else if (new URLSearchParams(location.search).get("from") === "3") {
       $("lede").after(el("p", {}, el("a", { href: "/report/3#s9" }, "← Back to Session 3")));
     }
