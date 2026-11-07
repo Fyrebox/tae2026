@@ -46,10 +46,10 @@ const llmPage = fill(read("public", "llm", "index.html"), {
 // Session 1 has short addresses learners can type: /ruleorai and /brief (the Session 1 report page, with the /tech activity in section 3).
 app.get("/ruleorai", (req, res) => res.type("html").send(sortPage));
 app.get("/ruleorai/host", (req, res) => res.type("html").send(hostPage));
-const moved = { "/session1": "/ruleorai", "/session1/host": "/ruleorai/host", "/session1/tech": "/tech", "/session1/tech/host": "/tech/host", "/report/1": "/brief", "/report/2": "/brief2", "/host": "/ruleorai/host" };
+const moved = { "/session1": "/ruleorai", "/session1/host": "/ruleorai/host", "/session1/tech": "/tech", "/session1/tech/host": "/tech/host", "/report/1": "/brief", "/report/2": "/brief2", "/session2": "/brief2", "/session2/host": "/brief2", "/host": "/ruleorai/host" };
 for (const [from, to] of Object.entries(moved)) app.get(from, (req, res) => res.redirect(301, to));
 
-// Tap-to-choose activities (/tech, /session2), each with a host view at <path>/host. An activity with inPage runs inside that page instead.
+// Tap-to-choose activities (/tech), each with a host view at <path>/host. An activity with inPage runs inside that page instead.
 const escHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const embed = (value) => JSON.stringify(value).replaceAll("<", "\\u003c");
 const pickV = fileHash("public", "pick", "app.js").slice(0, 3) + fileHash("public", "pick", "host.js").slice(0, 3) + fileHash("public", "pick", "styles.css").slice(0, 3);
@@ -79,7 +79,6 @@ const reportVars = {
     + fileHash("public", "report", "activity.js").slice(0, 2),
   report: embed(REPORT),
   tech: embed({ key: "tech", ...ACTIVITIES.tech }),
-  tasks: embed({ key: "tasks", ...ACTIVITIES.tasks }),
   cards: embed(CARDS),
 };
 const reportPage = fill(read("pages", "report.html"), reportVars);

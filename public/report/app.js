@@ -230,8 +230,6 @@
     $("yourReport").hidden = false;
     $("yourReport").textContent = `Your report: sections ${first}–${last}`;
     $("submit").hidden = only !== 3;
-    // Session 2 opens with the "What do organisations automate?" activity; its answers go to the host view, not the report.
-    if (only === 2) window.mountActivity($("tasksMount"), JSON.parse($("tasksActivity").textContent), { learnerId: id, saved: {}, onDone: () => {} });
     // Feedback in Session 3 can change an earlier section, so section 9 links back to the earlier pages, and they link back here.
     if (only === 3) {
       $("s9").append(el("p", { className: "small" }, "Need to change an earlier section? Go to ",

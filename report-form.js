@@ -23,7 +23,7 @@ const TECH = [
 
 // Section 2: the three goals from the work brief (option-cards.js). They matter equally, so each learner picks one.
 const RISKS = ["Privacy and health records", "Accuracy", "Bias and fairness", "Data quality", "Cost and vendor", "People"];
-const TYPE = { ai: "follows many rules written by experts", ml: "learns patterns from past data", dl: "works with language, pictures or sound" };
+const TYPE = { ai: "an AI assistant that works with text, like ChatGPT or Copilot", ml: "learns from past data to predict something", dl: "works with pictures or sound" };
 
 export const REPORT = {
   title: "AI Opportunities Report",

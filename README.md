@@ -10,8 +10,7 @@ An Express website for the TAE class delivery schedule and Session 1 activity.
 - `/tech`: What does Bellarine already use? (fixed rule, ML, DL or manual). It runs inside section 3 of `/brief`, so learners stay on one page; `/tech` redirects there.
 - `/brief`: the Session 1 learner page (details below).
 - The old addresses `/session1`, `/session1/host`, `/session1/tech`, `/session1/tech/host`, `/report/1` and `/host` redirect to the new ones.
-- `/session2`: What do organisations automate? (six tasks the unit lists: fixed rule, AI, ML or DL). It runs at the top of `/brief2`; `/session2` redirects there.
-- `/tech/host`, `/session2/host`: PIN-protected host views for those activities.
+- `/tech/host`: PIN-protected host view for the technology activity. `/session2` and `/session2/host` redirect to `/brief2`.
 - `/bellarine`: Bellarine Pathology work brief, AI use policy, fact sheet, glossary and question stems.
 - `/bellarine/role-card`, `/bellarine/links`: Operations Manager role card; vendor and policy links.
 - `/brief`, `/brief2` and `/report/3`: the learner page for each session (`/report/2` redirects to `/brief2`), with that session's brief at the top and its report sections below (nothing from the other sessions). Section 3 holds the `/tech` activity, and its answers are saved straight into the report. Section 4 shows the Session 2 option cards (`option-cards.js`) for the goal picked in section 2, each with a ChatGPT research question. `/report` is the whole report, for the trainer.
@@ -23,7 +22,7 @@ An Express website for the TAE class delivery schedule and Session 1 activity.
 All activity host views use the same `HOST_PIN`. Like `/ruleorai`, the tap-to-choose
 activities keep answers in memory only, with an anonymous device id and no names;
 **Reset for a new class** clears one activity. Decks live in `pick-decks.js`.
-In all three activities learners can retry the items they got wrong and the latest
+In both activities learners can retry the items they got wrong and the latest
 answer counts (the section 3 report also keeps the first-try score).
 
 The report form (`report-form.js` drives the form, server validation and host view)

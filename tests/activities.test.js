@@ -75,8 +75,6 @@ test('pick activity counts the latest answer when retries are allowed, otherwise
     const junk = stats.items.find((i) => i.id === 'junk');
     assert.deepEqual(junk.counts, { rule: 0, ml: 0, dl: 1, manual: 0 }); // tech allows retries: the latest answer counts
 
-    // Activities are separate: the Session 2 activity has no learners yet.
-    assert.equal((await (await call('/tasks/host/stats', { pin: '424242' })).json()).joined, 0);
 
     for (const i of ACTIVITIES.tech.items) await call('/tech/answer', { body: { id: ID, item: i.id, answer: i.answer } });
     const done = await (await call('/tech/host/stats', { pin: '424242' })).json();
@@ -138,12 +136,13 @@ test('reports are submitted, replaced on resubmission and readable only with the
   }
 });
 
-test('each session page has its own brief, and it matches the full work brief', async () => {
+test('Sessions 1 and 3 show a brief (Session 2 has none), and it matches the full work brief', async () => {
   const { readFile } = await import('node:fs/promises');
   const report = await readFile(new URL('../pages/report.html', import.meta.url), 'utf8');
   const brief = await readFile(new URL('../pages/bellarine.html', import.meta.url), 'utf8');
   const blocks = [...report.matchAll(/<section class="brief" data-sessions="([\d ]+)"/g)].map((m) => m[1].split(' '));
-  for (const n of ['1', '2', '3']) assert.ok(blocks.some((b) => b.includes(n)), `no brief for session ${n}`);
+  for (const n of ['1', '3']) assert.ok(blocks.some((b) => b.includes(n)), `no brief for session ${n}`);
+  assert.ok(!blocks.some((b) => b.includes('2')), 'Session 2 has no brief');
   const items = (html, cls) => [...html.slice(html.indexOf(cls)).split('</ol>')[0].matchAll(/<li>(.*?)<\/li>/g)].map((m) => m[1]);
   assert.deepEqual(items(report, '<ol class="policy">'), items(brief, '<h2 id="policy">'));
   for (const s of REPORT.sections) assert.ok(!/taegordon\.au/.test(s.intro || ''), `section ${s.n} intro sends learners off the page`);
