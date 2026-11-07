@@ -66,3 +66,13 @@ nav.jump a[aria-current] { background: var(--accent); border-color: var(--accent
 .act-review li { border: 2px solid var(--line); border-left-width: 6px; border-radius: 12px; padding: 8px 12px; background: var(--bg); }
 .act-review li.right { border-left-color: var(--ok); } .act-review li.wrong { border-left-color: var(--bad); }
 .act-review p { margin: .1rem 0; } .act-review .rhead { font-weight: 700; } .act-review .rwhy { color: var(--muted); font-size: .9rem; }
+
+/* Session 2 option cards (section 4). */
+.optcards { display: grid; gap: 8px; margin-top: 6px; }
+.optcard { font: inherit; text-align: left; display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+.optcard.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.optcard .optmeta { font-size: .85rem; color: var(--muted); }
+.ask { border-left: 4px solid var(--accent); padding: 4px 0 4px 10px; margin: 0 0 4px; }
+.ask p { margin: .2rem 0; }
+.ask .buttons { margin: 6px 0 0; }
+.ask .btn { text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; }

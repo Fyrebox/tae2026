@@ -1,5 +1,7 @@
 // The Bellarine AI Opportunities Report (ICTAII401): ten sections filled in across Sessions 1–3.
 // One schema drives the learner form, the server's validation and the host's read-only view.
+import { GOALS, cardValues } from "./option-cards.js";
+
 const OPTIONS = [["ai", "AI option"], ["ml", "ML option"], ["dl", "DL option"]];
 
 // One row per criterion, one text box per option (AI, ML, DL).
@@ -19,12 +21,9 @@ const TECH = [
   ["slides", "Scientists check samples under the microscope by eye"],
 ];
 
-// Section 2: the three goals from the work brief. They matter equally, so each learner picks one to work on.
-const GOALS = [
-  "Answer patients' questions faster",
-  "Fewer people miss their blood test",
-  "Check samples under the microscope faster",
-];
+// Section 2: the three goals from the work brief (option-cards.js). They matter equally, so each learner picks one.
+const RISKS = ["Privacy and health records", "Accuracy", "Bias and fairness", "Data quality", "Cost and vendor", "People"];
+const TYPE = { ai: "follows many rules written by experts", ml: "learns patterns from past data", dl: "works with language, pictures or sound" };
 
 export const REPORT = {
   title: "AI Opportunities Report",
@@ -51,24 +50,25 @@ export const REPORT = {
       { label: "Pick one ML or DL item. What is it, and why?", fields: [{ id: "s3_why_ai", type: "textarea", placeholder: "Example: Face unlock, because it learned from photos" }] },
       { label: "Pick one manual process. What is it, and could AI help?", fields: [{ id: "s3_why_manual", type: "textarea" }] },
     ] },
-    { n: 4, session: 2, title: "Application procedures", maps: "PC 1.4", intro: "How each option would be applied, from one of the product pages at the top of this page.", groups: perOption(4, [
-      ["source", "Source used and date"],
-      ["prereq", "Prerequisites", "Data, licences, skills"],
-      ["steps", "Main steps (at least 2)"],
-    ]) },
-    { n: 5, session: 2, title: "Recommended opportunities", maps: "PCs 2.1, 2.2, 2.4 · PE: one AI, one ML and one DL opportunity", groups: perOption(5, [
-      ["goal", "Goal addressed"],
-      ["product", "Technology type and example product"],
-      ["how", "How it works"],
-      ["adv", "Advantages"],
-      ["disadv", "Disadvantages"],
-      ["cost", "Estimated 12-month cost", "Budget: $10,000 set-up + $500 a month"],
-    ]) },
-    { n: 6, session: 2, title: "Implementation risks", maps: "PC 2.3", groups: perOption(6, [
-      ["risk", "Main risk"],
-      ["manage", "How to manage it"],
-      ["consulted", "Who was consulted, and what they said"],
-    ]) },
+    // Session 2: one group per option. The card picker (cards: type) shows the cards for the learner's goal from section 2.
+    { n: 4, session: 2, title: "Your options", maps: "PCs 2.1, 2.4, 1.4 · PE: one AI, one ML and one DL opportunity", intro: "For your goal, pick one card of each type and say why. Then ask ChatGPT the question on your card and check the product page. Never type personal information into ChatGPT.", groups: OPTIONS.map(([opt, optLabel]) => ({
+      label: optLabel, hint: `${opt.toUpperCase()}: ${TYPE[opt]}.`, fields: [
+        { id: `s4_pick_${opt}`, cards: opt, type: "select", options: cardValues(opt) },
+        { id: `s4_why_${opt}`, label: "Why this one?", type: "text" },
+        { id: `s4_needs_${opt}`, label: "What it needs, and the first two steps (from ChatGPT, checked on the product page)", type: "textarea" },
+      ] })) },
+    { n: 5, session: 2, title: "Good, bad and budget", maps: "PC 2.2", intro: "Budget: $10,000 to set up, plus up to $500 a month. The cost is on each card.", groups: OPTIONS.map(([opt, optLabel]) => ({
+      label: optLabel, fields: [
+        { id: `s5_goodbad_${opt}`, label: "One good thing and one problem for Bellarine", type: "textarea" },
+        { id: `s5_budget_${opt}`, label: "Does it fit the budget?", type: "select", options: ["Yes", "No"] },
+      ] })) },
+    { n: 6, session: 2, title: "Risks", maps: "PC 2.3", intro: "Pick the main risk of each option and say how to manage it. Then ask the Operations Manager at least one risk question.", groups: [
+      ...OPTIONS.map(([opt, optLabel]) => ({ label: optLabel, fields: [
+        { id: `s6_risk_${opt}`, label: "Main risk", type: "select", options: RISKS },
+        { id: `s6_manage_${opt}`, label: "How to manage it", type: "text" },
+      ] })),
+      { label: "What the Operations Manager said", fields: [{ id: "s6_priya", type: "textarea" }] },
+    ] },
     { n: 7, session: 3, title: "Comparison", maps: "PE: make comparisons between AI, ML and DL", groups: [
       ...perOption(7, [["goal", "Goal addressed"], ["data", "Data needed"], ["cost", "12-month cost"], ["risk", "Main risk"], ["effort", "Effort to implement"]]),
       { label: "Which would you start with, and why?", fields: [{ id: "s7_start", type: "textarea" }] },
@@ -87,17 +87,17 @@ export const REPORT = {
   // Section 10 (submission) is the checklist, the learner's first name and the submit button.
   checklist: [
     "All sections are complete",
-    "At least one AI, one ML and one DL opportunity (section 5)",
-    "Each technology is named with an example product (section 5)",
-    "How each would be applied, with the source (section 4)",
-    "Risks, how to manage them and who was consulted (section 6)",
+    "One AI, one ML and one DL option, each with a reason (section 4)",
+    "What each option needs and its first two steps (section 4)",
+    "One good thing, one problem and a budget check for each option (section 5)",
+    "Risks, how to manage them and what the Operations Manager said (section 6)",
     "Comparison and policy check complete (sections 7 and 8)",
     "Feedback recorded and at least one change made (section 9)",
     "No real personal information about patients, staff or anyone else",
   ],
 };
 
-export const FIELD_LIMITS = { text: 300, textarea: 1500, select: 60 };
+export const FIELD_LIMITS = { text: 300, textarea: 1500, select: 120 };
 
 // id -> field, for validation.
 export const FIELDS = new Map(REPORT.sections.flatMap((s) => s.groups.flatMap((g) => g.fields)).map((f) => [f.id, f]));

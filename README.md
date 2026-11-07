@@ -10,11 +10,11 @@ An Express website for the TAE class delivery schedule and Session 1 activity.
 - `/tech`: What does Bellarine already use? (fixed rule, ML, DL or manual). It runs inside section 3 of `/brief`, so learners stay on one page; `/tech` redirects there.
 - `/brief`: the Session 1 learner page (details below).
 - The old addresses `/session1`, `/session1/host`, `/session1/tech`, `/session1/tech/host`, `/report/1` and `/host` redirect to the new ones.
-- `/session2`: What do organisations automate? (match six tasks to a technology).
+- `/session2`: What do organisations automate? (six tasks the unit lists: fixed rule, AI, ML or DL). It runs at the top of `/report/2`; `/session2` redirects there.
 - `/tech/host`, `/session2/host`: PIN-protected host views for those activities.
 - `/bellarine`: Bellarine Pathology work brief, AI use policy, fact sheet, glossary and question stems.
 - `/bellarine/role-card`, `/bellarine/links`: Operations Manager role card; vendor and policy links.
-- `/brief`, `/report/2` and `/report/3`: the learner page for each session, with that session's brief at the top and its report sections below (nothing from the other sessions). Section 3 holds the `/tech` activity, and its answers are saved straight into the report. `/report` is the whole report, for the trainer.
+- `/brief`, `/report/2` and `/report/3`: the learner page for each session, with that session's brief at the top and its report sections below (nothing from the other sessions). Section 3 holds the `/tech` activity, and its answers are saved straight into the report. Section 4 shows the Session 2 option cards (`option-cards.js`) for the goal picked in section 2, each with a ChatGPT research question. `/report` is the whole report, for the trainer.
 - `/report/host`: PIN-protected list of submitted reports, with a printable view.
 - `/how-ai-writes`: optional LLM explainer.
 
@@ -23,9 +23,8 @@ An Express website for the TAE class delivery schedule and Session 1 activity.
 All activity host views use the same `HOST_PIN`. Like `/ruleorai`, the tap-to-choose
 activities keep answers in memory only, with an anonymous device id and no names;
 **Reset for a new class** clears one activity. Decks live in `pick-decks.js`.
-In Rule or AI? and the Bellarine technology activity, learners can retry the items they
-got wrong and the latest answer counts (the report also keeps the first-try score);
-in the Session 2 matching the first answer counts.
+In all three activities learners can retry the items they got wrong and the latest
+answer counts (the section 3 report also keeps the first-try score).
 
 The report form (`report-form.js` drives the form, server validation and host view)
 saves on the learner's device as they type. Submitting needs every checklist box

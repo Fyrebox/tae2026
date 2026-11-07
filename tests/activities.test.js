@@ -8,7 +8,8 @@ const { default: sortRouter } = await import('../sort.js');
 const { DECK } = await import('../sort-deck.js');
 const { ACTIVITIES } = await import('../pick-decks.js');
 const { createReportRouter, cleanSubmission } = await import('../report.js');
-const { REPORT, FIELDS } = await import('../report-form.js');
+const { REPORT, FIELDS, FIELD_LIMITS } = await import('../report-form.js');
+const { CARDS, GOALS } = await import('../option-cards.js');
 
 async function serve(path, router) {
   const app = express();
@@ -74,14 +75,8 @@ test('pick activity counts the latest answer when retries are allowed, otherwise
     const junk = stats.items.find((i) => i.id === 'junk');
     assert.deepEqual(junk.counts, { rule: 0, ml: 0, dl: 1, manual: 0 }); // tech allows retries: the latest answer counts
 
-    // Activities are separate: the Session 2 activity has no learners yet, and it keeps the first answer.
+    // Activities are separate: the Session 2 activity has no learners yet.
     assert.equal((await (await call('/tasks/host/stats', { pin: '424242' })).json()).joined, 0);
-    await call('/tasks/join', { body: { id: ID } });
-    await call('/tasks/answer', { body: { id: ID, item: 'email', answer: 'campaign' } });
-    await call('/tasks/answer', { body: { id: ID, item: 'email', answer: 'chatbot' } });
-    const email = (await (await call('/tasks/host/stats', { pin: '424242' })).json()).items.find((i) => i.id === 'email');
-    assert.equal(email.counts.campaign, 1);
-    assert.equal(email.counts.chatbot, 0);
 
     for (const i of ACTIVITIES.tech.items) await call('/tech/answer', { body: { id: ID, item: i.id, answer: i.answer } });
     const done = await (await call('/tech/host/stats', { pin: '424242' })).json();
@@ -112,7 +107,7 @@ test('report submissions are validated', () => {
     { name: 'Sam', fields: { s3_junk_class: 'Magic' }, checklist: ticks },
   ];
   for (const b of bad) assert.equal(cleanSubmission(b), null, JSON.stringify(b).slice(0, 80));
-  assert.ok(FIELDS.size > 80);
+  assert.equal(FIELDS.size, REPORT.sections.flatMap((s) => s.groups.flatMap((g) => g.fields)).length); // no two boxes share an id
 });
 
 test('reports are submitted, replaced on resubmission and readable only with the host PIN', async () => {
@@ -172,5 +167,32 @@ test('Rule or AI? counts the latest answer, so retrying a wrong card improves th
   } finally {
     await call('/host/reset', { method: 'POST', pin: '424242' });
     await close();
+  }
+});
+
+test('an activity without retries keeps the first answer', async () => {
+  const one = { key: 'one', options: [{ id: 'a' }, { id: 'b' }], items: [{ id: 'x', answer: 'a' }] };
+  const { call, close } = await serve('/api/pick', createPickRouter({ one }));
+  try {
+    await call('/one/join', { body: { id: ID } });
+    await call('/one/answer', { body: { id: ID, item: 'x', answer: 'a' } });
+    await call('/one/answer', { body: { id: ID, item: 'x', answer: 'b' } });
+    const x = (await (await call('/one/host/stats', { pin: '424242' })).json()).items[0];
+    assert.deepEqual(x.counts, { a: 1, b: 0 });
+  } finally {
+    await close();
+  }
+});
+
+test('Session 2 has two option cards per type for every goal, and each card fits the report', () => {
+  for (const goal of GOALS) {
+    for (const type of ['ai', 'ml', 'dl']) assert.equal(CARDS.filter((c) => c.goal === goal && c.type === type).length, 2, `${goal} ${type}`);
+  }
+  assert.equal(new Set(CARDS.map((c) => c.value)).size, CARDS.length);
+  assert.deepEqual(FIELDS.get('s2_goal').options, GOALS);
+  for (const c of CARDS) {
+    assert.match(c.link, /^https:\/\//, c.title);
+    assert.ok(c.value.length <= FIELD_LIMITS.select, c.value);
+    assert.ok(FIELDS.get(`s4_pick_${c.type}`).options.includes(c.value), c.value);
   }
 });

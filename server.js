@@ -11,6 +11,7 @@ import { createPickRouter } from "./pick.js";
 import { ACTIVITIES } from "./pick-decks.js";
 import { createReportRouter } from "./report.js";
 import { REPORT } from "./report-form.js";
+import { CARDS } from "./option-cards.js";
 import { createScheduleStore } from "./schedule-db.js";
 import { createScheduleRouter } from "./schedule.js";
 
@@ -78,6 +79,8 @@ const reportVars = {
     + fileHash("public", "report", "activity.js").slice(0, 2),
   report: embed(REPORT),
   tech: embed({ key: "tech", ...ACTIVITIES.tech }),
+  tasks: embed({ key: "tasks", ...ACTIVITIES.tasks }),
+  cards: embed(CARDS),
 };
 const reportPage = fill(read("pages", "report.html"), reportVars);
 const reportHostPage = fill(read("pages", "report-host.html"), reportVars);

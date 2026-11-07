@@ -51,27 +51,8 @@
     </section>
 
     <section class="brief" data-sessions="2" hidden>
-      <h3>Bellarine's goals</h3>
-      <ol>
-        <li>Answer patients' questions faster.</li>
-        <li>Fewer people miss their blood test.</li>
-        <li>Check samples under the microscope faster.</li>
-      </ol>
-      <h3>Products to name (sections 4 and 5)</h3>
-      <p class="note">Do not sign up for free trials or enter personal details on any of these sites.</p>
-      <ul class="cards links">
-        <li><a href="https://learn.microsoft.com/en-us/microsoft-copilot-studio/" target="_blank" rel="noopener">Microsoft Copilot Studio</a>Build assistants: scripted topics (rules written by experts) or generative answers from approved content (LLM).</li>
-        <li><a href="https://learn.microsoft.com/en-us/azure/machine-learning/concept-automated-ml" target="_blank" rel="noopener">Azure Machine Learning automated ML</a>Predict from historical data, e.g. which bookings are likely to be missed (ML).</li>
-        <li><a href="https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/" target="_blank" rel="noopener">Azure AI Document Intelligence</a>Read forms and documents, e.g. request forms (DL).</li>
-        <li><a href="https://learn.microsoft.com/en-us/copilot/microsoft-365/" target="_blank" rel="noopener">Microsoft 365 Copilot</a>LLM assistant inside Outlook, Word and Teams (DL).</li>
-        <li><a href="https://learn.microsoft.com/en-us/power-automate/" target="_blank" rel="noopener">Power Automate</a>Rule-based workflows. Useful, but not AI on its own.</li>
-      </ul>
-      <h3>Privacy and ethics (section 6)</h3>
-      <ul class="cards links">
-        <li><a href="https://www.oaic.gov.au/privacy/privacy-guidance-for-organisations-and-government-agencies/guidance-on-privacy-and-the-use-of-commercially-available-ai-products" target="_blank" rel="noopener">OAIC: privacy and commercially available AI products</a>How the Privacy Act 1988 applies when an organisation uses AI tools.</li>
-        <li><a href="https://www.industry.gov.au/publications/australias-artificial-intelligence-ethics-principles" target="_blank" rel="noopener">Australia's AI Ethics Principles</a>A further checklist for risks.</li>
-      </ul>
-      <p class="buttons"><a class="btn" href="/bellarine/role-card">Playing Priya? Open the role card</a></p>
+      <h3 id="tasks">What do organisations automate?</h3>
+      <div id="tasksMount" class="group"></div>
     </section>
 
     <section class="brief" data-sessions="3" hidden>
@@ -105,6 +86,8 @@
   </main>
   <script id="report" type="application/json">{{report}}</script>
   <script id="techActivity" type="application/json">{{tech}}</script>
+  <script id="tasksActivity" type="application/json">{{tasks}}</script>
+  <script id="optionCards" type="application/json">{{cards}}</script>
   <script src="/report/render.js?v={{v}}" defer></script>
   <script src="/report/activity.js?v={{v}}" defer></script>
   <script src="/report/app.js?v={{v}}" defer></script>

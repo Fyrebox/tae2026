@@ -1,6 +1,7 @@
 // Learner report form: built from the schema, saved on the device as you type, submitted to the trainer at the end.
 (() => {
   const FORM = JSON.parse(document.getElementById("report").textContent);
+  const CARDS = JSON.parse(document.getElementById("optionCards").textContent);
   const $ = (id) => document.getElementById(id);
   const KEY = "bellarineReport";
   // /brief (Session 1), /report/2 and /report/3 show one session's sections; /report shows them all.
@@ -50,6 +51,41 @@
     return n;
   };
 
+  const money = (n) => "$" + n.toLocaleString("en-AU");
+  function copyButton(text) {
+    const b = el("button", { type: "button", className: "btn" }, "Copy question");
+    b.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(text); b.textContent = "Copied"; } catch { b.textContent = "Select the question and copy it"; }
+    });
+    return b;
+  }
+
+  // Session 2 option cards: tap one card of this type. Only the cards for the goal picked in section 2 show.
+  function cardPicker(f) {
+    const wrap = el("div", { className: "optcards", role: "radiogroup" });
+    wrap.setAttribute("aria-label", "Option cards");
+    const render = () => {
+      const goal = state.fields.s2_goal;
+      wrap.textContent = "";
+      if (!goal) wrap.append(el("p", { className: "small" }, "No goal picked yet (section 2 of taegordon.au/brief), so every card shows."));
+      CARDS.filter((c) => c.type === f.cards && (!goal || c.goal === goal)).forEach((c) => {
+        const on = state.fields[f.id] === c.value;
+        const card = el("button", { type: "button", className: "optcard" + (on ? " on" : "") }, el("strong", {}, c.title), el("span", {}, c.text),
+          el("span", { className: "optmeta" }, `${c.product} · ${money(c.setup)} to set up + ${money(c.monthly)} a month`));
+        card.setAttribute("role", "radio");
+        card.setAttribute("aria-checked", String(on));
+        card.addEventListener("click", () => { state.fields[f.id] = c.value; updateProgress(); save(); render(); });
+        wrap.append(card);
+        if (on) wrap.append(el("div", { className: "ask" }, el("p", {}, el("strong", {}, "Ask ChatGPT: "), c.question),
+          el("p", { className: "buttons" }, copyButton(c.question),
+            el("a", { className: "btn", href: "https://chatgpt.com/", target: "_blank", rel: "noopener" }, "Open ChatGPT"),
+            el("a", { className: "btn", href: c.link, target: "_blank", rel: "noopener" }, "Product page"))));
+      });
+    };
+    render();
+    return wrap;
+  }
+
   // Sections, grouped under their session heading.
   const form = $("form");
   form.addEventListener("submit", (e) => e.preventDefault()); // Enter in a text box must not reload the page
@@ -88,6 +124,7 @@
       }
       g.fields.forEach((f) => {
         ids.push(f.id);
+        if (f.cards) return group.append(cardPicker(f));
         let input;
         if (f.type === "select") {
           input = el("select", { id: f.id }, el("option", { value: "" }, "Choose…"), ...f.options.map((o) => el("option", { value: o }, o)));
@@ -192,6 +229,8 @@
     $("yourReport").hidden = false;
     $("yourReport").textContent = `Your report: sections ${first}–${last}`;
     $("submit").hidden = only !== 3;
+    // Session 2 opens with the "What do organisations automate?" activity; its answers go to the host view, not the report.
+    if (only === 2) window.mountActivity($("tasksMount"), JSON.parse($("tasksActivity").textContent), { learnerId: id, saved: {}, onDone: () => {} });
     // Feedback in Session 3 can change an earlier section, so section 9 links back to the earlier pages, and they link back here.
     if (only === 3) {
       $("s9").append(el("p", { className: "small" }, "Need to change an earlier section? Go to ",
