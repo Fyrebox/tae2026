@@ -28,9 +28,12 @@
     const saved = JSON.parse(localStorage.getItem(KEY) || "null");
     if (saved && saved.fields) state = { ...state, ...saved, checklist: FORM.checklist.map((_, i) => saved.checklist?.[i] === true) };
   } catch { /* storage blocked or corrupt: start empty */ }
-  // Drop answers to boxes that no longer exist: the server rejects a report with fields it does not know.
-  const known = new Set(FORM.sections.flatMap((s) => s.groups.flatMap((g) => g.fields.map((f) => f.id))));
-  state.fields = Object.fromEntries(Object.entries(state.fields).filter(([fid]) => known.has(fid)));
+  // Drop answers the server would reject: boxes that no longer exist, and choices no longer offered (e.g. an old option card).
+  const known = new Map(FORM.sections.flatMap((s) => s.groups.flatMap((g) => g.fields.map((f) => [f.id, f]))));
+  state.fields = Object.fromEntries(Object.entries(state.fields).filter(([fid, v]) => {
+    const f = known.get(fid);
+    return f && (f.type !== "select" || !v || f.options.includes(v));
+  }));
 
   let saveTimer = null;
   function save() {
@@ -60,17 +63,16 @@
     return b;
   }
 
-  // Session 2 option cards: tap one card of this type. Only the cards for the goal picked in section 2 show.
+  // Session 2 option cards: tap one card of this type. All three show, each tagged with the goal it helps.
   function cardPicker(f) {
     const wrap = el("div", { className: "optcards", role: "radiogroup" });
     wrap.setAttribute("aria-label", "Option cards");
     const render = () => {
-      const goal = state.fields.s2_goal;
       wrap.textContent = "";
-      if (!goal) wrap.append(el("p", { className: "small" }, "No goal picked yet (section 2 of taegordon.au/brief), so every card shows."));
-      CARDS.filter((c) => c.type === f.cards && (!goal || c.goal === goal)).forEach((c) => {
+      CARDS.filter((c) => c.type === f.cards).forEach((c) => {
         const on = state.fields[f.id] === c.value;
         const card = el("button", { type: "button", className: "optcard" + (on ? " on" : "") }, el("strong", {}, c.title), el("span", {}, c.text),
+          el("span", { className: "optgoal" }, `Helps: ${c.goal}`),
           el("span", { className: "optmeta" }, `${c.product} · ${money(c.setup)} to set up + ${money(c.monthly)} a month`));
         card.setAttribute("role", "radio");
         card.setAttribute("aria-checked", String(on));
@@ -78,8 +80,7 @@
         wrap.append(card);
         if (on) wrap.append(el("div", { className: "ask" }, el("p", {}, el("strong", {}, "Ask ChatGPT: "), c.question),
           el("p", { className: "buttons" }, copyButton(c.question),
-            el("a", { className: "btn", href: "https://chatgpt.com/", target: "_blank", rel: "noopener" }, "Open ChatGPT"),
-            el("a", { className: "btn", href: c.link, target: "_blank", rel: "noopener" }, "Product page"))));
+            el("a", { className: "btn", href: "https://chatgpt.com/", target: "_blank", rel: "noopener" }, "Open ChatGPT"))));
       });
     };
     render();

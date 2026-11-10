@@ -13,7 +13,7 @@ An Express website for the TAE class delivery schedule and Session 1 activity.
 - `/tech/host`: PIN-protected host view for the technology activity. `/session2` and `/session2/host` redirect to `/brief2`.
 - `/bellarine`: Bellarine Pathology work brief, AI use policy, fact sheet, glossary and question stems.
 - `/bellarine/role-card`, `/bellarine/links`: Operations Manager role card; vendor and policy links.
-- `/brief`, `/brief2` and `/report/3`: the learner page for each session (`/report/2` redirects to `/brief2`), with that session's brief at the top and its report sections below (nothing from the other sessions). Section 3 holds the `/tech` activity, and its answers are saved straight into the report. Section 4 shows the Session 2 option cards (`option-cards.js`) for the goal picked in section 2, each with a ChatGPT research question. `/report` is the whole report, for the trainer.
+- `/brief`, `/brief2` and `/report/3`: the learner page for each session (`/report/2` redirects to `/brief2`), with that session's brief at the top and its report sections below (nothing from the other sessions). Section 3 holds the `/tech` activity, and its answers are saved straight into the report. Section 4 shows the nine Session 2 option cards (`option-cards.js`), three per type, each with a ChatGPT research question. `/report` is the whole report, for the trainer.
 - `/report/host`: PIN-protected list of submitted reports, with a printable view.
 - `/how-ai-writes`: optional LLM explainer.
 

@@ -51,16 +51,16 @@ export const REPORT = {
       { label: "Pick one manual process. What is it, and could AI help?", fields: [{ id: "s3_why_manual", type: "textarea" }] },
     ] },
     // Session 2: one group per option. The card picker (cards: type) shows the cards for the learner's goal from section 2.
-    { n: 4, session: 2, title: "Your options", maps: "PCs 2.1, 2.4, 1.4 · PE: one AI, one ML and one DL opportunity", intro: "For your goal, pick one card of each type and say why. Then ask ChatGPT the question on your card and check the product page. Never type personal information into ChatGPT.", groups: OPTIONS.map(([opt, optLabel]) => ({
+    { n: 4, session: 2, title: "Your options", maps: "PCs 2.1, 2.4, 1.4 · PE: one AI, one ML and one DL opportunity", intro: "Pick one card of each type and say why. Then ask ChatGPT the question on your card and check its answer fits Bellarine's budget ($10,000 to set up, plus up to $500 a month) and AI use policy. Never type personal information into ChatGPT.", groups: OPTIONS.map(([opt, optLabel]) => ({
       label: optLabel, hint: `${opt.toUpperCase()}: ${TYPE[opt]}.`, fields: [
         { id: `s4_pick_${opt}`, cards: opt, type: "select", options: cardValues(opt) },
         { id: `s4_why_${opt}`, label: "Why this one?", type: "text" },
-        { id: `s4_needs_${opt}`, label: "What it needs, and the first two steps (from ChatGPT, checked on the product page)", type: "textarea" },
+        { id: `s4_needs_${opt}`, label: "What it needs, and the first two steps (from ChatGPT)", type: "textarea" },
+        { id: `s4_fits_${opt}`, label: "Does it fit the budget and the AI use policy?", type: "select", options: ["Yes", "No"] },
       ] })) },
-    { n: 5, session: 2, title: "Good, bad and budget", maps: "PC 2.2", intro: "Budget: $10,000 to set up, plus up to $500 a month. The cost is on each card.", groups: OPTIONS.map(([opt, optLabel]) => ({
+    { n: 5, session: 2, title: "Good and bad", maps: "PC 2.2", groups: OPTIONS.map(([opt, optLabel]) => ({
       label: optLabel, fields: [
         { id: `s5_goodbad_${opt}`, label: "One good thing and one problem for Bellarine", type: "textarea" },
-        { id: `s5_budget_${opt}`, label: "Does it fit the budget?", type: "select", options: ["Yes", "No"] },
       ] })) },
     { n: 6, session: 2, title: "Risks", maps: "PC 2.3", intro: "Pick the main risk of each option and say how to manage it. Then ask the Operations Manager at least one risk question.", groups: [
       ...OPTIONS.map(([opt, optLabel]) => ({ label: optLabel, fields: [
@@ -88,8 +88,8 @@ export const REPORT = {
   checklist: [
     "All sections are complete",
     "One AI, one ML and one DL option, each with a reason (section 4)",
-    "What each option needs and its first two steps (section 4)",
-    "One good thing, one problem and a budget check for each option (section 5)",
+    "What each option needs, its first two steps, and whether it fits the budget and policy (section 4)",
+    "One good thing and one problem for each option (section 5)",
     "Risks, how to manage them and what the Operations Manager said (section 6)",
     "Comparison and policy check complete (sections 7 and 8)",
     "Feedback recorded and at least one change made (section 9)",

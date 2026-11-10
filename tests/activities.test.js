@@ -183,14 +183,13 @@ test('an activity without retries keeps the first answer', async () => {
   }
 });
 
-test('Session 2 has two option cards per type for every goal, and each card fits the report', () => {
+test('Session 2 has one option card per type for every goal, and each card fits the report', () => {
   for (const goal of GOALS) {
-    for (const type of ['ai', 'ml', 'dl']) assert.equal(CARDS.filter((c) => c.goal === goal && c.type === type).length, 2, `${goal} ${type}`);
+    for (const type of ['ai', 'ml', 'dl']) assert.equal(CARDS.filter((c) => c.goal === goal && c.type === type).length, 1, `${goal} ${type}`);
   }
   assert.equal(new Set(CARDS.map((c) => c.value)).size, CARDS.length);
   assert.deepEqual(FIELDS.get('s2_goal').options, GOALS);
   for (const c of CARDS) {
-    assert.match(c.link, /^https:\/\//, c.title);
     assert.ok(c.value.length <= FIELD_LIMITS.select, c.value);
     assert.ok(FIELDS.get(`s4_pick_${c.type}`).options.includes(c.value), c.value);
   }

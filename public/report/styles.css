@@ -76,3 +76,4 @@ nav.jump a[aria-current] { background: var(--accent); border-color: var(--accent
 .ask p { margin: .2rem 0; }
 .ask .buttons { margin: 6px 0 0; }
 .ask .btn { text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; }
+.optcard .optgoal { font-size: .85rem; font-weight: 600; color: var(--accent); }
