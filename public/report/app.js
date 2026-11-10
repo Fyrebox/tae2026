@@ -101,7 +101,7 @@
       }
     });
     show();
-    return el("div", { className: "chat" }, el("p", { className: "small" }, "Never type personal information."), log, input, el("p", { className: "buttons" }, send), status);
+    return el("div", { className: "chat" }, log, input, el("p", { className: "buttons" }, send), status);
   }
 
   // Session 2 option cards: tap one card of this type. All three show, each tagged with the goal it helps.

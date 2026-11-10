@@ -51,7 +51,7 @@ export const REPORT = {
       { label: "Pick one manual process. What is it, and could AI help?", fields: [{ id: "s3_why_manual", type: "textarea" }] },
     ] },
     // Session 2: one group per option. The card picker (cards: type) shows the cards for the learner's goal from section 2.
-    { n: 4, session: 2, title: "Your options", maps: "PCs 2.1, 2.4, 1.4 · PE: one AI, one ML and one DL opportunity", intro: "Pick one card of each type and say why. Then ask ChatGPT the question on your card and check its answer fits Bellarine's budget ($10,000 to set up, plus up to $500 a month) and AI use policy. Never type personal information into ChatGPT.", groups: OPTIONS.map(([opt, optLabel]) => ({
+    { n: 4, session: 2, title: "Your options", maps: "PCs 2.1, 2.4, 1.4 · PE: one AI, one ML and one DL opportunity", intro: "Pick one card of each type and say why. Then tap Ask AI on your card and check the answer fits Bellarine's budget ($10,000 to set up, plus up to $500 a month) and AI use policy.", groups: OPTIONS.map(([opt, optLabel]) => ({
       label: optLabel, hint: `${opt.toUpperCase()}: ${TYPE[opt]}.`, fields: [
         { id: `s4_pick_${opt}`, cards: opt, type: "select", options: cardValues(opt) },
         { id: `s4_why_${opt}`, label: "Why this one?", type: "text" },
