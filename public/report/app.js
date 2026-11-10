@@ -63,6 +63,47 @@
     return b;
   }
 
+  // "Ask AI": a chat box under the chosen card, so learners on phones never switch tabs. Questions go to /api/chat
+  // and nothing is stored; each card keeps its conversation while the page is open.
+  const chats = new Map(); // card value -> { open, history: [{ role, content }] }
+  function chatBox(c, chat) {
+    const log = el("div", { className: "chatlog" });
+    const input = el("textarea", { rows: 3, maxLength: 1000, value: chat.history.length ? "" : c.question, placeholder: "Ask a follow-up question" });
+    input.setAttribute("aria-label", "Your question for the AI");
+    const send = el("button", { type: "button", className: "btn primary" }, "Send");
+    const status = el("p", { className: "small" });
+    status.setAttribute("aria-live", "polite");
+    const show = () => {
+      log.textContent = "";
+      chat.history.forEach((m) => log.append(el("p", { className: `msg ${m.role}` }, m.content)));
+    };
+    send.addEventListener("click", async () => {
+      const question = input.value.trim();
+      if (!question) return;
+      const messages = [...chat.history, { role: "user", content: question }].slice(-7);
+      if (messages[0].role !== "user") messages.shift();
+      send.disabled = true;
+      status.textContent = "Thinking…";
+      try {
+        const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, messages }) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw Object.assign(new Error(data.error || "The AI chat is not working right now."), { fallback: res.status >= 500 });
+        chat.history.push({ role: "user", content: question }, { role: "assistant", content: data.answer });
+        input.value = "";
+        status.textContent = "";
+        show();
+      } catch (err) {
+        const offline = err instanceof TypeError; // fetch could not reach the server
+        status.textContent = offline ? "Could not reach the AI. Check the Wi-Fi and try again." : err.message;
+        if (offline || err.fallback) status.append(" ", el("a", { href: "https://chatgpt.com/", target: "_blank", rel: "noopener" }, "Open ChatGPT instead"));
+      } finally {
+        send.disabled = false;
+      }
+    });
+    show();
+    return el("div", { className: "chat" }, el("p", { className: "small" }, "Never type personal information."), log, input, el("p", { className: "buttons" }, send), status);
+  }
+
   // Session 2 option cards: tap one card of this type. All three show, each tagged with the goal it helps.
   function cardPicker(f) {
     const wrap = el("div", { className: "optcards", role: "radiogroup" });
@@ -78,9 +119,16 @@
         card.setAttribute("aria-checked", String(on));
         card.addEventListener("click", () => { state.fields[f.id] = c.value; updateProgress(); save(); render(); });
         wrap.append(card);
-        if (on) wrap.append(el("div", { className: "ask" }, el("p", {}, el("strong", {}, "Ask ChatGPT: "), c.question),
-          el("p", { className: "buttons" }, copyButton(c.question),
-            el("a", { className: "btn", href: "https://chatgpt.com/", target: "_blank", rel: "noopener" }, "Open ChatGPT"))));
+        if (on) {
+          const chat = chats.get(c.value) || { open: false, history: [] };
+          chats.set(c.value, chat);
+          const toggle = el("button", { type: "button", className: "btn primary" }, chat.open ? "Hide AI chat" : "Ask AI");
+          toggle.addEventListener("click", () => { chat.open = !chat.open; render(); });
+          const ask = el("div", { className: "ask" }, el("p", {}, el("strong", {}, "Question for the AI: "), c.question),
+            el("p", { className: "buttons" }, copyButton(c.question), toggle));
+          if (chat.open) ask.append(chatBox(c, chat));
+          wrap.append(ask);
+        }
       });
     };
     render();

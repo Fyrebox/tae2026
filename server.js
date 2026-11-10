@@ -5,6 +5,7 @@ import crypto from "crypto";
 import path from "path";
 import { fileURLToPath } from "url";
 import llmExplainer from "./llm-explainer.js";
+import { createChatRouter } from "./chat.js";
 import sortRouter from "./sort.js";
 import { DECK } from "./sort-deck.js";
 import { createPickRouter } from "./pick.js";
@@ -98,6 +99,7 @@ app.get(["/llm", "/llm/", "/llm/index.html"], (req, res) => res.redirect(301, "/
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/api/llm", llmExplainer);
+app.use("/api/chat", createChatRouter());
 app.use("/api/sort", sortRouter);
 app.use("/api/pick", createPickRouter());
 app.use("/api/report", createReportRouter());
