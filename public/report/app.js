@@ -95,6 +95,70 @@
     return el("div", { className: "chat" }, log, status);
   }
 
+  const shuffle = (list) => {
+    const a = [...list];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+  const changed = () => { updateProgress(); save(); };
+
+  // A row of tap buttons for one choice: items are [value, hint?]; the chosen one is highlighted.
+  function taps(items, current, onPick, className = "") {
+    const row = el("div", { className: `taps ${className}`, role: "radiogroup" });
+    items.forEach(([value, hint]) => {
+      const b = el("button", { type: "button", className: "tap" + (value === current ? " on" : "") }, value);
+      if (hint) b.append(el("small", {}, hint));
+      b.setAttribute("role", "radio");
+      b.setAttribute("aria-checked", String(value === current));
+      b.addEventListener("click", () => onPick(value));
+      row.append(b);
+    });
+    return row;
+  }
+
+  // Section 5: for the card picked in section 4, tap the kind of risk, then the best way to manage it. A wrong fix shows
+  // why; tapping another replaces it (the latest answer counts). Redrawn when the section 4 card changes.
+  const riskViews = [];
+  function riskPicker(g) {
+    const [typeF, fixF] = g.fields;
+    const wrap = el("div", { className: "risk" });
+    const order = new Map(); // risk -> its fixes in a shuffled order, kept while the page is open
+    const render = () => {
+      wrap.textContent = "";
+      const card = CARDS.find((c) => c.value === state.fields[`s4_pick_${g.risks}`]);
+      if (!card) {
+        wrap.append(el("p", { className: "small" }, `Pick your ${g.label} in `, el("a", { href: "#s4" }, "section 4"), " first."));
+        return;
+      }
+      wrap.append(el("p", { className: "riskcard" }, el("strong", {}, card.title), ` (${card.product})`));
+      wrap.append(el("p", { className: "riskq" }, "What kind of risk is it?"));
+      wrap.append(taps(FORM.risks.map((r) => [r.name, r.hint]), state.fields[typeF.id], (v) => {
+        if (state.fields[typeF.id] !== v) delete state.fields[fixF.id];
+        state.fields[typeF.id] = v;
+        changed();
+        render();
+      }, "two"));
+      const risk = FORM.risks.find((r) => r.name === state.fields[typeF.id]);
+      if (!risk) return;
+      if (!order.has(risk.name)) order.set(risk.name, shuffle(risk.fixes));
+      const picked = state.fields[fixF.id];
+      wrap.append(el("p", { className: "riskq" }, "Best way to manage it?"));
+      wrap.append(taps(order.get(risk.name).map((f) => [f]), picked, (v) => { state.fields[fixF.id] = v; changed(); render(); }));
+      if (risk.fixes.includes(picked)) {
+        const ok = picked === risk.fixes[0];
+        const why = el("p", { className: `riskwhy ${ok ? "right" : "wrong"}` }, ok ? `✓ Good choice. ${risk.why}` : `✗ Not the best way. ${risk.why} Tap another one.`);
+        why.setAttribute("aria-live", "polite");
+        wrap.append(why);
+      }
+    };
+    riskViews.push(render);
+    render();
+    return wrap;
+  }
+
   // Session 2 option cards: tap one card of this type. All three show, each tagged with the goal it helps.
   function cardPicker(f) {
     const wrap = el("div", { className: "optcards", role: "radiogroup" });
@@ -108,7 +172,7 @@
           el("span", { className: "optmeta" }, `${c.product} · ${money(c.setup)} to set up + ${money(c.monthly)} a month`));
         card.setAttribute("role", "radio");
         card.setAttribute("aria-checked", String(on));
-        card.addEventListener("click", () => { state.fields[f.id] = c.value; updateProgress(); save(); render(); });
+        card.addEventListener("click", () => { state.fields[f.id] = c.value; changed(); render(); riskViews.forEach((r) => r()); });
         wrap.append(card);
         if (on) {
           const chat = chats.get(c.value) || { open: false, history: [] };
@@ -166,9 +230,21 @@
         sec.append(group);
         return;
       }
+      if (g.risks) {
+        ids.push(...g.fields.map((f) => f.id));
+        group.append(riskPicker(g));
+        sec.append(group);
+        return;
+      }
       g.fields.forEach((f) => {
         ids.push(f.id);
         if (f.cards) return group.append(cardPicker(f));
+        if (f.tap) {
+          const box = el("div", { className: "field" }, el("span", {}, f.label));
+          const draw = () => box.replaceChildren(box.firstChild, taps(f.options.map((o) => [o]), state.fields[f.id], (v) => { state.fields[f.id] = v; changed(); draw(); }));
+          draw();
+          return group.append(box);
+        }
         let input;
         if (f.type === "select") {
           input = el("select", { id: f.id }, el("option", { value: "" }, "Choose…"), ...f.options.map((o) => el("option", { value: o }, o)));

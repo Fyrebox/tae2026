@@ -222,3 +222,20 @@ test('the good-and-bad test has a good thing and a problem for every card, each 
   const ok = cleanSubmission({ name: 'Sam', fields: { gb_score: '16 of 18 (first try 13)', gb_chat: 'Good: x · Problem: y' }, checklist: ticks });
   assert.equal(ok.fields.gb_score, '16 of 18 (first try 13)');
 });
+
+test('section 5 has a kind of risk and three different fixes for each option, and only listed fixes are accepted', () => {
+  assert.equal(REPORT.risks.length, 5);
+  for (const r of REPORT.risks) {
+    assert.equal(new Set(r.fixes).size, 3, r.name);
+    assert.ok(r.why && r.hint, r.name);
+    for (const f of r.fixes) assert.ok(f.length <= FIELD_LIMITS.select, f);
+  }
+  for (const opt of ['ai', 'ml', 'dl']) {
+    assert.deepEqual(FIELDS.get(`s5_risk_${opt}`).options, REPORT.risks.map((r) => r.name));
+    assert.deepEqual(FIELDS.get(`s5_manage_${opt}`).answers, REPORT.risks.map((r) => r.fixes[0]));
+  }
+  const fix = REPORT.risks[0].fixes[1]; // a wrong fix is still saved: the latest answer counts
+  const ok = cleanSubmission({ name: 'Sam', fields: { s5_risk_ai: 'Privacy', s5_manage_ai: fix, s5_question: FIELDS.get('s5_question').options[0] }, checklist: ticks });
+  assert.equal(ok.fields.s5_manage_ai, fix);
+  assert.equal(cleanSubmission({ name: 'Sam', fields: { s5_manage_ai: 'Ask a friend' }, checklist: ticks }), null);
+});

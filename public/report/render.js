@@ -13,7 +13,9 @@ window.renderReport = (form, report) => {
       out.push(`<div class="rgroup"><h3>${esc(g.label)}</h3>`);
       g.fields.forEach((f) => {
         const v = report.fields[f.id];
-        out.push(`<p>${f.label ? `<span class="flabel">${esc(f.label)}:</span> ` : ""}${v ? esc(v).replace(/\n/g, "<br>") : '<span class="empty">(empty)</span>'}</p>`);
+        // Fields with answers (section 5 fixes) say whether the learner's latest choice is the best one.
+        const mark = v && f.answers ? (f.answers.includes(v) ? " ✓" : " ✗ (not the best fix)") : "";
+        out.push(`<p>${f.label ? `<span class="flabel">${esc(f.label)}:</span> ` : ""}${v ? esc(v).replace(/\n/g, "<br>") + mark : '<span class="empty">(empty)</span>'}</p>`);
       });
       out.push("</div>");
     });

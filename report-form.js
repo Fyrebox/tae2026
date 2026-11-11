@@ -22,7 +22,35 @@ const TECH = [
 ];
 
 // Section 2: the three goals from the work brief (option-cards.js). They matter equally, so each learner picks one.
-const RISKS = ["Privacy and health records", "Accuracy", "Bias and fairness", "Data quality", "Cost and vendor", "People"];
+// Section 5: for each option the learner taps the kind of risk, then the best way to manage it. The right fix comes
+// first (the page shuffles them); the other two are common mistakes. Accuracy includes poor data.
+const RISKS = [
+  { name: "Privacy", hint: "patient data", why: "Health records are sensitive under the Privacy Act 1988: use less data, keep it safe and check before you start.", fixes: [
+    "Use only the data it needs, keep it in Australia and check with the privacy officer first",
+    "Ask patients to stop sharing health details",
+    "Let the supplier decide what data to keep"] },
+  { name: "Accuracy", hint: "wrong answers or poor data", why: "AI and ML can be wrong, and poor data makes them worse: test first and keep a person checking.", fixes: [
+    "Test it on past cases first, and have staff check its answers",
+    "Trust it once it has run for a week without complaints",
+    "Give it as much data as possible, even if some is out of date"] },
+  { name: "Bias", hint: "unfair to some groups", why: "A tool that learns from past data can treat some groups unfairly: check the results for each group.", fixes: [
+    "Check it works equally well for different groups, such as older patients",
+    "Leave out the patients it gets wrong",
+    "Only use it for patients who live nearby"] },
+  { name: "Cost", hint: "money and the supplier", why: "A small trial keeps within the budget and shows whether it is worth it before you spend more.", fixes: [
+    "Start with a small trial, track the monthly cost and read the contract",
+    "Sign a three-year contract to get a discount",
+    "Buy it for every collection centre at once"] },
+  { name: "People", hint: "staff and patients", why: "People trust a tool they understand, and some patients will always need a person.", fixes: [
+    "Train staff, tell patients how it works and keep a way to reach a person",
+    "Start it without telling staff, so they don't worry",
+    "Close the phone line so patients have to use it"] },
+];
+const PRIYA_QUESTIONS = [
+  "Who should check the AI's answers before patients see them?",
+  "Which patient data are we allowed to use?",
+  "What would make staff or patients not trust it?",
+];
 const TYPE = { ai: "an AI assistant that works with text, like ChatGPT or Copilot", ml: "learns from past data to predict something", dl: "works with pictures or sound" };
 
 export const REPORT = {
@@ -58,12 +86,16 @@ export const REPORT = {
         { id: `s4_needs_${opt}`, label: "What it needs, and the first two steps (from the AI)", type: "textarea" },
         { id: `s4_fits_${opt}`, label: "Does it fit the budget and the AI use policy?", type: "select", options: ["Yes", "No"] },
       ] })) },
-    { n: 5, session: 2, title: "Risks", maps: "PC 2.3", intro: "Pick the main risk of each option and say how to manage it. Then ask the Operations Manager at least one risk question.", groups: [
-      ...OPTIONS.map(([opt, optLabel]) => ({ label: optLabel, fields: [
-        { id: `s5_risk_${opt}`, label: "Main risk", type: "select", options: RISKS },
-        { id: `s5_manage_${opt}`, label: "How to manage it", type: "text" },
+    { n: 5, session: 2, title: "Risks", maps: "PC 2.3", intro: "For each option you picked in section 4, tap its main risk, then the best way to manage it. Then ask the Operations Manager one question.", groups: [
+      // risks: tapped through the risk picker for that option's card (RISKS above), not drop-downs.
+      ...OPTIONS.map(([opt, optLabel]) => ({ label: optLabel, risks: opt, fields: [
+        { id: `s5_risk_${opt}`, label: "Main risk", type: "select", options: RISKS.map((r) => r.name) },
+        { id: `s5_manage_${opt}`, label: "How to manage it", type: "select", options: RISKS.flatMap((r) => r.fixes), answers: RISKS.map((r) => r.fixes[0]) },
       ] })),
-      { label: "What the Operations Manager said", fields: [{ id: "s5_priya", type: "textarea" }] },
+      { label: "Ask the Operations Manager", hint: "Tap the question you asked, then write down the answer.", fields: [
+        { id: "s5_question", label: "The question I asked", type: "select", tap: true, options: PRIYA_QUESTIONS },
+        { id: "s5_priya", label: "What the Operations Manager said", type: "textarea" },
+      ] },
     ] },
     { n: 6, session: 3, title: "Comparison", maps: "PE: make comparisons between AI, ML and DL", groups: [
       ...perOption(6, [["goal", "Goal addressed"], ["data", "Data needed"], ["cost", "12-month cost"], ["risk", "Main risk"], ["effort", "Effort to implement"]]),
@@ -86,6 +118,7 @@ export const REPORT = {
     { id: "gb_score", label: "Score", type: "text" },
     ...CARDS.map((c) => ({ id: `gb_${c.id}`, card: c.id, label: c.title, type: "text" })),
   ] },
+  risks: RISKS,
   // Section 9 (submission) is the checklist, the learner's first name and the submit button.
   checklist: [
     "All sections are complete",

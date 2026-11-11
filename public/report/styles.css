@@ -87,3 +87,14 @@ nav.jump a[aria-current] { background: var(--accent); border-color: var(--accent
 .msg.thinking { color: var(--muted); font-style: italic; animation: thinking 1.2s ease-in-out infinite; }
 @keyframes thinking { 50% { opacity: .45; } }
 @media (prefers-reduced-motion: reduce) { .msg.thinking { animation: none; } }
+
+/* Tap choices (section 5: the risk, its fix and the question for the Operations Manager). */
+.taps { display: grid; gap: 8px; margin: 4px 0 10px; }
+.taps.two { grid-template-columns: 1fr 1fr; }
+.tap { font: inherit; text-align: left; display: grid; gap: 2px; padding: 10px 12px; min-height: 48px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+.tap small { font-size: .8rem; color: var(--muted); }
+.tap.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); font-weight: 700; }
+.risk p { margin: .3rem 0; }
+.riskq { font-weight: 700; margin-top: .6rem !important; }
+.riskwhy { padding: 8px 10px; border-radius: 10px; border: 2px solid var(--line); border-left-width: 6px; background: var(--bg); }
+.riskwhy.right { border-left-color: var(--ok); } .riskwhy.wrong { border-left-color: var(--bad); }
