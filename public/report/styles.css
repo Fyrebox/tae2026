@@ -83,10 +83,7 @@ nav.jump a[aria-current] { background: var(--accent); border-color: var(--accent
 .chat p.small { margin: 0; }
 .chatlog { display: grid; gap: 6px; }
 .msg { white-space: pre-wrap; margin: 0; padding: 8px 10px; border-radius: 12px; font-size: .95rem; line-height: 1.4; }
-.msg.user { justify-self: end; max-width: 90%; background: color-mix(in srgb, var(--accent) 16%, var(--panel)); }
 .msg.assistant { background: var(--bg); border: 1px solid var(--line); }
-.chat textarea { width: 100%; }
-.chat .buttons { margin: 0; }
 .msg.thinking { color: var(--muted); font-style: italic; animation: thinking 1.2s ease-in-out infinite; }
 @keyframes thinking { 50% { opacity: .45; } }
 @media (prefers-reduced-motion: reduce) { .msg.thinking { animation: none; } }

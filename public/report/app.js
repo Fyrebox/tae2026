@@ -57,60 +57,42 @@
   const money = (n) => "$" + n.toLocaleString("en-AU");
 
   // "Ask AI": tapping it sends the card's question straight away and shows the answer under the card, so learners on
-  // phones never switch tabs; a box below takes follow-up questions. Questions go to /api/chat and nothing is stored.
-  // Each card keeps its conversation while the page is open; rerender() redraws the cards once an answer arrives.
-  const chats = new Map(); // card value -> { open, asked, pending, error, fallback, history: [{ role, content }] }
+  // phones never switch tabs. Questions go to /api/chat and nothing is stored. Each card keeps its answer while the
+  // page is open; rerender() redraws the cards once the answer arrives.
+  const chats = new Map(); // card value -> { open, asked, pending, answer, error, fallback }
   function chatBox(c, chat, rerender) {
     const log = el("div", { className: "chatlog" });
-    const input = el("textarea", { rows: 2, maxLength: 1000, placeholder: "Ask a follow-up question", value: chat.error && !chat.history.length ? c.question : "" });
-    input.setAttribute("aria-label", "Your question for the AI");
-    const send = el("button", { type: "button", className: "btn" }, "Send");
-    const status = el("p", { className: "small" });
+    if (chat.pending) log.append(el("p", { className: "msg assistant thinking" }, "Thinking…"));
+    else if (chat.answer) log.append(el("p", { className: "msg assistant" }, chat.answer));
+    const status = el("p", { className: "small" }, chat.pending ? "" : chat.error || "");
     status.setAttribute("aria-live", "polite");
-    const followUp = el("p", { className: "buttons" }, send);
-    // The card's own question is already shown above the button, so the chat shows only the answers and any follow-ups.
-    const show = () => {
-      log.textContent = "";
-      chat.history.forEach((m, i) => { if (i > 0 || m.role !== "user") log.append(el("p", { className: `msg ${m.role}` }, m.content)); });
-      if (chat.pending && chat.history.length) log.append(el("p", { className: "msg user" }, chat.pending));
-      if (chat.pending) log.append(el("p", { className: "msg assistant thinking" }, "Thinking…"));
-      status.textContent = chat.pending ? "" : chat.error || "";
-      if (!chat.pending && chat.fallback) status.append(" ", el("a", { href: "https://chatgpt.com/", target: "_blank", rel: "noopener" }, "Open ChatGPT instead"));
-      // The follow-up box appears once there is an answer (or an error to retry).
-      const ready = !chat.pending && (chat.history.length > 0 || Boolean(chat.error));
-      input.hidden = followUp.hidden = !ready;
-      send.disabled = Boolean(chat.pending);
-    };
-    async function ask(question) {
-      const messages = [...chat.history, { role: "user", content: question }].slice(-7);
-      if (messages[0].role !== "user") messages.shift();
-      Object.assign(chat, { pending: question, error: "", fallback: false });
-      show();
+    if (!chat.pending && chat.error) {
+      status.append(" Tap Hide AI chat, then Ask AI, to try again.");
+      if (chat.fallback) status.append(" ", el("a", { href: "https://chatgpt.com/", target: "_blank", rel: "noopener" }, "Open ChatGPT instead"));
+    }
+    async function ask() {
+      Object.assign(chat, { pending: true, error: "", fallback: false });
+      rerender();
       try {
-        const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, messages }) });
+        const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, messages: [{ role: "user", content: c.question }] }) });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw Object.assign(new Error(data.error || "The AI chat is not working right now."), { fallback: res.status >= 500 });
-        chat.history.push({ role: "user", content: question }, { role: "assistant", content: data.answer });
+        chat.answer = data.answer;
       } catch (err) {
         const offline = err instanceof TypeError; // fetch could not reach the server
-        chat.error = offline ? "Could not reach the AI. Check the Wi-Fi and try again." : err.message;
+        chat.error = offline ? "Could not reach the AI. Check the Wi-Fi." : err.message;
         chat.fallback = offline || Boolean(err.fallback);
       } finally {
-        chat.pending = "";
+        chat.pending = false;
         rerender();
       }
     }
-    send.addEventListener("click", () => {
-      const question = input.value.trim();
-      if (question && !chat.pending) ask(question);
-    });
-    show();
-    // First time open: ask the card's question right away (after this render finishes).
+    // Opening the chat asks once (after this render finishes); reopening after an error asks again.
     if (!chat.asked) {
       chat.asked = true;
-      setTimeout(() => ask(c.question));
+      setTimeout(ask);
     }
-    return el("div", { className: "chat" }, log, input, followUp, status);
+    return el("div", { className: "chat" }, log, status);
   }
 
   // Session 2 option cards: tap one card of this type. All three show, each tagged with the goal it helps.
@@ -132,7 +114,11 @@
           const chat = chats.get(c.value) || { open: false, history: [] };
           chats.set(c.value, chat);
           const toggle = el("button", { type: "button", className: "btn primary" }, chat.open ? "Hide AI chat" : "Ask AI");
-          toggle.addEventListener("click", () => { chat.open = !chat.open; render(); });
+          toggle.addEventListener("click", () => {
+            chat.open = !chat.open;
+            if (chat.open && !chat.answer && !chat.pending) chat.asked = false; // retry after an error
+            render();
+          });
           const ask = el("div", { className: "ask" }, el("p", {}, el("strong", {}, "Question for the AI: "), c.question),
             el("p", { className: "buttons" }, toggle));
           if (chat.open) ask.append(chatBox(c, chat, render));
