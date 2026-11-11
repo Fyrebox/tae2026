@@ -55,13 +55,6 @@
   };
 
   const money = (n) => "$" + n.toLocaleString("en-AU");
-  function copyButton(text) {
-    const b = el("button", { type: "button", className: "btn" }, "Copy question");
-    b.addEventListener("click", async () => {
-      try { await navigator.clipboard.writeText(text); b.textContent = "Copied"; } catch { b.textContent = "Select the question and copy it"; }
-    });
-    return b;
-  }
 
   // "Ask AI": a chat box under the chosen card, so learners on phones never switch tabs. Questions go to /api/chat
   // and nothing is stored; each card keeps its conversation while the page is open.
@@ -125,7 +118,7 @@
           const toggle = el("button", { type: "button", className: "btn primary" }, chat.open ? "Hide AI chat" : "Ask AI");
           toggle.addEventListener("click", () => { chat.open = !chat.open; render(); });
           const ask = el("div", { className: "ask" }, el("p", {}, el("strong", {}, "Question for the AI: "), c.question),
-            el("p", { className: "buttons" }, copyButton(c.question), toggle));
+            el("p", { className: "buttons" }, toggle));
           if (chat.open) ask.append(chatBox(c, chat));
           wrap.append(ask);
         }
