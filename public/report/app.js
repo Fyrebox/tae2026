@@ -4,8 +4,16 @@
   const CARDS = JSON.parse(document.getElementById("optionCards").textContent);
   const $ = (id) => document.getElementById(id);
   const KEY = "bellarineReport";
-  // /brief (Session 1), /brief2 (Session 2) and /report/3 show one session's sections; /report shows them all.
-  const only = { "/brief": 1, "/brief2": 2, "/report/3": 3 }[location.pathname.replace(/\/$/, "")] || 0;
+  // Learner pages show one session's sections (or some of them); /report shows them all, for the trainer.
+  const PAGES = {
+    "/brief": { session: 1 },
+    "/brief2": { session: 2, sections: [4] },
+    "/risks": { session: 2, sections: [5], title: "Risks", note: "Use the same phone as your Session 2 page: the options you picked in section 4 are saved on it." },
+    "/report/3": { session: 3 },
+  };
+  const page = PAGES[location.pathname.replace(/\/$/, "")];
+  const only = page?.session || 0;
+  const shows = (s) => !page || (s.session === only && (!page.sections || page.sections.includes(s.n)));
 
   // Same anonymous id as the activities, so a resubmission replaces the learner's earlier report.
   function learnerId() {
@@ -23,23 +31,38 @@
   }
   const id = learnerId();
 
+  const stored = () => {
+    try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch { return null; } // storage blocked or corrupt
+  };
   let state = { fields: {}, checklist: FORM.checklist.map(() => false), name: "", submittedAt: null };
-  try {
-    const saved = JSON.parse(localStorage.getItem(KEY) || "null");
-    if (saved && saved.fields) state = { ...state, ...saved, checklist: FORM.checklist.map((_, i) => saved.checklist?.[i] === true) };
-  } catch { /* storage blocked or corrupt: start empty */ }
+  const saved = stored();
+  if (saved && saved.fields) state = { ...state, ...saved, checklist: FORM.checklist.map((_, i) => saved.checklist?.[i] === true) };
   // Drop answers the server would reject: boxes that no longer exist, and choices no longer offered (e.g. an old option card).
   const known = new Map([...FORM.sections.flatMap((s) => s.groups.flatMap((g) => g.fields)), ...FORM.goodbad.fields].map((f) => [f.id, f]));
-  state.fields = Object.fromEntries(Object.entries(state.fields).filter(([fid, v]) => {
+  const keep = ([fid, v]) => {
     const f = known.get(fid);
     return f && (f.type !== "select" || !v || f.options.includes(v));
-  }));
+  };
+  state.fields = Object.fromEntries(Object.entries(state.fields).filter(keep));
+
+  // Two pages of the report can be open in different tabs (e.g. /brief2 and /risks). Each page saves only its own
+  // answers on top of the latest copy, and picks up the other pages' answers, so neither overwrites the other.
+  const own = new Set([...FORM.sections.filter(shows).flatMap((s) => s.groups.flatMap((g) => g.fields.map((f) => f.id))), ...FORM.goodbad.fields.map((f) => f.id)]);
+  const ownsSubmit = !only || only === 3;
+  function pull() {
+    const latest = stored();
+    if (!latest || !latest.fields) return;
+    state.fields = Object.fromEntries([...Object.entries(latest.fields).filter(([fid, v]) => !own.has(fid) && keep([fid, v])),
+      ...Object.entries(state.fields).filter(([fid]) => own.has(fid))]);
+    if (!ownsSubmit) Object.assign(state, { name: latest.name || "", submittedAt: latest.submittedAt || null, checklist: FORM.checklist.map((_, i) => latest.checklist?.[i] === true) });
+  }
 
   let saveTimer = null;
   function save() {
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
       try {
+        pull();
         localStorage.setItem(KEY, JSON.stringify(state));
         $("saved").textContent = "Saved on this device";
       } catch {
@@ -130,7 +153,7 @@
       wrap.textContent = "";
       const card = CARDS.find((c) => c.value === state.fields[`s4_pick_${g.risks}`]);
       if (!card) {
-        wrap.append(el("p", { className: "small" }, `Pick your ${g.label} in `, el("a", { href: "#s4" }, "section 4"), " first."));
+        wrap.append(el("p", { className: "small" }, `Pick your ${g.label} in `, el("a", { href: only ? "/brief2#s4" : "#s4" }, "section 4"), " first, on this phone."));
         return;
       }
       wrap.append(el("p", { className: "riskcard" }, el("strong", {}, card.title), ` (${card.product})`));
@@ -203,7 +226,7 @@
       session = s.session;
       form.append(el("h2", { id: `session${session}`, className: "session", hidden: Boolean(only) }, `Session ${session}`));
     }
-    const sec = el("section", { className: "rsec", id: `s${s.n}`, hidden: only && only !== s.session });
+    const sec = el("section", { className: "rsec", id: `s${s.n}`, hidden: !shows(s) });
     const progress = el("span", { className: "progress" });
     sec.append(el("h3", {}, `${s.n}. ${s.title} `, el("span", { className: "maps" }, s.maps), progress));
     if (s.intro) sec.append(el("p", { className: "small" }, s.intro));
@@ -339,21 +362,24 @@
   // Session page: that session's brief on top and its sections below, with nothing from the other sessions.
   // The submission shows only in Session 3. /report (no session) is the whole report, for the trainer.
   if (only) {
-    const first = FORM.sections.find((s) => s.session === only).n;
-    const last = only === 3 ? 9 : FORM.sections.filter((s) => s.session === only).at(-1).n;
-    document.title = `Session ${only} · Bellarine Pathology`;
-    $("title").textContent = `Session ${only}`;
+    const shown = FORM.sections.filter(shows).map((s) => s.n);
+    const first = shown[0];
+    const last = only === 3 ? 9 : shown.at(-1);
+    const range = first === last ? `section ${first}` : `sections ${first}–${last}`;
+    const name = `Session ${only}${page.title ? `: ${page.title}` : ""}`;
+    document.title = `${name} · Bellarine Pathology`;
+    $("title").textContent = name;
     const hasBrief = $("briefHead").closest("section").dataset.sessions.split(" ").includes(String(only));
-    $("lede").textContent = `${hasBrief ? `Read the brief, then fill in sections ${first}–${last} of your report below.` : `Fill in sections ${first}–${last} of your report below.`} Short, clear answers are enough. Your work is saved on this device as you type.`;
+    $("lede").textContent = `${hasBrief ? `Read the brief, then fill in ${range} of your report below.` : `Fill in ${range} of your report below.`} ${page.note ? page.note + " " : ""}Short, clear answers are enough. Your work is saved on this device as you type.`;
     $("sessions").hidden = true;
     document.querySelectorAll("section.brief").forEach((b) => { b.hidden = !b.dataset.sessions.split(" ").includes(String(only)); });
     $("yourReport").hidden = false;
-    $("yourReport").textContent = `Your report: sections ${first}–${last}`;
+    $("yourReport").textContent = `Your report: ${range}`;
     $("submit").hidden = only !== 3;
     // Feedback in Session 3 can change an earlier section, so section 8 links back to the earlier pages, and they link back here.
     if (only === 3) {
       $("s8").append(el("p", { className: "small" }, "Need to change an earlier section? Go to ",
-        el("a", { href: "/brief?from=3" }, "sections 1–3"), " or ", el("a", { href: "/brief2?from=3#s4" }, "sections 4–5"), "."));
+        el("a", { href: "/brief?from=3" }, "sections 1–3"), ", ", el("a", { href: "/brief2?from=3#s4" }, "section 4"), " or ", el("a", { href: "/risks?from=3" }, "section 5"), "."));
     } else if (new URLSearchParams(location.search).get("from") === "3") {
       $("lede").after(el("p", {}, el("a", { href: "/report/3#s8" }, "← Back to Session 3")));
     }
@@ -375,6 +401,13 @@
     save();
   }
   copyGoodBad();
+  // Another tab saved the report (e.g. the section 4 picks on /brief2): show its answers here.
+  window.addEventListener("storage", (e) => {
+    if (e.key !== KEY) return;
+    pull();
+    riskViews.forEach((r) => r());
+    updateProgress();
+  });
   window.addEventListener("storage", (e) => { if (e.key === "goodbadResult") copyGoodBad(); });
 
   updateProgress();

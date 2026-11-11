@@ -84,7 +84,7 @@ const reportVars = {
 };
 const reportPage = fill(read("pages", "report.html"), reportVars);
 const reportHostPage = fill(read("pages", "report-host.html"), reportVars);
-for (const route of ["/report", "/brief", "/brief2", "/report/3"]) {
+for (const route of ["/report", "/brief", "/brief2", "/risks", "/report/3"]) {
   app.get(route, (req, res) => res.type("html").send(reportPage));
 }
 app.get("/report/host", (req, res) => res.type("html").send(reportHostPage));
