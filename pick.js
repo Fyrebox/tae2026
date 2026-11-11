@@ -41,9 +41,12 @@ export function createPickRouter(activities = ACTIVITIES) {
   router.post("/:activity/answer", rateLimit, (req, res) => {
     const l = learner(req.act, req.body?.id);
     const { item, answer } = req.body || {};
-    if (!l || !req.act.items.has(item) || !req.act.options.has(answer)) {
+    if (!l || !req.act.items.has(item) || (!req.act.items.get(item).options && !req.act.options.has(answer))) {
       return res.status(400).json({ error: "Bad request." });
     }
+    // An item can have its own choices (the good-and-bad test); otherwise it uses the activity's options.
+    const own = req.act.items.get(item)?.options;
+    if (own && !own.some((o) => o.id === answer)) return res.status(400).json({ error: "Bad request." });
     // The first answer to an item counts, unless the activity allows retries: then the latest answer counts.
     if (req.act.activity.retries || !l.answers[item]) l.answers[item] = answer;
     res.json({ ok: true });
@@ -52,8 +55,8 @@ export function createPickRouter(activities = ACTIVITIES) {
   router.get("/:activity/host/stats", requireHost, (req, res) => {
     const { activity, learners } = req.act;
     const items = activity.items.map((i) => ({
-      id: i.id, text: i.text, correct: i.answer,
-      counts: Object.fromEntries(activity.options.map((o) => [o.id, 0])),
+      id: i.id, text: i.text, correct: i.answer, ...(i.options ? { options: i.options } : {}),
+      counts: Object.fromEntries((i.options || activity.options).map((o) => [o.id, 0])),
     }));
     let started = 0;
     let finished = 0;

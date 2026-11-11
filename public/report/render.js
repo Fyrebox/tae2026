@@ -19,7 +19,17 @@ window.renderReport = (form, report) => {
     });
     out.push("</section>");
   });
-  out.push(`<section class="rsec"><h2>10. Submission</h2><p>Submitted to ${esc(form.submitTo)} · ${esc(when)}</p><ul>`);
+  // The good-and-bad test result travels with the report (PC 2.2); show it even when missing, so the assessor sees that.
+  const gb = form.goodbad;
+  if (gb) {
+    out.push(`<section class="rsec"><h2>${esc(gb.title)}</h2><p class="maps">${esc(gb.maps)}</p><div class="rgroup">`);
+    gb.fields.forEach((f) => {
+      const v = report.fields[f.id];
+      out.push(`<p><span class="flabel">${esc(f.label)}:</span> ${v ? esc(v) : '<span class="empty">(not done on this device)</span>'}</p>`);
+    });
+    out.push("</div></section>");
+  }
+  out.push(`<section class="rsec"><h2>9. Submission</h2><p>Submitted to ${esc(form.submitTo)} · ${esc(when)}</p><ul>`);
   form.checklist.forEach((c, i) => out.push(`<li>${report.checklist?.[i] ? "☑" : "☐"} ${esc(c)}</li>`));
   out.push("</ul></section>");
   return out.join("");

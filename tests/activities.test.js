@@ -31,10 +31,10 @@ const GOAL = FIELDS.get('s2_goal').options.at(-1); // the longest goal name must
 
 test('every activity item has a valid answer and an explanation', () => {
   for (const [key, a] of Object.entries(ACTIVITIES)) {
-    const options = new Set(a.options.map((o) => o.id));
     assert.ok(a.items.length >= 6, key);
     assert.equal(new Set(a.items.map((i) => i.id)).size, a.items.length, key);
     for (const i of a.items) {
+      const options = new Set((i.options || a.options).map((o) => o.id));
       assert.ok(options.has(i.answer), `${key}/${i.id}`);
       assert.ok(i.why.length > 10, `${key}/${i.id}`);
     }
@@ -105,7 +105,7 @@ test('report submissions are validated', () => {
     { name: 'Sam', fields: { s3_junk_class: 'Magic' }, checklist: ticks },
   ];
   for (const b of bad) assert.equal(cleanSubmission(b), null, JSON.stringify(b).slice(0, 80));
-  assert.equal(FIELDS.size, REPORT.sections.flatMap((s) => s.groups.flatMap((g) => g.fields)).length); // no two boxes share an id
+  assert.equal(FIELDS.size, REPORT.sections.flatMap((s) => s.groups.flatMap((g) => g.fields)).length + REPORT.goodbad.fields.length); // no two boxes share an id
 });
 
 test('reports are submitted, replaced on resubmission and readable only with the host PIN', async () => {
@@ -193,4 +193,32 @@ test('Session 2 has one option card per type for every goal, and each card fits 
     assert.ok(c.value.length <= FIELD_LIMITS.select, c.value);
     assert.ok(FIELDS.get(`s4_pick_${c.type}`).options.includes(c.value), c.value);
   }
+});
+
+test('the good-and-bad test has a good thing and a problem for every card, each with its own choices', async () => {
+  const g = ACTIVITIES.goodbad;
+  assert.equal(g.items.length, CARDS.length * 2);
+  for (const c of CARDS) {
+    for (const side of ['good', 'bad']) {
+      const it = g.items.find((i) => i.id === `${c.id}-${side}`);
+      assert.ok(it, `${c.id}-${side}`);
+      assert.equal(it.options.length, 3);
+      assert.equal(new Set(it.options.map((o) => o.label)).size, 3, it.id);
+    }
+    assert.ok(FIELDS.get(`gb_${c.id}`), c.id);
+  }
+  const { call, close } = await serve('/api/pick', createPickRouter());
+  try {
+    await call('/goodbad/join', { body: { id: ID } });
+    assert.equal((await call('/goodbad/answer', { body: { id: ID, item: 'chat-good', answer: 'b' } })).status, 200);
+    assert.equal((await call('/goodbad/answer', { body: { id: ID, item: 'chat-good', answer: 'a' } })).status, 200);
+    assert.equal((await call('/goodbad/answer', { body: { id: ID, item: 'chat-good', answer: 'rule' } })).status, 400);
+    const item = (await (await call('/goodbad/host/stats', { pin: '424242' })).json()).items.find((i) => i.id === 'chat-good');
+    assert.deepEqual(item.counts, { a: 1, b: 0, c: 0 }); // retries: the latest answer counts
+    assert.equal(item.options.length, 3);
+  } finally {
+    await close();
+  }
+  const ok = cleanSubmission({ name: 'Sam', fields: { gb_score: '16 of 18 (first try 13)', gb_chat: 'Good: x · Problem: y' }, checklist: ticks });
+  assert.equal(ok.fields.gb_score, '16 of 18 (first try 13)');
 });

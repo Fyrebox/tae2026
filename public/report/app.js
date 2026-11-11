@@ -29,7 +29,7 @@
     if (saved && saved.fields) state = { ...state, ...saved, checklist: FORM.checklist.map((_, i) => saved.checklist?.[i] === true) };
   } catch { /* storage blocked or corrupt: start empty */ }
   // Drop answers the server would reject: boxes that no longer exist, and choices no longer offered (e.g. an old option card).
-  const known = new Map(FORM.sections.flatMap((s) => s.groups.flatMap((g) => g.fields.map((f) => [f.id, f]))));
+  const known = new Map([...FORM.sections.flatMap((s) => s.groups.flatMap((g) => g.fields)), ...FORM.goodbad.fields].map((f) => [f.id, f]));
   state.fields = Object.fromEntries(Object.entries(state.fields).filter(([fid, v]) => {
     const f = known.get(fid);
     return f && (f.type !== "select" || !v || f.options.includes(v));
@@ -209,7 +209,7 @@
     $("send").disabled = !ready;
   }
 
-  // Checklist and name (section 10).
+  // Checklist and name (section 9).
   $("submitTo").textContent = FORM.submitTo;
   FORM.checklist.forEach((c, i) => {
     const box = el("input", { type: "checkbox", checked: state.checklist[i] });
@@ -264,7 +264,7 @@
   // The submission shows only in Session 3. /report (no session) is the whole report, for the trainer.
   if (only) {
     const first = FORM.sections.find((s) => s.session === only).n;
-    const last = only === 3 ? 10 : FORM.sections.filter((s) => s.session === only).at(-1).n;
+    const last = only === 3 ? 9 : FORM.sections.filter((s) => s.session === only).at(-1).n;
     document.title = `Session ${only} · Bellarine Pathology`;
     $("title").textContent = `Session ${only}`;
     const hasBrief = $("briefHead").closest("section").dataset.sessions.split(" ").includes(String(only));
@@ -274,16 +274,32 @@
     $("yourReport").hidden = false;
     $("yourReport").textContent = `Your report: sections ${first}–${last}`;
     $("submit").hidden = only !== 3;
-    // Feedback in Session 3 can change an earlier section, so section 9 links back to the earlier pages, and they link back here.
+    // Feedback in Session 3 can change an earlier section, so section 8 links back to the earlier pages, and they link back here.
     if (only === 3) {
-      $("s9").append(el("p", { className: "small" }, "Need to change an earlier section? Go to ",
-        el("a", { href: "/brief?from=3" }, "sections 1–3"), " or ", el("a", { href: "/brief2?from=3#s4" }, "sections 4–6"), "."));
+      $("s8").append(el("p", { className: "small" }, "Need to change an earlier section? Go to ",
+        el("a", { href: "/brief?from=3" }, "sections 1–3"), " or ", el("a", { href: "/brief2?from=3#s4" }, "sections 4–5"), "."));
     } else if (new URLSearchParams(location.search).get("from") === "3") {
-      $("lede").after(el("p", {}, el("a", { href: "/report/3#s9" }, "← Back to Session 3")));
+      $("lede").after(el("p", {}, el("a", { href: "/report/3#s8" }, "← Back to Session 3")));
     }
   } else {
     document.querySelector('#sessions a[data-session="0"]').setAttribute("aria-current", "page");
   }
+
+  // The good-and-bad test (taegordon.au/goodbad) keeps its result on this device: copy it into the report.
+  function copyGoodBad() {
+    let r = null;
+    try { r = JSON.parse(localStorage.getItem("goodbadResult") || "null"); } catch { /* storage blocked */ }
+    if (!r || !r.answers) return;
+    const first = Number.isInteger(r.firstTry) && r.firstTry !== r.score ? ` (first try ${r.firstTry})` : "";
+    state.fields.gb_score = `${r.score} of ${r.total}${first}`;
+    FORM.goodbad.fields.filter((f) => f.card).forEach((f) => {
+      const good = r.answers[`${f.card}-good`], bad = r.answers[`${f.card}-bad`];
+      if (good || bad) state.fields[f.id] = `Good: ${good || "—"} · Problem: ${bad || "—"}`.slice(0, 300);
+    });
+    save();
+  }
+  copyGoodBad();
+  window.addEventListener("storage", (e) => { if (e.key === "goodbadResult") copyGoodBad(); });
 
   updateProgress();
   showSubmitted();

@@ -1,5 +1,10 @@
 // Tap-to-choose activities for ICTAII401, set in the fictional Bellarine Pathology.
 // Each item has one correct option; "why" is shown to the learner after they finish.
+import { CARDS, GOOD_BAD } from "./option-cards.js";
+
+const TYPE_NAME = { ai: "AI", ml: "ML", dl: "DL" };
+const abc = (labels) => labels.map((label, i) => ({ id: "abc"[i], label }));
+
 export const ACTIVITIES = {
   tech: {
     path: "/tech",
@@ -32,5 +37,22 @@ export const ACTIVITIES = {
       { id: "slides", text: "Scientists check samples under the microscope by eye", answer: "manual",
         why: "Done by hand: deep learning could help with goal 3, with a scientist still signing off." },
     ],
+  },
+  goodbad: {
+    path: "/goodbad",
+    // Each question has its own three choices ("a" is right; the page shuffles them), in card order.
+    // retries: the latest answer counts; saveAs: the result is kept on the device and copied into the report.
+    retries: true,
+    ordered: true,
+    saveAs: "goodbadResult",
+    eyebrow: "ICTAII401 · Session 2",
+    title: "Good and bad",
+    lede: "Nine options for Bellarine. For each one, pick a good thing and a problem. Your answers are saved in your report on this device.",
+    options: [],
+    items: CARDS.flatMap((c) => ["good", "bad"].map((side) => ({
+      id: `${c.id}-${side}`, card: c.id,
+      text: `${c.title} (${TYPE_NAME[c.type]}): ${side === "good" ? "a good thing?" : "a problem?"}`,
+      options: abc(GOOD_BAD[c.id][side]), answer: "a", why: GOOD_BAD[c.id].why,
+    }))),
   },
 };

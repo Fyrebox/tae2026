@@ -10,6 +10,7 @@ An Express website for the TAE class delivery schedule and Session 1 activity.
 - `/tech`: What does Bellarine already use? (fixed rule, ML, DL or manual). It runs inside section 3 of `/brief`, so learners stay on one page; `/tech` redirects there.
 - `/brief`: the Session 1 learner page (details below).
 - The old addresses `/session1`, `/session1/host`, `/session1/tech`, `/session1/tech/host`, `/report/1` and `/host` redirect to the new ones.
+- `/goodbad`: Good and bad test (Session 2): a good thing and a problem for each of the nine option cards, with retries. The result is kept on the device and copied into the report (not a section; shown in the report view, PC 2.2). `/goodbad/host` shows class results.
 - `/tech/host`: PIN-protected host view for the technology activity. `/session2` and `/session2/host` redirect to `/brief2`.
 - `/bellarine`: Bellarine Pathology work brief, AI use policy, fact sheet, glossary and question stems.
 - `/bellarine/role-card`, `/bellarine/links`: Operations Manager role card; vendor and policy links.
@@ -22,7 +23,7 @@ An Express website for the TAE class delivery schedule and Session 1 activity.
 All activity host views use the same `HOST_PIN`. Like `/ruleorai`, the tap-to-choose
 activities keep answers in memory only, with an anonymous device id and no names;
 **Reset for a new class** clears one activity. Decks live in `pick-decks.js`.
-In both activities learners can retry the items they got wrong and the latest
+In all three activities learners can retry the items they got wrong and the latest
 answer counts (the section 3 report also keeps the first-try score).
 
 The report form (`report-form.js` drives the form, server validation and host view)

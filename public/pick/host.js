@@ -62,14 +62,15 @@
       const answer = document.createElement("p");
       answer.className = "small";
       answer.innerHTML = 'Answer: <span class="rcorrect"></span>';
-      answer.lastChild.textContent = label[it.correct];
+      const opts = it.options || s.options;
+      answer.lastChild.textContent = (opts.find((o) => o.id === it.correct) || {}).label || label[it.correct];
 
       const bar = document.createElement("div");
       bar.className = "split";
-      s.options.forEach((o) => {
+      opts.forEach((o, k) => {
         const count = it.counts[o.id];
         const part = document.createElement("div");
-        part.className = "part " + colour[o.id] + (it.correct === o.id ? " is-correct" : "");
+        part.className = "part " + (colour[o.id] || "o" + (k + 1)) + (it.correct === o.id ? " is-correct" : "");
         part.style.flexGrow = count;
         if (!count) part.style.padding = "0";
         part.textContent = count ? `${pct(count, it.n)}%${it.correct === o.id ? " ✓" : ""}` : "";

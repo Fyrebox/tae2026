@@ -1,6 +1,6 @@
 // The Bellarine AI Opportunities Report (ICTAII401): ten sections filled in across Sessions 1–3.
 // One schema drives the learner form, the server's validation and the host's read-only view.
-import { GOALS, cardValues } from "./option-cards.js";
+import { CARDS, GOALS, cardValues } from "./option-cards.js";
 
 const OPTIONS = [["ai", "AI option"], ["ml", "ML option"], ["dl", "DL option"]];
 
@@ -55,44 +55,46 @@ export const REPORT = {
       label: optLabel, hint: `${opt.toUpperCase()}: ${TYPE[opt]}.`, fields: [
         { id: `s4_pick_${opt}`, cards: opt, type: "select", options: cardValues(opt) },
         { id: `s4_why_${opt}`, label: "Why this one?", type: "text" },
-        { id: `s4_needs_${opt}`, label: "What it needs, and the first two steps (from ChatGPT)", type: "textarea" },
+        { id: `s4_needs_${opt}`, label: "What it needs, and the first two steps (from the AI)", type: "textarea" },
         { id: `s4_fits_${opt}`, label: "Does it fit the budget and the AI use policy?", type: "select", options: ["Yes", "No"] },
       ] })) },
-    { n: 5, session: 2, title: "Good and bad", maps: "PC 2.2", groups: OPTIONS.map(([opt, optLabel]) => ({
-      label: optLabel, fields: [
-        { id: `s5_goodbad_${opt}`, label: "One good thing and one problem for Bellarine", type: "textarea" },
-      ] })) },
-    { n: 6, session: 2, title: "Risks", maps: "PC 2.3", intro: "Pick the main risk of each option and say how to manage it. Then ask the Operations Manager at least one risk question.", groups: [
+    { n: 5, session: 2, title: "Risks", maps: "PC 2.3", intro: "Pick the main risk of each option and say how to manage it. Then ask the Operations Manager at least one risk question.", groups: [
       ...OPTIONS.map(([opt, optLabel]) => ({ label: optLabel, fields: [
-        { id: `s6_risk_${opt}`, label: "Main risk", type: "select", options: RISKS },
-        { id: `s6_manage_${opt}`, label: "How to manage it", type: "text" },
+        { id: `s5_risk_${opt}`, label: "Main risk", type: "select", options: RISKS },
+        { id: `s5_manage_${opt}`, label: "How to manage it", type: "text" },
       ] })),
-      { label: "What the Operations Manager said", fields: [{ id: "s6_priya", type: "textarea" }] },
+      { label: "What the Operations Manager said", fields: [{ id: "s5_priya", type: "textarea" }] },
     ] },
-    { n: 7, session: 3, title: "Comparison", maps: "PE: make comparisons between AI, ML and DL", groups: [
-      ...perOption(7, [["goal", "Goal addressed"], ["data", "Data needed"], ["cost", "12-month cost"], ["risk", "Main risk"], ["effort", "Effort to implement"]]),
-      { label: "Which would you start with, and why?", fields: [{ id: "s7_start", type: "textarea" }] },
+    { n: 6, session: 3, title: "Comparison", maps: "PE: make comparisons between AI, ML and DL", groups: [
+      ...perOption(6, [["goal", "Goal addressed"], ["data", "Data needed"], ["cost", "12-month cost"], ["risk", "Main risk"], ["effort", "Effort to implement"]]),
+      { label: "Which would you start with, and why?", fields: [{ id: "s6_start", type: "textarea" }] },
     ] },
-    { n: 8, session: 3, title: "Policy and legislation", maps: "PE: apply organisational policies and procedures", groups: perOption(8, [
+    { n: 7, session: 3, title: "Policy and legislation", maps: "PE: apply organisational policies and procedures", groups: perOption(7, [
       ["policy", "AI use policy rules that apply"],
       ["privacy", "How it complies with the Privacy Act 1988 and health-records rules"],
     ]) },
-    { n: 9, session: 3, title: "Feedback log", maps: "PCs 3.1, 3.2", intro: "Implementing feedback means changing the report, not just writing it down.", groups: [1, 2].map((r) => ({ label: `Feedback ${r}`, fields: [
-      { id: `s9_date${r}`, label: "Date", type: "text" },
-      { id: `s9_who${r}`, label: "Who gave feedback", type: "text" },
-      { id: `s9_said${r}`, label: "What they said", type: "textarea" },
-      { id: `s9_changed${r}`, label: "What I changed", type: "textarea" },
+    { n: 8, session: 3, title: "Feedback log", maps: "PCs 3.1, 3.2", intro: "Implementing feedback means changing the report, not just writing it down.", groups: [1, 2].map((r) => ({ label: `Feedback ${r}`, fields: [
+      { id: `s8_date${r}`, label: "Date", type: "text" },
+      { id: `s8_who${r}`, label: "Who gave feedback", type: "text" },
+      { id: `s8_said${r}`, label: "What they said", type: "textarea" },
+      { id: `s8_changed${r}`, label: "What I changed", type: "textarea" },
     ] })) },
   ],
-  // Section 10 (submission) is the checklist, the learner's first name and the submit button.
+  // The good-and-bad test (taegordon.au/goodbad, PC 2.2) is not a section: its result is copied in from the device
+  // and submitted with the report, and the host view shows it.
+  goodbad: { title: "Good and bad test", maps: "PC 2.2", fields: [
+    { id: "gb_score", label: "Score", type: "text" },
+    ...CARDS.map((c) => ({ id: `gb_${c.id}`, card: c.id, label: c.title, type: "text" })),
+  ] },
+  // Section 9 (submission) is the checklist, the learner's first name and the submit button.
   checklist: [
     "All sections are complete",
     "One AI, one ML and one DL option, each with a reason (section 4)",
     "What each option needs, its first two steps, and whether it fits the budget and policy (section 4)",
-    "One good thing and one problem for each option (section 5)",
-    "Risks, how to manage them and what the Operations Manager said (section 6)",
-    "Comparison and policy check complete (sections 7 and 8)",
-    "Feedback recorded and at least one change made (section 9)",
+    "Good and bad test done on this device (taegordon.au/goodbad)",
+    "Risks, how to manage them and what the Operations Manager said (section 5)",
+    "Comparison and policy check complete (sections 6 and 7)",
+    "Feedback recorded and at least one change made (section 8)",
     "No real personal information about patients, staff or anyone else",
   ],
 };
@@ -100,4 +102,4 @@ export const REPORT = {
 export const FIELD_LIMITS = { text: 300, textarea: 1500, select: 120 };
 
 // id -> field, for validation.
-export const FIELDS = new Map(REPORT.sections.flatMap((s) => s.groups.flatMap((g) => g.fields)).map((f) => [f.id, f]));
+export const FIELDS = new Map([...REPORT.sections.flatMap((s) => s.groups.flatMap((g) => g.fields)), ...REPORT.goodbad.fields].map((f) => [f.id, f]));
