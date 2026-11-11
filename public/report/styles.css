@@ -87,3 +87,6 @@ nav.jump a[aria-current] { background: var(--accent); border-color: var(--accent
 .msg.assistant { background: var(--bg); border: 1px solid var(--line); }
 .chat textarea { width: 100%; }
 .chat .buttons { margin: 0; }
+.msg.thinking { color: var(--muted); font-style: italic; animation: thinking 1.2s ease-in-out infinite; }
+@keyframes thinking { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .msg.thinking { animation: none; } }

@@ -67,12 +67,18 @@
     const send = el("button", { type: "button", className: "btn" }, "Send");
     const status = el("p", { className: "small" });
     status.setAttribute("aria-live", "polite");
+    const followUp = el("p", { className: "buttons" }, send);
+    // The card's own question is already shown above the button, so the chat shows only the answers and any follow-ups.
     const show = () => {
       log.textContent = "";
-      chat.history.forEach((m) => log.append(el("p", { className: `msg ${m.role}` }, m.content)));
-      if (chat.pending) log.append(el("p", { className: "msg user" }, chat.pending));
-      status.textContent = chat.pending ? "Thinking…" : chat.error || "";
+      chat.history.forEach((m, i) => { if (i > 0 || m.role !== "user") log.append(el("p", { className: `msg ${m.role}` }, m.content)); });
+      if (chat.pending && chat.history.length) log.append(el("p", { className: "msg user" }, chat.pending));
+      if (chat.pending) log.append(el("p", { className: "msg assistant thinking" }, "Thinking…"));
+      status.textContent = chat.pending ? "" : chat.error || "";
       if (!chat.pending && chat.fallback) status.append(" ", el("a", { href: "https://chatgpt.com/", target: "_blank", rel: "noopener" }, "Open ChatGPT instead"));
+      // The follow-up box appears once there is an answer (or an error to retry).
+      const ready = !chat.pending && (chat.history.length > 0 || Boolean(chat.error));
+      input.hidden = followUp.hidden = !ready;
       send.disabled = Boolean(chat.pending);
     };
     async function ask(question) {
@@ -104,7 +110,7 @@
       chat.asked = true;
       setTimeout(() => ask(c.question));
     }
-    return el("div", { className: "chat" }, log, input, el("p", { className: "buttons" }, send), status);
+    return el("div", { className: "chat" }, log, input, followUp, status);
   }
 
   // Session 2 option cards: tap one card of this type. All three show, each tagged with the goal it helps.
