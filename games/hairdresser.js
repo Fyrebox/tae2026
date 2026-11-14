@@ -3,7 +3,7 @@
 // The salon and its costs are made up for the course.
 export const GAME = {
   key: "hairdresser",
-  job: "Hairdresser", // the learner's job, on the /games picker
+  job: "Hairdresser", // the learner's job, on the /session3 picker
   path: "/hairdresser",
   title: "A day at the salon",
   place: "Harbour Hair Studio",

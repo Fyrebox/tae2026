@@ -2,7 +2,7 @@
 // constructionworker.ink; this file holds what the page shows beside it. The builder and its costs are made up.
 export const GAME = {
   key: "constructionworker",
-  job: "Construction worker", // the learner's job, on the /games picker
+  job: "Construction worker", // the learner's job, on the /session3 picker
   path: "/constructionworker",
   title: "A day on the building site",
   place: "Bayline Builders, Armstrong Creek site",

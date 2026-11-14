@@ -74,7 +74,7 @@ for (const [key, game] of Object.entries(GAMES)) {
   });
 }
 
-test('every game has its own address and a job name for the /games picker', () => {
+test('every game has its own address and a job name for the /session3 picker', () => {
   const games = Object.values(GAMES);
   assert.equal(new Set(games.map((g) => g.path)).size, games.length);
   for (const g of games) {

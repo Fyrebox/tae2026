@@ -2,7 +2,7 @@
 // this file holds what the page shows beside it. The restaurant and its costs are made up.
 export const GAME = {
   key: "chef",
-  job: "Chef", // the learner's job, on the /games picker
+  job: "Chef", // the learner's job, on the /session3 picker
   path: "/chef",
   title: "A day in the kitchen",
   place: "The Pier Kitchen",
