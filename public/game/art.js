@@ -41,12 +41,12 @@ window.GameArt = (() => {
       over: `<g fill="none" stroke="#3a3f47" stroke-width="2.5"><circle cx="66" cy="78" r="10"/><circle cx="94" cy="78" r="10"/><path d="M76 78 L84 78"/></g>`,
     },
     restowner: {
-      skin: "#8d5a3b", shade: "#7a4c31", hair: "#1c1714", top: "#2f5d50", trim: "#e9c46a",
+      skin: "#f1c7a6", shade: "#dea986", hair: "#4a3324", top: "#2f5d50", trim: "#e9c46a",
       // Short curly hair, a beard, a green shirt and a black apron.
       back: "",
-      front: `<path d="M46 80 Q42 48 62 42 Q66 34 80 38 Q94 32 102 42 Q120 48 114 80 Q110 62 96 58 Q80 64 64 58 Q50 62 46 80 Z" fill="#1c1714"/>
-              ${[[52, 50], [62, 41], [74, 37], [88, 37], [100, 42], [109, 52]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="7" fill="#1c1714"/>`).join("")}
-              <path d="M48 96 Q50 128 80 132 Q110 128 112 96 Q106 116 80 118 Q54 116 48 96 Z" fill="#1c1714"/>`,
+      front: `<path d="M46 80 Q42 48 62 42 Q66 34 80 38 Q94 32 102 42 Q120 48 114 80 Q110 62 96 58 Q80 64 64 58 Q50 62 46 80 Z" fill="#4a3324"/>
+              ${[[52, 50], [62, 41], [74, 37], [88, 37], [100, 42], [109, 52]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="7" fill="#4a3324"/>`).join("")}
+              <path d="M48 96 Q50 128 80 132 Q110 128 112 96 Q106 116 80 118 Q54 116 48 96 Z" fill="#4a3324"/>`,
       badge: `<path d="M50 200 L54 154 Q80 162 106 154 L110 200 Z" fill="#26262e"/><path d="M54 154 L60 140 M106 154 L100 140" stroke="#26262e" stroke-width="3"/>`,
     },
     customer: {
