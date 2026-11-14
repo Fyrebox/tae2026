@@ -148,7 +148,7 @@
     if (view.mood) toast(view.mood);
     report();
     save();
-    if (show) openPanel(show);
+    if (show) openPanel(show, { story: true });
   }
 
   function render() {
@@ -220,7 +220,9 @@
   };
 
   let returnFocus = null;
-  function openPanel(name) {
+  // Opened by the story: just that panel, no tabs, and Close below it, so the learner reads it and carries on.
+  // Opened with the Notes button: every tab, with Close at the top right.
+  function openPanel(name, { story = false } = {}) {
     const tab = TABS[name] ? name : "policy";
     $("panelTitle").textContent = TABS[tab].title;
     const tabs = $("tabs");
@@ -231,15 +233,22 @@
     });
     $("panelBody").textContent = "";
     $("panelBody").append(RENDER[tab]());
+    tabs.hidden = story;
+    $("panelClose").hidden = story;
+    $("panelDone").hidden = !story;
     if ($("panel").hidden) returnFocus = document.activeElement;
     $("panel").hidden = false;
-    $("panelClose").focus();
+    $("panel").querySelector(".sheet").scrollTop = 0;
+    // In story mode, start reading at the title (the Close button is below the content).
+    if (story) $("panelTitle").focus({ preventScroll: true });
+    else $("panelClose").focus();
   }
   function closePanel() {
     $("panel").hidden = true;
     (returnFocus && document.body.contains(returnFocus) ? returnFocus : $("next")).focus?.();
   }
   $("panelClose").addEventListener("click", closePanel);
+  $("panelDone").addEventListener("click", closePanel);
   $("panel").addEventListener("click", (e) => { if (e.target === $("panel")) closePanel(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("panel").hidden) closePanel(); });
   $("notesBtn").addEventListener("click", () => openPanel("policy"));

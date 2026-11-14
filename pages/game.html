@@ -63,11 +63,12 @@
     <div id="panel" class="panel" role="dialog" aria-modal="true" aria-labelledby="panelTitle" hidden>
       <div class="sheet">
         <header>
-          <h2 id="panelTitle"></h2>
+          <h2 id="panelTitle" tabindex="-1"></h2>
           <button id="panelClose" class="btn small" type="button">Close</button>
         </header>
         <nav id="tabs" class="tabs"></nav>
         <div id="panelBody" class="panel-body"></div>
+        <button id="panelDone" class="btn primary panel-done" type="button" hidden>Close</button>
       </div>
     </div>
   </main>
