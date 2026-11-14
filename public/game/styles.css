@@ -164,3 +164,21 @@ h2 { font-size: 1.15rem; margin: 0; }
   .sheet { border-radius: 18px; margin-bottom: 4vh; max-width: 640px; }
   .panel { align-items: center; }
 }
+
+/* /games: pick a workplace */
+.games { list-style: none; padding: 0; margin: 16px 0; display: grid; gap: 12px; }
+.pick {
+  display: grid; grid-template-columns: 84px 1fr; gap: 12px; align-items: center; text-decoration: none; color: var(--ink);
+  background: #fff; border: 2px solid var(--line); border-radius: var(--radius); padding: 10px 14px 10px 10px; min-height: 96px;
+}
+.pick:hover { border-color: var(--brand); }
+.pick:focus-visible { outline: 3px solid #1d6fd8; outline-offset: 2px; }
+.pick-art { width: 84px; height: 96px; background: #f1e9e4; border-radius: 10px; overflow: hidden; display: flex; align-items: flex-end; }
+.pick-art svg { width: 100%; height: auto; display: block; }
+.pick-job { display: block; font-size: 1.2rem; font-weight: 700; }
+.pick-title { display: block; color: var(--muted); font-size: .95rem; }
+.pick-go { display: block; color: var(--brand); font-weight: 700; font-size: .9rem; margin-top: 4px; }
+@media (min-width: 760px) and (min-aspect-ratio: 1/1) {
+  .picker { max-width: 820px; margin: 0 auto; }
+  .games { grid-template-columns: 1fr 1fr; }
+}

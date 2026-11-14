@@ -2,6 +2,7 @@
 // cardiacnurse.ink; this file holds what the page shows beside it. The hospital, the ward and its costs are made up.
 export const GAME = {
   key: "cardiacnurse",
+  job: "Cardiac nurse", // the learner's job, on the /games picker
   path: "/cardiacnurse",
   title: "A shift on the cardiac ward",
   place: "Ward 4B (cardiology), Corio Bay Hospital",

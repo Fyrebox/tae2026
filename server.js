@@ -100,6 +100,14 @@ for (const [key, game] of Object.entries(GAMES)) {
   app.get(game.path, (req, res) => res.type("html").send(page));
   app.get(game.path + "/host", (req, res) => res.type("html").send(host));
 }
+// /games: learners pick their workplace game. Server-rendered links, so it works even before the script loads.
+const gamesPage = fill(read("pages", "games.html"), {
+  v: gameV,
+  list: Object.values(GAMES).map((g) => `        <li><a class="pick" href="${g.path}"><span class="pick-art" data-key="${g.key}" aria-hidden="true"></span>`
+    + `<span><span class="pick-job">${escHtml(g.job)}</span><span class="pick-title">${escHtml(g.title)}</span><span class="pick-go">Start ›</span></span></a></li>`).join("\n"),
+  looks: embed(Object.fromEntries(Object.values(GAMES).map((g) => [g.key, Object.values(g.cast)[0].look]))),
+});
+app.get("/games", (req, res) => res.type("html").send(gamesPage));
 app.get("/vendor/ink.js", (req, res) => res.sendFile(path.join(__dirname, "node_modules", "inkjs", "dist", "ink.js"), { maxAge: "30d" }));
 const schedulePage = fill(read("pages", "schedule.html"), {
   v: fileHash("public", "schedule", "app.js") + fileHash("public", "schedule", "styles.css"),

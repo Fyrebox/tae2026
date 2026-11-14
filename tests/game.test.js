@@ -74,6 +74,15 @@ for (const [key, game] of Object.entries(GAMES)) {
   });
 }
 
+test('every game has its own address and a job name for the /games picker', () => {
+  const games = Object.values(GAMES);
+  assert.equal(new Set(games.map((g) => g.path)).size, games.length);
+  for (const g of games) {
+    assert.ok(g.job && g.title && g.path === `/${g.key}`, g.key);
+    assert.ok(Object.values(g.cast)[0].look, g.key);
+  }
+});
+
 async function serve() {
   const app = express();
   app.use('/api/game', createGameRouter());
