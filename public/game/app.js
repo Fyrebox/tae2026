@@ -39,7 +39,7 @@
 
   let story = new inkjs.Story(STORY);
   // What is on screen, saved with the story so a reload shows the same moment.
-  let view = { scene: "desk", clock: "9:00 am", level: "", who: "", face: "happy", text: "", mood: "", ended: false, sent: false };
+  let view = { scene: "desk", clock: "9:00 am", level: "", who: "", face: "happy", text: "", mood: "", show: "", ended: false, sent: false };
   const v = (name) => story.variablesState[name];
 
   function save() {
@@ -144,6 +144,7 @@
       show = applyTags(story.currentTags) || show;
       if (text) { view.text = text; break; }
     }
+    view.show = show; // the panel this line opened, so the learner can reopen it
     render();
     if (view.mood) toast(view.mood);
     report();
@@ -157,6 +158,14 @@
     drawHud();
     drawLine();
     drawChoices();
+    drawReopen();
+  }
+
+  // While the story is on a line that opened a panel, a button under the bubble opens it again.
+  function drawReopen() {
+    const t = TABS[view.show];
+    $("reopen").hidden = !t;
+    if (t) $("reopen").textContent = t.again;
   }
 
   function choose(i) {
@@ -172,10 +181,10 @@
 
   // ---- Notes panel: the rules, the three options, the comparison and the pitch ----
   const TABS = {
-    policy: { label: "Rules", title: G.rulesTitle },
-    cards: { label: "Options", title: "Three ideas" },
-    compare: { label: "Compare", title: "Your comparison" },
-    pitch: { label: "Pitch", title: "Your one-minute pitch" },
+    policy: { label: "Rules", title: G.rulesTitle, again: "Read the rules again" },
+    cards: { label: "Options", title: "Three ideas", again: "See the three ideas again" },
+    compare: { label: "Compare", title: "Your comparison", again: "See the comparison again" },
+    pitch: { label: "Pitch", title: "Your one-minute pitch", again: "See my pitch script again" },
   };
   const filled = (s) => s || "?";
   const risk = (id) => v(`${id}_risk`);
@@ -249,6 +258,7 @@
   }
   $("panelClose").addEventListener("click", closePanel);
   $("panelDone").addEventListener("click", closePanel);
+  $("reopen").addEventListener("click", () => { if (TABS[view.show]) openPanel(view.show, { story: true }); });
   $("panel").addEventListener("click", (e) => { if (e.target === $("panel")) closePanel(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("panel").hidden) closePanel(); });
   $("notesBtn").addEventListener("click", () => openPanel("policy"));
@@ -337,7 +347,7 @@
     if (fresh) {
       try { localStorage.removeItem(KEY); } catch { /* ignore */ }
       story = new inkjs.Story(STORY);
-      view = { scene: "desk", clock: "9:00 am", level: "", who: "", face: "happy", text: "", mood: "", ended: false, sent: false };
+      view = { scene: "desk", clock: "9:00 am", level: "", who: "", face: "happy", text: "", mood: "", show: "", ended: false, sent: false };
       drawnScene = "";
       lastSent = "";
     }

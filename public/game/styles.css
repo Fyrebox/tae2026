@@ -186,3 +186,6 @@ h2 { font-size: 1.15rem; margin: 0; }
 /* A panel opened by the story: Close sits below the content. */
 .panel-done { margin-top: 16px; }
 #panelTitle:focus { outline: none; }
+
+/* Reopen the panel the story just showed (under the speech bubble). */
+.btn.ghost.reopen { border-color: var(--brand); color: var(--brand); background: #fff; }
