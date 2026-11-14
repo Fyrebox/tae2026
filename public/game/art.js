@@ -57,6 +57,24 @@ window.GameArt = (() => {
               <circle cx="46" cy="98" r="2.4" fill="#fff"/><circle cx="114" cy="98" r="2.4" fill="#fff"/>`,
       badge: `<path d="M80 158 L80 200" stroke="#e08a43" stroke-width="2"/><circle cx="86" cy="172" r="2.5" fill="#fff"/><circle cx="86" cy="188" r="2.5" fill="#fff"/>`,
     },
+    supervisor: {
+      skin: "#c68863", shade: "#b0744f", hair: "#4a2f22", top: "#1f3a5f", trim: "#c0c6cc",
+      // A white hard hat, a ponytail and an orange hi-vis vest.
+      back: `<path d="M106 70 Q136 80 128 132 Q120 104 104 92 Z" fill="#4a2f22"/>`,
+      front: `<path d="M46 92 Q43 66 55 54 L61 92 Z" fill="#4a2f22"/><path d="M114 92 Q117 66 105 54 L99 92 Z" fill="#4a2f22"/>`,
+      badge: `<path d="M24 200 L34 152 L60 142 L70 200 Z" fill="#ff7a00"/><path d="M136 200 L126 152 L100 142 L90 200 Z" fill="#ff7a00"/>
+              <rect x="27" y="176" width="40" height="6" fill="#d9dde1"/><rect x="93" y="176" width="40" height="6" fill="#d9dde1"/>`,
+      over: `<g transform="translate(0 -9)"><path d="M38 62 Q38 20 80 18 Q122 20 122 62 Z" fill="#f7f7f5" stroke="#d9d9d4" stroke-width="2"/><path d="M80 20 L80 60" stroke="#e2e2dc" stroke-width="5"/><rect x="30" y="56" width="100" height="9" rx="4.5" fill="#ececE6" stroke="#d9d9d4"/></g>`,
+    },
+    apprentice: {
+      skin: "#d9a07a", shade: "#c48a64", hair: "#1e1a17", top: "#3d4a57", trim: "#c0c6cc",
+      // A young man: a yellow hard hat, short dark hair at the sides and a yellow hi-vis vest.
+      back: "",
+      front: `<path d="M46 86 Q45 66 54 58 L58 86 Z" fill="#1e1a17"/><path d="M114 86 Q115 66 106 58 L102 86 Z" fill="#1e1a17"/>`,
+      badge: `<path d="M24 200 L34 152 L60 142 L70 200 Z" fill="#d7e93b"/><path d="M136 200 L126 152 L100 142 L90 200 Z" fill="#d7e93b"/>
+              <rect x="27" y="176" width="40" height="6" fill="#d9dde1"/><rect x="93" y="176" width="40" height="6" fill="#d9dde1"/>`,
+      over: `<g transform="translate(0 -9)"><path d="M38 62 Q38 20 80 18 Q122 20 122 62 Z" fill="#f4c430" stroke="#d9a91c" stroke-width="2"/><path d="M80 20 L80 60" stroke="#e8b923" stroke-width="5"/><rect x="30" y="56" width="100" height="9" rx="4.5" fill="#f0bd22" stroke="#d9a91c"/></g>`,
+    },
   };
 
   const FACES = {
@@ -187,6 +205,29 @@ window.GameArt = (() => {
       front: `<ellipse cx="220" cy="186" rx="130" ry="18" fill="#fff" stroke="#e2d6c2"/><rect x="92" y="186" width="256" height="34" fill="#fff"/>
         <circle cx="180" cy="180" r="12" fill="#f4f1ea" stroke="#d9cdb8"/><path d="M200 168 L200 186 M206 168 L206 186" stroke="#9aa5b1" stroke-width="2"/>
         <rect x="262" y="166" width="8" height="18" rx="2" fill="#bfe0f2"/>`,
+    },
+    site: {
+      back: `<rect width="360" height="220" fill="#cfe6f5"/>
+        <circle cx="300" cy="34" r="14" fill="#fff3b0"/>
+        <path d="M0 150 L360 150 L360 220 L0 220 Z" fill="#b89a74"/>
+        <g stroke="#c9a46b" stroke-width="5">${[30, 62, 94, 126, 158].map((x) => `<line x1="${x}" y1="150" x2="${x}" y2="80"/>`).join("")}<line x1="24" y1="80" x2="164" y2="80"/><line x1="24" y1="115" x2="164" y2="115"/></g>
+        <path d="M18 82 L94 36 L170 82" fill="none" stroke="#c9a46b" stroke-width="5"/>
+        <g stroke="#7d8894" stroke-width="3">${[196, 236, 276].map((x) => `<line x1="${x}" y1="150" x2="${x}" y2="70"/>`).join("")}<line x1="190" y1="70" x2="282" y2="70"/><line x1="190" y1="110" x2="282" y2="110"/></g>
+        <path d="M318 150 L318 20 M318 24 L240 24 M318 24 L346 24" stroke="#f4c430" stroke-width="5"/><line x1="262" y1="24" x2="262" y2="52" stroke="#555" stroke-width="1.5"/><rect x="254" y="52" width="16" height="10" fill="#7d8894"/>`,
+      front: `<rect x="70" y="182" width="290" height="38" fill="#8f7558"/>
+        <g>${[90, 160, 230, 300].map((x) => `<rect x="${x}" y="166" width="58" height="10" rx="2" fill="#ff7a00"/><rect x="${x}" y="176" width="58" height="10" rx="2" fill="#fff"/><rect x="${x + 4}" y="186" width="6" height="30" fill="#ff7a00"/><rect x="${x + 48}" y="186" width="6" height="30" fill="#ff7a00"/>`).join("")}</g>`,
+    },
+    shed: {
+      back: `<rect width="360" height="220" fill="#e6e1d6"/>
+        <g stroke="#d3ccbd" stroke-width="2">${[30, 60, 90, 120, 150].map((y) => `<line x1="0" y1="${y}" x2="360" y2="${y}"/>`).join("")}</g>
+        <rect y="176" width="360" height="44" fill="#9c9486"/>
+        <rect x="22" y="22" width="120" height="84" fill="#fff" stroke="#b9b2a3"/><g stroke="#4a78a8" stroke-width="1.5" fill="none"><rect x="34" y="34" width="56" height="40"/><rect x="90" y="34" width="40" height="60"/><line x1="34" y1="54" x2="90" y2="54"/></g>
+        <rect x="250" y="34" width="90" height="6" fill="#7a6a55"/>
+        <path d="M262 40 Q262 26 274 26 Q286 26 286 40 Z" fill="#f7f7f5"/><path d="M296 40 Q296 26 308 26 Q320 26 320 40 Z" fill="#f4c430"/>
+        <rect x="258" y="60" width="18" height="40" rx="3" fill="#ff7a00"/><rect x="292" y="60" width="18" height="40" rx="3" fill="#d7e93b"/>`,
+      front: `<rect x="70" y="166" width="250" height="12" rx="3" fill="#7a6a55"/><rect x="84" y="178" width="10" height="42" fill="#5e5242"/><rect x="296" y="178" width="10" height="42" fill="#5e5242"/>
+        <rect x="114" y="136" width="44" height="30" rx="3" fill="#2b2f36"/><rect x="118" y="140" width="36" height="22" fill="#7ab8d9"/>
+        <rect x="190" y="154" width="70" height="12" fill="#fff" stroke="#b9b2a3"/><path d="M196 160 L254 160" stroke="#4a78a8"/>`,
     },
   };
 

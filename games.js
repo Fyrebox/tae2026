@@ -10,9 +10,10 @@ import { ID_PATTERN, createRateLimit, jsonErrors, requireHost } from "./activity
 import { GAME as hairdresser } from "./games/hairdresser.js";
 import { GAME as cardiacnurse } from "./games/cardiacnurse.js";
 import { GAME as chef } from "./games/chef.js";
+import { GAME as constructionworker } from "./games/constructionworker.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const GAMES = { hairdresser, cardiacnurse, chef };
+export const GAMES = { hairdresser, cardiacnurse, chef, constructionworker };
 
 const MAX_LEARNERS = 200;
 const TEXT_MAX = 300;

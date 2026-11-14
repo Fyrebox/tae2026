@@ -7,7 +7,7 @@ process.env.HOST_PIN = '424242';
 const { GAMES, compileStory, storySource, levelsOf, createGameRouter } = await import('../games.js');
 
 const FACES = ['happy', 'worried', 'thinking', 'surprised'];
-const SCENES = ['desk', 'office', 'colour', 'station', 'bedside', 'kitchen', 'dining'];
+const SCENES = ['desk', 'office', 'colour', 'station', 'bedside', 'kitchen', 'dining', 'site', 'shed'];
 const ID = 'learner-0001';
 
 // Play to the end. pick(story) chooses the choice index at each choice point.
@@ -54,7 +54,7 @@ for (const [key, game] of Object.entries(GAMES)) {
     assert.deepEqual(game.cards.map((c) => c.type), ['AI', 'ML', 'DL']);
   });
 
-  test(`${key}: every random playthrough reaches 5 pm with a full recommendation`, () => {
+  test(`${key}: every random playthrough reaches the end of the day with a full recommendation`, () => {
     let seed = 7;
     const rand = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
     for (let run = 0; run < 300; run++) {

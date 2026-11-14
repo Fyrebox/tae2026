@@ -272,6 +272,7 @@
 
   function showEnd() {
     show("end");
+    $("endEyebrow").textContent = `${view.clock} · Send it`;
     $("endScore").textContent = `Right first time: ${v("score")} out of ${v("total")}. Check your recommendation, then send it.`;
     $("memo").textContent = "";
     $("memo").append(...memo());
