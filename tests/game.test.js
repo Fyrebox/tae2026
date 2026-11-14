@@ -7,7 +7,7 @@ process.env.HOST_PIN = '424242';
 const { GAMES, compileStory, storySource, levelsOf, createGameRouter } = await import('../games.js');
 
 const FACES = ['happy', 'worried', 'thinking', 'surprised'];
-const SCENES = ['desk', 'office', 'colour', 'station', 'bedside'];
+const SCENES = ['desk', 'office', 'colour', 'station', 'bedside', 'kitchen', 'dining'];
 const ID = 'learner-0001';
 
 // Play to the end. pick(story) chooses the choice index at each choice point.

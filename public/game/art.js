@@ -40,6 +40,23 @@ window.GameArt = (() => {
       badge: `<g fill="#7fb3d5">${[[40, 176], [60, 190], [104, 184], [124, 172], [84, 194]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3"/>`).join("")}</g>`,
       over: `<g fill="none" stroke="#3a3f47" stroke-width="2.5"><circle cx="66" cy="78" r="10"/><circle cx="94" cy="78" r="10"/><path d="M76 78 L84 78"/></g>`,
     },
+    restowner: {
+      skin: "#8d5a3b", shade: "#7a4c31", hair: "#1c1714", top: "#2f5d50", trim: "#e9c46a",
+      // Short curly hair, a beard, a green shirt and a black apron.
+      back: "",
+      front: `<path d="M46 80 Q42 48 62 42 Q66 34 80 38 Q94 32 102 42 Q120 48 114 80 Q110 62 96 58 Q80 64 64 58 Q50 62 46 80 Z" fill="#1c1714"/>
+              ${[[52, 50], [62, 41], [74, 37], [88, 37], [100, 42], [109, 52]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="7" fill="#1c1714"/>`).join("")}
+              <path d="M48 96 Q50 128 80 132 Q110 128 112 96 Q106 116 80 118 Q54 116 48 96 Z" fill="#1c1714"/>`,
+      badge: `<path d="M50 200 L54 154 Q80 162 106 154 L110 200 Z" fill="#26262e"/><path d="M54 154 L60 140 M106 154 L100 140" stroke="#26262e" stroke-width="3"/>`,
+    },
+    customer: {
+      skin: "#f3d3b8", shade: "#e4bb9a", hair: "#c9a050", top: "#f4a261", trim: "#fff",
+      // Fair hair in a high ponytail and an orange cardigan.
+      back: `<path d="M104 44 Q138 52 132 112 Q124 86 108 72 Z" fill="#c9a050"/><path d="M42 90 Q38 44 80 38 Q122 44 118 90 Q112 66 80 62 Q48 66 42 90 Z" fill="#c9a050"/>`,
+      front: `<path d="M46 80 Q48 44 82 42 Q114 44 114 74 Q100 56 78 56 Q60 58 46 80 Z" fill="#c9a050"/>
+              <circle cx="46" cy="98" r="2.4" fill="#fff"/><circle cx="114" cy="98" r="2.4" fill="#fff"/>`,
+      badge: `<path d="M80 158 L80 200" stroke="#e08a43" stroke-width="2"/><circle cx="86" cy="172" r="2.5" fill="#fff"/><circle cx="86" cy="188" r="2.5" fill="#fff"/>`,
+    },
   };
 
   const FACES = {
@@ -145,6 +162,31 @@ window.GameArt = (() => {
         <text x="306" y="80" font-family="system-ui, sans-serif" font-size="9" fill="#7dd3fc">SpO2 97</text>`,
       front: `<rect x="96" y="170" width="236" height="50" rx="8" fill="#fff" stroke="#c8d3dc"/><rect x="96" y="182" width="236" height="10" fill="#a8d0e6"/>
         <rect x="88" y="150" width="8" height="70" rx="3" fill="#9aa5b1"/><rect x="332" y="150" width="8" height="70" rx="3" fill="#9aa5b1"/>`,
+    },
+    kitchen: {
+      back: `<rect width="360" height="220" fill="#e9ecef"/>
+        <g fill="#fff" stroke="#d3d8dd">${[0, 1, 2, 3, 4, 5, 6, 7].map((c) => [0, 1, 2, 3].map((r) => `<rect x="${c * 46}" y="${r * 30}" width="46" height="30"/>`).join("")).join("")}</g>
+        <rect y="150" width="360" height="70" fill="#b8c0c8"/>
+        <rect x="20" y="20" width="150" height="6" fill="#8a949e"/>
+        ${[0, 1, 2, 3, 4].map((i) => `<rect x="${28 + i * 28}" y="26" width="18" height="10" rx="1" fill="#fffbe6" stroke="#c8b98a"/>`).join("")}
+        <rect x="214" y="18" width="120" height="70" rx="6" fill="#c0c7ce"/><rect x="220" y="24" width="108" height="58" rx="4" fill="#d9dee3"/>
+        <g fill="#ffb347" opacity=".85">${[236, 272, 308].map((x) => `<rect x="${x}" y="82" width="20" height="6" rx="3"/>`).join("")}</g>
+        <g>${[[40, 108, "#9aa5b1"], [76, 112, "#7d8894"], [112, 106, "#9aa5b1"]].map(([x, y, c]) => `<rect x="${x}" y="${y}" width="28" height="22" rx="3" fill="${c}"/><rect x="${x - 4}" y="${y - 3}" width="36" height="5" rx="2" fill="${c}"/>`).join("")}</g>`,
+      front: `<rect x="70" y="164" width="270" height="56" fill="#aeb6be"/><rect x="62" y="156" width="286" height="12" rx="3" fill="#d6dbe0"/>
+        <rect x="96" y="140" width="60" height="16" rx="3" fill="#f6efe4"/><circle cx="112" cy="146" r="5" fill="#e76f51"/><circle cx="126" cy="146" r="5" fill="#2a9d8f"/><circle cx="140" cy="146" r="5" fill="#e9c46a"/>
+        <rect x="270" y="132" width="10" height="26" fill="#6c4f3d"/><rect x="262" y="128" width="26" height="6" rx="2" fill="#8a949e"/>`,
+    },
+    dining: {
+      back: `<rect width="360" height="220" fill="#f3ead8"/>
+        <rect y="168" width="360" height="52" fill="#a47551"/>
+        <rect x="24" y="22" width="110" height="80" rx="4" fill="#2f3b35"/><rect x="28" y="26" width="102" height="72" rx="2" fill="#3d4a43"/>
+        <text x="79" y="44" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#f3ead8">Today</text>
+        <g stroke="#f3ead8" stroke-width="2" opacity=".7">${[56, 68, 80].map((y) => `<line x1="40" y1="${y}" x2="118" y2="${y}"/>`).join("")}</g>
+        ${[200, 270, 330].map((x) => `<line x1="${x}" y1="0" x2="${x}" y2="34" stroke="#26262e" stroke-width="1.5"/><path d="M${x - 12} 46 Q${x} 30 ${x + 12} 46 Z" fill="#26262e"/><circle cx="${x}" cy="48" r="4" fill="#ffd166"/>`).join("")}
+        <rect x="150" y="60" width="70" height="56" rx="4" fill="#fff"/><rect x="154" y="64" width="62" height="48" fill="#bfe0f2"/><path d="M154 100 Q180 90 216 102 L216 112 L154 112 Z" fill="#7fb3d5"/>`,
+      front: `<ellipse cx="220" cy="186" rx="130" ry="18" fill="#fff" stroke="#e2d6c2"/><rect x="92" y="186" width="256" height="34" fill="#fff"/>
+        <circle cx="180" cy="180" r="12" fill="#f4f1ea" stroke="#d9cdb8"/><path d="M200 168 L200 186 M206 168 L206 186" stroke="#9aa5b1" stroke-width="2"/>
+        <rect x="262" y="166" width="8" height="18" rx="2" fill="#bfe0f2"/>`,
     },
   };
 
