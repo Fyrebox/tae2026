@@ -8,9 +8,10 @@ import express from "express";
 import { Compiler, CompilerOptions } from "inkjs/full";
 import { ID_PATTERN, createRateLimit, jsonErrors, requireHost } from "./activity-common.js";
 import { GAME as hairdresser } from "./games/hairdresser.js";
+import { GAME as cardiacnurse } from "./games/cardiacnurse.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const GAMES = { hairdresser };
+export const GAMES = { hairdresser, cardiacnurse };
 
 const MAX_LEARNERS = 200;
 const TEXT_MAX = 300;
@@ -77,10 +78,11 @@ export function createGameRouter(games = GAMES) {
     const { id, name, score, total, answers } = req.body || {};
     const first = cleanText(name).slice(0, 40);
     if (!first || !isInt(score, 100) || !isInt(total, 100) || score > total || !answers || typeof answers !== "object") throw fail(400);
-    if (!["ai", "ml"].includes(answers.start)) throw fail(400);
+    if (!req.g.game.startable.includes(answers.start)) throw fail(400);
     const l = learner(req.g, id);
     Object.assign(l, {
-      name: first, score, total, level: req.g.levels.at(-1),
+      // The score as sent stays with the recommendation, even if the learner plays again afterwards.
+      name: first, score, total, sentScore: score, sentTotal: total, level: req.g.levels.at(-1),
       answers: Object.fromEntries(ANSWER_KEYS.map((k) => [k, cleanText(answers[k])])),
       submittedAt: Date.now(), updatedAt: Date.now(),
     });

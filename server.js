@@ -94,7 +94,7 @@ app.get("/report/host", (req, res) => res.type("html").send(reportHostPage));
 const gameV = ["app.js", "art.js", "styles.css", "host.js", "host.css"].map((f) => fileHash("public", "game", f).slice(0, 2)).join("");
 const inkV = fileHash("node_modules", "inkjs", "dist", "ink.js");
 for (const [key, game] of Object.entries(GAMES)) {
-  const vars = { v: gameV, inkV, title: escHtml(game.title), place: escHtml(game.place), game: embed(game), story: compileStory(storySource(key)).replaceAll("<", "\\u003c") };
+  const vars = { v: gameV, inkV, title: escHtml(game.title), place: escHtml(game.place), intro: escHtml(game.intro), madeUp: escHtml(game.madeUp), game: embed(game), story: compileStory(storySource(key)).replaceAll("<", "\\u003c") };
   const page = fill(read("pages", "game.html"), vars);
   const host = fill(read("pages", "game-host.html"), vars);
   app.get(game.path, (req, res) => res.type("html").send(page));

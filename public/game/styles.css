@@ -144,3 +144,23 @@ h2 { font-size: 1.15rem; margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Laptops and the main screen: scene on the left, the conversation on the right, all on one screen. */
+@media (min-width: 760px) and (min-aspect-ratio: 1/1) {
+  body { font-size: 16px; }
+  .game { max-width: 1120px; }
+  .intro, .end { max-width: 640px; margin: 0 auto; }
+  .play {
+    display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(320px, 1fr); grid-template-rows: auto 1fr;
+    column-gap: 24px; padding: 0 24px 24px;
+  }
+  .hud { grid-column: 1 / -1; border-radius: 0 0 14px 14px; padding: 10px 16px; }
+  .stage {
+    margin-top: 16px; border-radius: 14px; align-self: start;
+    width: min(100%, calc((100dvh - 110px) * 360 / 220));
+  }
+  .talk { padding: 16px 0 0; align-content: start; }
+  .bubble.speech::before { top: 26px; right: auto; left: -12px; transform: rotate(-45deg); }
+  .sheet { border-radius: 18px; margin-bottom: 4vh; max-width: 640px; }
+  .panel { align-items: center; }
+}

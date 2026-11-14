@@ -23,7 +23,7 @@
   }
 
   function render({ levels, learners }) {
-    const pitchAt = levels.indexOf("Pitch the owner");
+    const pitchAt = levels.indexOf(G.pitchLevel);
     $("joined").textContent = learners.length;
     $("pitching").textContent = learners.filter((l) => !l.submittedAt && levels.indexOf(l.level) >= pitchAt).length;
     $("sent").textContent = learners.filter((l) => l.submittedAt).length;
@@ -36,7 +36,7 @@
         el("div", { className: "lhead" },
           el("span", { className: "lname", textContent: l.name || `Learner ${l.n}` }),
           el("span", { className: "llevel", textContent: l.submittedAt ? "Sent ✓" : l.level }),
-          el("span", { className: "lscore", textContent: `★ ${l.score} / ${l.total}` })),
+          el("span", { className: "lscore", textContent: l.submittedAt ? `★ ${l.sentScore} / ${l.sentTotal}` : `★ ${l.score} / ${l.total}` })),
         steps);
       if (l.answers) {
         const a = l.answers;
@@ -45,7 +45,7 @@
           ["Recommendation", c ? `${c.title} (${c.type}, ${c.product})` : a.start],
           ["Why", a.start_why],
           ["Main risk and how managed", `${a[`${a.start}_risk`] || ""}. ${a.start_fix}`],
-          ["Owner's feedback", a.feedback],
+          ["Feedback", a.feedback],
           ["Change made", a.change],
         ];
         li.append(el("details", {}, el("summary", { textContent: "Read the recommendation" }),

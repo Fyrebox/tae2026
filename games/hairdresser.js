@@ -7,6 +7,12 @@ export const GAME = {
   title: "A day at the salon",
   place: "Harbour Hair Studio",
   manager: "the salon owner",
+  intro: "You look after the computers and apps at Harbour Hair Studio. The owner needs one AI idea, and has one minute to hear it.",
+  madeUp: "The salon and its costs are made up.",
+  rulesTitle: "The salon's AI rules",
+  pitchLevel: "Pitch the owner",
+  // The options a learner may recommend starting with (the DL one is too costly to start with).
+  startable: ["ai", "ml"],
   budget: { setup: 3000, monthly: 150 },
   // The four people who can appear on screen. "you" never appears: your replies are the buttons.
   cast: {

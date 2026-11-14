@@ -23,6 +23,22 @@ window.GameArt = (() => {
               <path d="M116 86 Q120 110 112 128" stroke="#5e2f1c" stroke-width="3" fill="none" stroke-linecap="round"/>`,
       badge: "",
     },
+    manager: {
+      skin: "#e0ac8a", shade: "#cc9472", hair: "#2b2b2b", top: "#1d3557", trim: "#7fb3d5",
+      // Short hair with a side part, navy scrubs, a fob watch and an ID lanyard.
+      back: "",
+      front: `<path d="M46 80 Q44 44 80 40 Q118 42 114 78 Q112 60 96 54 Q78 62 58 58 Q50 66 46 80 Z" fill="#2b2b2b"/>`,
+      badge: `<path d="M64 142 L74 176 M96 142 L86 176" stroke="#7fb3d5" stroke-width="3"/><rect x="72" y="174" width="16" height="20" rx="2" fill="#fff"/><rect x="75" y="178" width="10" height="6" fill="#7fb3d5"/>
+              <circle cx="112" cy="166" r="7" fill="#fff" stroke="#7fb3d5" stroke-width="2"/><path d="M112 162 L112 166 L115 168" stroke="#1d3557" stroke-width="1.5" fill="none"/>`,
+    },
+    patient: {
+      skin: "#efc3a1", shade: "#dba783", hair: "#a9adb3", top: "#a8d0e6", trim: "#7fb3d5",
+      // An older man: grey hair at the sides, glasses and a hospital gown.
+      back: "",
+      front: `<path d="M44 94 Q41 66 53 54 Q50 76 55 94 Z" fill="#a9adb3"/><path d="M116 94 Q119 66 107 54 Q110 76 105 94 Z" fill="#a9adb3"/>`,
+      badge: `<g fill="#7fb3d5">${[[40, 176], [60, 190], [104, 184], [124, 172], [84, 194]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3"/>`).join("")}</g>`,
+      over: `<g fill="none" stroke="#3a3f47" stroke-width="2.5"><circle cx="66" cy="78" r="10"/><circle cx="94" cy="78" r="10"/><path d="M76 78 L84 78"/></g>`,
+    },
   };
 
   const FACES = {
@@ -63,6 +79,7 @@ window.GameArt = (() => {
       <g class="brows" fill="none" stroke="${L.hair}" stroke-width="3.5" stroke-linecap="round">${F.brows}</g>
       <g class="eyes" fill="#2b2024">${F.eyes}</g>
       <circle cx="67.5" cy="76" r="1.4" fill="#fff"/><circle cx="95.5" cy="76" r="1.4" fill="#fff"/>
+      ${L.over || ""}
       <path d="M80 84 Q77 94 81 96" fill="none" stroke="${L.shade}" stroke-width="2.5" stroke-linecap="round"/>
       <circle cx="60" cy="96" r="6" fill="#e07a6a" opacity=".25"/><circle cx="100" cy="96" r="6" fill="#e07a6a" opacity=".25"/>
       <g class="mouth">${F.mouth}</g>`, `person ${look}`);
@@ -102,6 +119,31 @@ window.GameArt = (() => {
         <rect x="30" y="120" width="70" height="8" rx="2" fill="#9a8aa6"/><rect x="36" y="128" width="6" height="52" fill="#7d6d8a"/><rect x="88" y="128" width="6" height="52" fill="#7d6d8a"/>
         <circle cx="48" cy="114" r="9" fill="#c2185b"/><circle cx="72" cy="114" r="9" fill="#e0b84a"/><rect x="82" y="96" width="4" height="22" fill="#26262e"/>`,
       front: `<rect x="110" y="178" width="200" height="42" rx="10" fill="#26262e"/><rect x="104" y="160" width="22" height="40" rx="8" fill="#3a3a44"/><rect x="294" y="160" width="22" height="40" rx="8" fill="#3a3a44"/>`,
+    },
+    station: {
+      back: `<rect width="360" height="220" fill="#e3f1ef"/>
+        <rect y="172" width="360" height="48" fill="#c5d6d3"/>
+        <rect x="22" y="22" width="96" height="28" rx="6" fill="#1d3557"/>
+        <text x="70" y="41" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#fff">Ward 4B</text>
+        <rect x="196" y="24" width="140" height="84" rx="4" fill="#fff" stroke="#9fb7b4"/>
+        <g>${[0, 1, 2].map((r) => [0, 1, 2, 3].map((c) => `<rect x="${204 + c * 32}" y="${32 + r * 24}" width="26" height="18" rx="2" fill="${["#cfe8e4", "#f6d6a8", "#cfe8e4", "#e8c4cf"][(r + c) % 4]}"/>`).join("")).join("")}</g>
+        <circle cx="160" cy="40" r="15" fill="#fff" stroke="#1d3557" stroke-width="3"/><path d="M160 30 L160 40 L167 44" stroke="#1d3557" stroke-width="2.5" fill="none"/>
+        <rect x="40" y="96" width="14" height="26" rx="3" fill="#fff" stroke="#9fb7b4"/><rect x="43" y="90" width="8" height="7" fill="#2a9d8f"/>`,
+      front: `<rect x="80" y="166" width="250" height="54" rx="6" fill="#4f7c82"/><rect x="74" y="158" width="262" height="12" rx="4" fill="#6b9aa0"/>
+        <rect x="104" y="120" width="56" height="38" rx="3" fill="#2b2f36"/><rect x="108" y="124" width="48" height="28" fill="#7ab8d9"/><rect x="128" y="156" width="8" height="6" fill="#2b2f36"/>`,
+    },
+    bedside: {
+      back: `<rect width="360" height="220" fill="#eef2f6"/>
+        <rect y="180" width="360" height="40" fill="#cfd8df"/>
+        <rect x="132" y="22" width="90" height="64" rx="4" fill="#fff"/><rect x="138" y="28" width="78" height="52" fill="#bfe0f2"/>
+        <rect x="40" y="20" width="4" height="150" fill="#9aa5b1"/><rect x="28" y="20" width="28" height="4" fill="#9aa5b1"/><rect x="30" y="26" width="22" height="34" rx="6" fill="#e8f4fb" stroke="#9aa5b1"/>
+        <path d="M41 60 Q44 100 70 130" stroke="#9aa5b1" stroke-width="1.5" fill="none"/>
+        <rect x="262" y="26" width="84" height="60" rx="4" fill="#1f2a33"/>
+        <polyline points="268,60 282,60 286,52 290,68 294,40 298,74 302,60 318,60 322,54 326,62 340,60" fill="none" stroke="#4ade80" stroke-width="2"/>
+        <text x="270" y="44" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#4ade80">HR 72</text>
+        <text x="306" y="80" font-family="system-ui, sans-serif" font-size="9" fill="#7dd3fc">SpO2 97</text>`,
+      front: `<rect x="96" y="170" width="236" height="50" rx="8" fill="#fff" stroke="#c8d3dc"/><rect x="96" y="182" width="236" height="10" fill="#a8d0e6"/>
+        <rect x="88" y="150" width="8" height="70" rx="3" fill="#9aa5b1"/><rect x="332" y="150" width="8" height="70" rx="3" fill="#9aa5b1"/>`,
     },
   };
 

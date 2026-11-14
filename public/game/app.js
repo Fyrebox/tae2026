@@ -172,7 +172,7 @@
 
   // ---- Notes panel: the rules, the three options, the comparison and the pitch ----
   const TABS = {
-    policy: { label: "Rules", title: "The salon's AI rules" },
+    policy: { label: "Rules", title: G.rulesTitle },
     cards: { label: "Options", title: "Three ideas" },
     compare: { label: "Compare", title: "Your comparison" },
     pitch: { label: "Pitch", title: "Your one-minute pitch" },
@@ -347,7 +347,7 @@
     });
   }
 
-  $("introArt").innerHTML = GameArt.person("owner", "happy");
+  $("introArt").innerHTML = GameArt.person(Object.values(G.cast)[0].look, "happy");
   const resumed = load();
   if (resumed) {
     $("start").textContent = view.ended ? "See my recommendation" : `Carry on (${view.clock})`;

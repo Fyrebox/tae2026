@@ -7,7 +7,7 @@ process.env.HOST_PIN = '424242';
 const { GAMES, compileStory, storySource, levelsOf, createGameRouter } = await import('../games.js');
 
 const FACES = ['happy', 'worried', 'thinking', 'surprised'];
-const SCENES = ['desk', 'office', 'colour'];
+const SCENES = ['desk', 'office', 'colour', 'station', 'bedside'];
 const ID = 'learner-0001';
 
 // Play to the end. pick(story) chooses the choice index at each choice point.
@@ -43,7 +43,7 @@ for (const [key, game] of Object.entries(GAMES)) {
     const levels = levelsOf(source);
     assert.ok(levels.length >= 8, levels.join(', '));
     assert.equal(levels.at(-1), 'Send it');
-    assert.ok(levels.includes('Pitch the owner'));
+    assert.ok(levels.includes(game.pitchLevel));
     for (const [, who, face] of source.matchAll(/#\s*(\w+):(\w+)/g)) {
       if (['scene', 'level', 'show', 'clock'].includes(who)) continue;
       assert.ok(game.cast[who], `unknown speaker ${who}`);
@@ -60,7 +60,7 @@ for (const [key, game] of Object.entries(GAMES)) {
     for (let run = 0; run < 300; run++) {
       const { story } = play(json, (s) => Math.floor(rand() * s.currentChoices.length));
       const v = (n) => story.variablesState[n];
-      assert.ok(['ai', 'ml'].includes(v('start')), `run ${run}`);
+      assert.ok(game.startable.includes(v('start')), `run ${run}`);
       for (const k of ['start_why', 'start_fix', 'feedback', 'change', 'ai_goal', 'ai_risk', 'ml_goal', 'ml_risk', 'dl_goal', 'dl_risk']) assert.ok(v(k), `run ${run}: ${k}`);
       assert.ok(v('score') <= v('total'));
     }
@@ -112,6 +112,10 @@ test('the game API tracks levels, takes the sent recommendation and keeps the ho
     assert.equal(l.level, 'Send it');
     assert.equal(l.answers.change.length, 300);
     assert.equal(l.answers.extra, undefined);
+    // Playing again after sending does not change the score that was sent.
+    assert.equal((await call('/hairdresser/progress', { body: { id: ID, level: 'Spot it', score: 0, total: 1 } })).status, 200);
+    const again = (await (await call('/hairdresser/host', { pin: '424242' })).json()).learners[0];
+    assert.deepEqual([again.sentScore, again.sentTotal, again.name], [20, 23, 'Sam']);
 
     assert.equal((await call('/hairdresser/host/reset', { body: {}, pin: '424242' })).status, 200);
     assert.equal((await (await call('/hairdresser/host', { pin: '424242' })).json()).learners.length, 0);
