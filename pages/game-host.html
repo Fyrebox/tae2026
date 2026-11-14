@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>{{title}} Host</title>
+  <link rel="stylesheet" href="/game/styles.css?v={{v}}">
+  <link rel="stylesheet" href="/game/host.css?v={{v}}">
+</head>
+<body class="host">
+  <main class="hostapp">
+    <section id="gate" class="gate">
+      <h1>Host view</h1>
+      <form id="pinForm" class="send">
+        <label class="field"><span>Host PIN</span><input id="pin" type="password" inputmode="numeric" autocomplete="off" required></label>
+        <button class="btn primary" type="submit">Open</button>
+        <p id="pinError" class="small" hidden>Wrong PIN.</p>
+      </form>
+    </section>
+
+    <section id="dash" hidden>
+      <header class="hosthead">
+        <p class="eyebrow">Session 3 · {{place}}</p>
+        <h1>{{title}}</h1>
+        <p>Join on your phone: <strong id="joinUrl"></strong></p>
+      </header>
+      <div class="stats">
+        <div class="stat"><span id="joined" class="big">0</span><span>playing</span></div>
+        <div class="stat"><span id="pitching" class="big">0</span><span>ready to pitch</span></div>
+        <div class="stat"><span id="sent" class="big">0</span><span>sent</span></div>
+      </div>
+      <ol id="learners" class="learners"></ol>
+      <div class="buttons">
+        <button id="reset" class="btn ghost" type="button">Reset for a new class</button>
+      </div>
+      <p id="offline" class="small" hidden>Lost contact with the server. Retrying…</p>
+    </section>
+  </main>
+  <script id="game" type="application/json">{{game}}</script>
+  <script src="/game/host.js?v={{v}}" defer></script>
+</body>
+</html>

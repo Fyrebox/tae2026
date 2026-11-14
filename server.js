@@ -15,6 +15,7 @@ import { REPORT } from "./report-form.js";
 import { CARDS } from "./option-cards.js";
 import { createScheduleStore } from "./schedule-db.js";
 import { createScheduleRouter } from "./schedule.js";
+import { GAMES, compileStory, createGameRouter, storySource } from "./games.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -88,6 +89,18 @@ for (const route of ["/report", "/brief", "/brief2", "/risks", "/report/3"]) {
   app.get(route, (req, res) => res.type("html").send(reportPage));
 }
 app.get("/report/host", (req, res) => res.type("html").send(reportHostPage));
+// Session 3 workplace games (/hairdresser): an ink story played with drawn characters, plus a host view.
+// The story is compiled at boot and embedded in the page; the ink runtime is served from node_modules.
+const gameV = ["app.js", "art.js", "styles.css", "host.js", "host.css"].map((f) => fileHash("public", "game", f).slice(0, 2)).join("");
+const inkV = fileHash("node_modules", "inkjs", "dist", "ink.js");
+for (const [key, game] of Object.entries(GAMES)) {
+  const vars = { v: gameV, inkV, title: escHtml(game.title), place: escHtml(game.place), game: embed(game), story: compileStory(storySource(key)).replaceAll("<", "\\u003c") };
+  const page = fill(read("pages", "game.html"), vars);
+  const host = fill(read("pages", "game-host.html"), vars);
+  app.get(game.path, (req, res) => res.type("html").send(page));
+  app.get(game.path + "/host", (req, res) => res.type("html").send(host));
+}
+app.get("/vendor/ink.js", (req, res) => res.sendFile(path.join(__dirname, "node_modules", "inkjs", "dist", "ink.js"), { maxAge: "30d" }));
 const schedulePage = fill(read("pages", "schedule.html"), {
   v: fileHash("public", "schedule", "app.js") + fileHash("public", "schedule", "styles.css"),
 });
@@ -103,6 +116,7 @@ app.use("/api/chat", createChatRouter());
 app.use("/api/sort", sortRouter);
 app.use("/api/pick", createPickRouter());
 app.use("/api/report", createReportRouter());
+app.use("/api/game", createGameRouter());
 
 if (process.env.DATABASE_URL) {
   const scheduleStore = await createScheduleStore(process.env.DATABASE_URL, process.env.NODE_ENV === "test" ? process.env.SCHEDULE_DB_SCHEMA || "class_schedule_test" : "class_schedule");

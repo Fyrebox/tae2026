@@ -1,0 +1,23 @@
+/* Host view for the workplace games: for the trainer's laptop or the main screen. */
+.hostapp { max-width: 960px; margin: 0 auto; padding: 24px 16px 48px; }
+.gate { max-width: 360px; margin: 10vh auto 0; }
+.hosthead h1 { margin-bottom: .2em; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+.stat { background: #fff; border: 1.5px solid var(--line); border-radius: 12px; padding: 12px; display: grid; text-align: center; }
+.big { font-size: 2.2rem; font-weight: 800; color: var(--brand); }
+.learners { list-style: none; padding: 0; display: grid; gap: 10px; }
+.learner { background: #fff; border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.learner.sent { border-color: var(--good); }
+.lhead { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; }
+.lname { font-weight: 700; font-size: 1.05rem; }
+.llevel { color: var(--muted); }
+.lscore { color: var(--brand-dark); font-weight: 700; margin-left: auto; }
+.steps { display: flex; gap: 3px; margin: 8px 0 4px; }
+.steps i { flex: 1; height: 6px; border-radius: 3px; background: var(--line); }
+.steps i.done { background: var(--brand); }
+.learner details { margin-top: 6px; }
+.learner summary { cursor: pointer; font-weight: 600; }
+.learner dl { display: grid; grid-template-columns: 12em 1fr; gap: 4px 12px; margin: 8px 0 0; }
+.learner dt { font-weight: 700; color: var(--muted); }
+.learner dd { margin: 0; }
+@media (max-width: 600px) { .learner dl { grid-template-columns: 1fr; } }
