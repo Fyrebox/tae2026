@@ -24,10 +24,11 @@ window.GameArt = (() => {
       badge: "",
     },
     manager: {
-      skin: "#e0ac8a", shade: "#cc9472", hair: "#2b2b2b", top: "#1d3557", trim: "#7fb3d5",
-      // Short hair with a side part, navy scrubs, a fob watch and an ID lanyard.
-      back: "",
-      front: `<path d="M46 80 Q44 44 80 40 Q118 42 114 78 Q112 60 96 54 Q78 62 58 58 Q50 66 46 80 Z" fill="#2b2b2b"/>`,
+      skin: "#e0ac8a", shade: "#cc9472", hair: "#3b2a20", top: "#1d3557", trim: "#7fb3d5",
+      // Hair tied up in a bun with a swept fringe, small earrings, navy scrubs, a fob watch and an ID lanyard.
+      back: `<circle cx="80" cy="36" r="17" fill="#3b2a20"/><path d="M42 92 Q38 44 80 38 Q122 44 118 92 Q112 70 80 66 Q48 70 42 92 Z" fill="#3b2a20"/>`,
+      front: `<path d="M46 82 Q46 44 82 42 Q116 44 114 80 Q104 58 74 60 Q56 64 46 82 Z" fill="#3b2a20"/>
+              <circle cx="46" cy="98" r="2.6" fill="#7fb3d5"/><circle cx="114" cy="98" r="2.6" fill="#7fb3d5"/>`,
       badge: `<path d="M64 142 L74 176 M96 142 L86 176" stroke="#7fb3d5" stroke-width="3"/><rect x="72" y="174" width="16" height="20" rx="2" fill="#fff"/><rect x="75" y="178" width="10" height="6" fill="#7fb3d5"/>
               <circle cx="112" cy="166" r="7" fill="#fff" stroke="#7fb3d5" stroke-width="2"/><path d="M112 162 L112 166 L115 168" stroke="#1d3557" stroke-width="1.5" fill="none"/>`,
     },
