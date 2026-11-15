@@ -1,4 +1,4 @@
-// Session 2 option cards for the Bellarine report: three per type, one for each goal. Every learner sees all nine
+// Session 2 option cards for the Bellarine Pathology report: three per type, one for each goal. Every learner sees all nine
 // and picks one of each type; Session 2 does not depend on the goal picked in Session 1.
 // AI: an assistant that works with text (an LLM); ML: predictions from past data; DL: pictures or sound.
 // Costs are made up for the course.

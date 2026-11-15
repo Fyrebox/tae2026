@@ -353,7 +353,7 @@
 
   $("download").addEventListener("click", () => {
     const html = `<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><title>${FORM.title}</title><style>${window.REPORT_PRINT_CSS}</style></head><body>${window.renderReport(FORM, state)}</body></html>`;
-    const a = el("a", { href: URL.createObjectURL(new Blob([html], { type: "text/html" })), download: `Bellarine report ${state.name.trim() || "draft"}.html` });
+    const a = el("a", { href: URL.createObjectURL(new Blob([html], { type: "text/html" })), download: `Bellarine Pathology report ${state.name.trim() || "draft"}.html` });
     document.body.append(a);
     a.click();
     a.remove();

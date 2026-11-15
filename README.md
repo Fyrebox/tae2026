@@ -7,7 +7,7 @@ An Express website for the TAE class delivery schedule and Session 1 activity.
 - `/`: shared delivery schedule, grouped by student group and date.
 - `/ruleorai`: Rule or AI? activity (Session 1).
 - `/ruleorai/host`: PIN-protected activity host view.
-- `/tech`: What does Bellarine already use? (fixed rule, ML, DL or manual). It runs inside section 3 of `/brief`, so learners stay on one page; `/tech` redirects there.
+- `/tech`: What does Bellarine Pathology already use? (fixed rule, ML, DL or manual). It runs inside section 3 of `/brief`, so learners stay on one page; `/tech` redirects there.
 - `/brief`: the Session 1 learner page (details below).
 - The old addresses `/session1`, `/session1/host`, `/session1/tech`, `/session1/tech/host`, `/report/1` and `/host` redirect to the new ones.
 - `/goodbad`: Good and bad test (Session 2): a good thing and a problem for each of the nine option cards, with retries. The result is kept on the device and copied into the report (not a section; shown in the report view, PC 2.2). `/goodbad/host` shows class results.

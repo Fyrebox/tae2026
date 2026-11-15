@@ -13,8 +13,8 @@ export const ACTIVITIES = {
     // Learners can retry the items they got wrong; the latest answer counts in the report and on the host view.
     retries: true,
     eyebrow: "ICTAII401 · Session 1",
-    title: "What does Bellarine already use?",
-    lede: "Seven things Bellarine uses or does now. For each one, choose: a fixed rule, ML, DL, or done by hand. Your answers are saved in section 3 of your report.",
+    title: "What does Bellarine Pathology already use?",
+    lede: "Seven things Bellarine Pathology uses or does now. For each one, choose: a fixed rule, ML, DL, or done by hand. Your answers are saved in section 3 of your report.",
     options: [
       { id: "rule", label: "Fixed rule", hint: "a person wrote the steps" },
       { id: "ml", label: "ML", hint: "machine learning: it learned from examples" },
@@ -47,7 +47,7 @@ export const ACTIVITIES = {
     saveAs: "goodbadResult",
     eyebrow: "ICTAII401 · Session 2",
     title: "Good and bad",
-    lede: "Nine options for Bellarine. For each one, pick a good thing and a problem. Your answers are saved in your report on this device.",
+    lede: "Nine options for Bellarine Pathology. For each one, pick a good thing and a problem. Your answers are saved in your report on this device.",
     options: [],
     items: CARDS.flatMap((c) => ["good", "bad"].map((side) => ({
       id: `${c.id}-${side}`, card: c.id,

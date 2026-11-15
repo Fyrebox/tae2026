@@ -1,4 +1,4 @@
-// Read-only view of a Bellarine report, shared by the learner's "Download a copy" and the host view.
+// Read-only view of a Bellarine Pathology report, shared by the learner's "Download a copy" and the host view.
 // Returns an HTML string; every value is escaped.
 window.renderReport = (form, report) => {
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));

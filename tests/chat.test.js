@@ -21,7 +21,7 @@ test('the AI chat answers, keeps the conversation and refuses personal informati
   const seen = [];
   const { post, close } = await serve(createChatRouter({ ask: async (messages) => { seen.push(messages); return `Answer ${messages.length}`; } }));
   try {
-    let res = await post({ id: ID, messages: [q('How could Bellarine start using Power BI?')] });
+    let res = await post({ id: ID, messages: [q('How could Bellarine Pathology start using Power BI?')] });
     assert.equal(res.status, 200);
     assert.deepEqual(await res.json(), { answer: 'Answer 1' });
 

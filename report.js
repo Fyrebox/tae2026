@@ -1,4 +1,4 @@
-// API behind /report (learners submit the Bellarine report) and /report/host (the trainer reads and prints them).
+// API behind /report (learners submit the Bellarine Pathology report) and /report/host (the trainer reads and prints them).
 // Reports live in memory only, like the activities: learners keep their own copy on the device and can download it.
 import express from "express";
 import { FIELDS, FIELD_LIMITS, REPORT } from "./report-form.js";

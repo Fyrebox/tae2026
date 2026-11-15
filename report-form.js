@@ -1,4 +1,4 @@
-// The Bellarine AI Opportunities Report (ICTAII401): ten sections filled in across Sessions 1–3.
+// The Bellarine Pathology AI Opportunities Report (ICTAII401): ten sections filled in across Sessions 1–3.
 // One schema drives the learner form, the server's validation and the host's read-only view.
 import { CARDS, GOALS, cardValues } from "./option-cards.js";
 
@@ -67,7 +67,7 @@ export const REPORT = {
       { label: "How will we know it worked?", fields: [{ id: "s2_measure", type: "text", placeholder: "Example for a printer: fewer paper jams each week" }] },
       { label: "Budget and limits", hint: "What the Operations Manager said about money, and anything off limits.", fields: [{ id: "s2_budget", type: "textarea" }] },
     ] },
-    { n: 3, session: 1, title: "Current technology and processes", maps: "PC 1.3", intro: "Tap Start and sort Bellarine's seven technologies and processes. Got some wrong? Retry them: your latest answers are saved here. Then explain three of them.", groups: [
+    { n: 3, session: 1, title: "Current technology and processes", maps: "PC 1.3", intro: "Tap Start and sort Bellarine Pathology's seven technologies and processes. Got some wrong? Retry them: your latest answers are saved here. Then explain three of them.", groups: [
       // activity: the learner answers through the tap-to-choose activity (pick-decks.js), not drop-downs; item links each field
       // to its card. Retries replace wrong answers; firstTry keeps the score of the first round for the trainer.
       { label: "Type of each technology or process", activity: "tech", fields: [
@@ -79,7 +79,7 @@ export const REPORT = {
       { label: "Pick one manual process. What is it, and could AI help?", fields: [{ id: "s3_why_manual", type: "textarea" }] },
     ] },
     // Session 2: one group per option. The card picker (cards: type) shows the cards for the learner's goal from section 2.
-    { n: 4, session: 2, title: "Your options", maps: "PCs 2.1, 2.4, 1.4 · PE: one AI, one ML and one DL opportunity", intro: "Pick one card of each type and say why. Then tap Ask AI on your card and check the answer fits Bellarine's budget ($10,000 to set up, plus up to $500 a month) and AI use policy.", groups: OPTIONS.map(([opt, optLabel]) => ({
+    { n: 4, session: 2, title: "Your options", maps: "PCs 2.1, 2.4, 1.4 · PE: one AI, one ML and one DL opportunity", intro: "Pick one card of each type and say why. Then tap Ask AI on your card and check the answer fits Bellarine Pathology's budget ($10,000 to set up, plus up to $500 a month) and AI use policy.", groups: OPTIONS.map(([opt, optLabel]) => ({
       label: optLabel, hint: `${opt.toUpperCase()}: ${TYPE[opt]}.`, fields: [
         { id: `s4_pick_${opt}`, cards: opt, type: "select", options: cardValues(opt) },
         { id: `s4_why_${opt}`, label: "Why this one?", type: "text" },
