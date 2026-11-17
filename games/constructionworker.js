@@ -3,6 +3,7 @@
 export const GAME = {
   key: "constructionworker",
   job: "Construction worker", // the learner's job, on the /session3 picker
+  greeting: "Hard hat on? Let's go!", // what the manager says on the /session3 picker
   path: "/constructionworker",
   title: "A day on the building site",
   place: "Bayline Builders, Armstrong Creek site",

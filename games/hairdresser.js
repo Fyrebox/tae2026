@@ -4,6 +4,7 @@
 export const GAME = {
   key: "hairdresser",
   job: "Hairdresser", // the learner's job, on the /session3 picker
+  greeting: "Hi! I run the salon.", // what the manager says on the /session3 picker
   path: "/hairdresser",
   title: "A day at the salon",
   place: "Harbour Hair Studio",

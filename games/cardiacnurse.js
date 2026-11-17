@@ -3,6 +3,7 @@
 export const GAME = {
   key: "cardiacnurse",
   job: "Cardiac nurse", // the learner's job, on the /session3 picker
+  greeting: "Welcome to Ward 4B!", // what the manager says on the /session3 picker
   path: "/cardiacnurse",
   title: "A shift on the cardiac ward",
   place: "Ward 4B (cardiology), Corio Bay Hospital",

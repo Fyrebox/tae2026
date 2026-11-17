@@ -60,7 +60,7 @@ h2 { font-size: 1.15rem; margin: 0; }
 .stage { position: relative; aspect-ratio: 360 / 220; overflow: hidden; background: #eee; }
 .layer, .actor { position: absolute; inset: 0; }
 .layer svg { width: 100%; height: 100%; display: block; }
-.actor { left: auto; right: 14%; width: 42%; top: 12%; transform: translateY(110%); transition: transform .35s ease; }
+.actor { left: auto; right: 14%; width: 42%; top: 12%; transform: translateY(110%); }
 .actor.on { transform: none; }
 .actor svg { width: 100%; height: auto; display: block; }
 .actor.talking { animation: talk .45s ease; }
@@ -189,3 +189,57 @@ h2 { font-size: 1.15rem; margin: 0; }
 
 /* Reopen the panel the story just showed (under the speech bubble). */
 .btn.ghost.reopen { border-color: var(--brand); color: var(--brand); background: #fff; }
+
+/* ---- Characters come alive: breathing, blinking, talking, nods, head shakes and waves ----
+   All of it stops for anyone who asks for reduced motion (the rule near the top switches animations off). */
+.person .head, .person .hair-back { transform-origin: 80px 128px; }
+.person .blink { transform-origin: 80px 77px; animation: blink 5.2s infinite; }
+@keyframes blink { 0%, 94%, 100% { transform: none; } 96% { transform: scaleY(.1); } }
+.person .body, .person .head, .person .hair-back { animation: breathe 3.8s ease-in-out infinite; }
+@keyframes breathe { 50% { translate: 0 1.2px; } }
+.person .mouth { transform-origin: 80px 104px; }
+.actor.talking .mouth { animation: chatter .18s ease-in-out var(--talk, 6) alternate; }
+@keyframes chatter { to { transform: scaleY(.45); } }
+.actor.nod .head, .actor.nod .hair-back { animation: nod .7s ease-in-out; }
+@keyframes nod { 20% { transform: rotate(0) translateY(4px); } 45% { transform: translateY(-2px); } 70% { transform: translateY(3px); } }
+.actor.shake .head, .actor.shake .hair-back { animation: shake .55s ease-in-out; }
+@keyframes shake { 20% { transform: rotate(-6deg); } 45% { transform: rotate(5deg); } 70% { transform: rotate(-3deg); } }
+.person .hand { opacity: 0; transform-origin: 134px 176px; }
+.waving .person .hand { animation: wave 1.8s ease-in-out; }
+@keyframes wave {
+  0% { opacity: 0; transform: translateY(26px); } 14% { opacity: 1; transform: none; }
+  30% { transform: rotate(12deg); } 46% { transform: rotate(-8deg); } 62% { transform: rotate(12deg); } 76% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(26px); }
+}
+.actor { transition: transform .3s ease; }
+
+/* The line types out; the rest of it is already there (invisible), so the bubble never jumps. */
+.line .rest { color: transparent; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.choice.enter { animation: rise .32s ease both; animation-delay: calc(var(--i, 0) * 80ms); }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+.score.bump { animation: bump .55s ease; display: inline-block; }
+@keyframes bump { 35% { transform: scale(1.45); } }
+
+/* A new part of the day: a banner slides across the scene. */
+.banner {
+  position: absolute; left: 50%; top: 10px; z-index: 2; translate: -50% 0; background: #26262e; color: #fff; font-weight: 700;
+  font-size: .9rem; border-radius: 999px; padding: 6px 16px; white-space: nowrap; box-shadow: 0 4px 14px rgba(0, 0, 0, .25);
+  animation: banner 2.2s ease forwards; pointer-events: none;
+}
+@keyframes banner { 0% { opacity: 0; transform: translateY(-16px); } 15%, 80% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-8px); } }
+
+/* Sent: a burst of stars. */
+.burst { position: fixed; left: 50%; top: 50%; z-index: 20; pointer-events: none; }
+.burst span { position: absolute; font-size: 1.6rem; color: #f4b400; animation: star 1.1s ease-out forwards; }
+@keyframes star { from { opacity: 1; transform: translate(-50%, -50%) scale(.6); } to { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.2) rotate(40deg); } }
+
+/* /session3: the cards come in one after another, and each manager says hello in turn. */
+.games li { animation: rise .45s ease both; animation-delay: calc(var(--i, 0) * 110ms); }
+.pick { position: relative; }
+.pick-hi {
+  position: absolute; left: 76px; top: -12px; z-index: 1; background: #fff; border: 2px solid var(--ink); border-radius: 12px;
+  padding: 3px 10px; font-size: .85rem; font-weight: 600; white-space: nowrap; opacity: 0; transform: translateY(6px) scale(.9);
+  transition: opacity .2s ease, transform .2s ease; pointer-events: none;
+}
+.pick:hover .pick-hi, .pick:focus-visible .pick-hi, .pick.greet .pick-hi { opacity: 1; transform: none; }

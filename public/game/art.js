@@ -6,12 +6,14 @@ window.GameArt = (() => {
   // ---- Characters (160 × 200, a head-and-shoulders bust) ----
   const LOOKS = {
     owner: {
-      skin: "#b97a57", shade: "#a0664a", hair: "#211b26", top: "#26262e", trim: "#c2185b",
-      // A sleek bob with a pink streak, small gold earrings and a scissors badge.
-      back: `<path d="M40 86 Q36 40 80 34 Q124 40 120 86 L122 120 Q100 128 80 124 Q60 128 38 120 Z" fill="#211b26"/>`,
-      front: `<path d="M44 82 Q46 42 82 40 Q118 42 116 80 Q108 60 84 56 Q62 58 52 74 Z" fill="#211b26"/>
-              <path d="M98 48 Q112 56 114 80 L108 78 Q106 60 94 52 Z" fill="#c2185b"/>
-              <circle cx="46" cy="98" r="3.2" fill="#e0b84a"/><circle cx="114" cy="98" r="3.2" fill="#e0b84a"/>`,
+      skin: "#b97a57", shade: "#a0664a", hair: "#e2bd6b", brow: "#8a6a33", top: "#26262e", trim: "#c2185b",
+      // Big blond curls down to the shoulders, small pink earrings and a scissors badge.
+      back: `<path d="M38 80 Q36 34 80 28 Q124 34 122 80 L128 140 Q104 152 80 146 Q56 152 32 140 Z" fill="#e2bd6b"/>
+              ${[[46, 52, 15], [34, 76, 15], [31, 102, 15], [34, 126, 14], [44, 144, 13], [114, 52, 15], [126, 76, 15], [129, 102, 15], [126, 126, 14], [116, 144, 13], [62, 36, 15], [80, 30, 15], [98, 36, 15]]
+                .map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#e2bd6b"/><path d="M${x - r * 0.5} ${y + r * 0.2} q${r * 0.5} ${r * 0.5} ${r} 0" stroke="#c59a45" stroke-width="2" fill="none" stroke-linecap="round"/>`).join("")}`,
+      front: `${[[50, 58, 10], [62, 50, 10], [76, 46, 10], [90, 47, 10], [103, 51, 10], [112, 60, 9], [45, 72, 8], [115, 73, 8]]
+                .map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#e2bd6b"/><path d="M${x - r * 0.5} ${y + r * 0.1} q${r * 0.5} ${r * 0.5} ${r} 0" stroke="#c59a45" stroke-width="1.8" fill="none" stroke-linecap="round"/>`).join("")}
+              <circle cx="46" cy="100" r="3.2" fill="#c2185b"/><circle cx="114" cy="100" r="3.2" fill="#c2185b"/>`,
       badge: `<g transform="translate(98 168) rotate(-20)"><circle cx="-6" cy="8" r="4" fill="none" stroke="#fff" stroke-width="2"/><circle cx="6" cy="8" r="4" fill="none" stroke="#fff" stroke-width="2"/><path d="M-4 5 L6 -10 M4 5 L-6 -10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></g>`,
     },
     client: {
@@ -100,25 +102,44 @@ window.GameArt = (() => {
     },
   };
 
+  // Each look blinks at its own moment, so a row of characters doesn't blink in step.
+  const offset = (look) => -([...look].reduce((n, c) => n + c.charCodeAt(0), 0) % 47) / 10;
+
+  // Parts are grouped so the stylesheet can animate them: hair-back and head nod or shake together, blink closes the
+  // eyes, mouth moves while talking, and hand (hidden until a wave) waves hello.
   function person(look, face = "happy") {
     const L = LOOKS[look] || LOOKS.owner;
     const F = FACES[face] || FACES.happy;
     return svg(160, 200, `
-      ${L.back}
-      <path d="M14 200 Q16 150 56 140 L104 140 Q144 150 146 200 Z" fill="${L.top}"/>
-      <path d="M62 140 L80 158 L98 140" fill="none" stroke="${L.trim}" stroke-width="4" stroke-linejoin="round"/>
-      ${L.badge}
-      <rect x="68" y="112" width="24" height="32" rx="10" fill="${L.shade}"/>
-      <ellipse cx="80" cy="84" rx="34" ry="40" fill="${L.skin}"/>
-      <ellipse cx="46" cy="88" rx="5" ry="8" fill="${L.shade}"/><ellipse cx="114" cy="88" rx="5" ry="8" fill="${L.shade}"/>
-      ${L.front}
-      <g class="brows" fill="none" stroke="${L.hair}" stroke-width="3.5" stroke-linecap="round">${F.brows}</g>
-      <g class="eyes" fill="#2b2024">${F.eyes}</g>
-      <circle cx="67.5" cy="76" r="1.4" fill="#fff"/><circle cx="95.5" cy="76" r="1.4" fill="#fff"/>
-      ${L.over || ""}
-      <path d="M80 84 Q77 94 81 96" fill="none" stroke="${L.shade}" stroke-width="2.5" stroke-linecap="round"/>
-      <circle cx="60" cy="96" r="6" fill="#e07a6a" opacity=".25"/><circle cx="100" cy="96" r="6" fill="#e07a6a" opacity=".25"/>
-      <g class="mouth">${F.mouth}</g>`, `person ${look}`);
+      <g class="hair-back">${L.back}</g>
+      <g class="body">
+        <path d="M14 200 Q16 150 56 140 L104 140 Q144 150 146 200 Z" fill="${L.top}"/>
+        <path d="M62 140 L80 158 L98 140" fill="none" stroke="${L.trim}" stroke-width="4" stroke-linejoin="round"/>
+        ${L.badge}
+        <rect x="68" y="112" width="24" height="32" rx="10" fill="${L.shade}"/>
+      </g>
+      <g class="hand">
+        <path d="M128 200 L132 150 Q134 136 142 128" fill="none" stroke="${L.top}" stroke-width="15" stroke-linecap="round"/>
+        <g fill="${L.skin}" stroke="${L.shade}" stroke-width="1.5">
+          ${[[136, 104], [142, 101], [148, 103], [153, 108]].map(([x, y]) => `<rect x="${x - 3}" y="${y}" width="6" height="18" rx="3"/>`).join("")}
+          <rect x="128" y="113" width="6" height="15" rx="3" transform="rotate(-35 131 120)"/>
+          <rect x="133" y="114" width="23" height="20" rx="8"/>
+        </g>
+      </g>
+      <g class="head">
+        <ellipse cx="80" cy="84" rx="34" ry="40" fill="${L.skin}"/>
+        <ellipse cx="46" cy="88" rx="5" ry="8" fill="${L.shade}"/><ellipse cx="114" cy="88" rx="5" ry="8" fill="${L.shade}"/>
+        ${L.front}
+        <g class="brows" fill="none" stroke="${L.brow || L.hair}" stroke-width="3.5" stroke-linecap="round">${F.brows}</g>
+        <g class="blink" style="animation-delay:${offset(look)}s">
+          <g class="eyes" fill="#2b2024">${F.eyes}</g>
+          <circle cx="67.5" cy="76" r="1.4" fill="#fff"/><circle cx="95.5" cy="76" r="1.4" fill="#fff"/>
+        </g>
+        ${L.over || ""}
+        <path d="M80 84 Q77 94 81 96" fill="none" stroke="${L.shade}" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="60" cy="96" r="6" fill="#e07a6a" opacity=".25"/><circle cx="100" cy="96" r="6" fill="#e07a6a" opacity=".25"/>
+        <g class="mouth">${F.mouth}</g>
+      </g>`, `person ${look}`);
   }
 
   // ---- Scenes (360 × 220) ----

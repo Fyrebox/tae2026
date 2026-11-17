@@ -26,6 +26,26 @@
     // Draw each workplace's manager next to its name.
     const looks = JSON.parse(document.getElementById("looks").textContent);
     document.querySelectorAll(".pick-art").forEach((el) => { el.innerHTML = GameArt.person(looks[el.dataset.key], "happy"); });
+    // Each manager says hello in turn (and on hover or focus), unless the learner asked for less motion.
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const cards = [...document.querySelectorAll(".pick")];
+      const hello = (card) => {
+        cards.forEach((c) => c.classList.toggle("greet", c === card));
+        const art = card.querySelector(".pick-art");
+        art.classList.remove("waving"); void art.getBoundingClientRect(); art.classList.add("waving");
+      };
+      let turn = 0;
+      let paused = false;
+      cards.forEach((c) => {
+        c.addEventListener("pointerenter", () => { paused = true; hello(c); });
+        c.addEventListener("focus", () => { paused = true; hello(c); });
+        c.addEventListener("pointerleave", () => { paused = false; });
+      });
+      setTimeout(function next() {
+        if (!paused && cards.length) hello(cards[turn++ % cards.length]);
+        setTimeout(next, 2600);
+      }, 900);
+    }
   </script>
 </body>
 </html>

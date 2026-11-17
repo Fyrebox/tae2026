@@ -65,19 +65,86 @@
     $("front").innerHTML = s.front;
     drawnScene = view.scene;
   }
+  // Restart a CSS animation class on an element.
+  function replay(node, cls) {
+    node.classList.remove(cls);
+    if (reduced) return;
+    void node.getBoundingClientRect();
+    node.classList.add(cls);
+  }
+
+  // A new speaker slides out the last one first; the same speaker just changes face.
+  let shownWho = "";
+  let swapTimer = 0;
   function drawActor() {
     const who = G.cast[view.who];
     const actor = $("actor");
-    if (!who) { actor.classList.remove("on"); return; }
-    actor.innerHTML = GameArt.person(who.look, view.face);
-    actor.classList.add("on");
-    actor.classList.remove("talking");
-    if (!reduced) { void actor.offsetWidth; actor.classList.add("talking"); }
+    clearTimeout(swapTimer);
+    if (!who) { actor.classList.remove("on"); shownWho = ""; return; }
+    const paint = () => {
+      actor.innerHTML = GameArt.person(who.look, view.face);
+      actor.classList.add("on");
+      replay(actor, "talking");
+    };
+    if (!reduced && shownWho && shownWho !== view.who && actor.classList.contains("on")) {
+      actor.classList.remove("on");
+      swapTimer = setTimeout(paint, 280);
+    } else paint();
+    shownWho = view.who;
   }
+  // A right answer gets a nod, a wrong one a shake of the head.
+  function react(mood) {
+    const actor = $("actor");
+    actor.classList.remove("nod", "shake");
+    if (mood) replay(actor, mood === "good" ? "nod" : "shake");
+  }
+
+  let shownScore = null;
   function drawHud() {
     $("clock").textContent = view.clock;
     $("level").textContent = view.level;
-    $("score").textContent = v("score");
+    const score = v("score");
+    $("score").textContent = score;
+    if (shownScore !== null && score > shownScore) replay($("score"), "bump");
+    shownScore = score;
+  }
+  function banner(text) {
+    if (reduced || !text) return;
+    const b = el("div", { className: "banner", textContent: text });
+    $("stage").append(b);
+    setTimeout(() => b.remove(), 2300);
+  }
+
+  // The line types out (a tap shows it all). Screen readers get the whole line at once from a hidden live region.
+  let typing = null;
+  function finishTyping() {
+    if (!typing) return;
+    cancelAnimationFrame(typing.raf);
+    $("line").textContent = typing.text;
+    const done = typing.done;
+    typing = null;
+    done();
+  }
+  function typeLine(text, done) {
+    if (typing) { cancelAnimationFrame(typing.raf); typing = null; } // a new line replaces one still typing
+    const line = $("line");
+    if (reduced || !text) { line.textContent = text; done(); return; }
+    const shown = el("span");
+    const rest = el("span", { className: "rest", textContent: text });
+    line.textContent = "";
+    line.append(shown, rest);
+    const per = Math.min(1000 / 45, 2400 / text.length); // about 45 characters a second, never more than 2.4 s a line
+    $("actor").style.setProperty("--talk", String(Math.max(2, Math.round((per * text.length) / 180))));
+    const t0 = performance.now();
+    typing = { text, done, raf: 0 };
+    const tick = () => {
+      const n = Math.min(text.length, Math.floor((performance.now() - t0) / per));
+      shown.textContent = text.slice(0, n);
+      rest.textContent = text.slice(n);
+      if (n >= text.length) finishTyping();
+      else typing.raf = requestAnimationFrame(tick);
+    };
+    typing.raf = requestAnimationFrame(tick);
   }
   function drawLine() {
     const who = G.cast[view.who];
@@ -85,8 +152,13 @@
     bubble.className = "bubble" + (who ? " speech " + view.who : " narrator") + (view.mood ? " " + view.mood : "");
     $("who").textContent = who ? who.name : "";
     $("who").hidden = !who;
-    $("line").textContent = view.text;
-    if (!reduced) { bubble.classList.remove("pop"); void bubble.offsetWidth; bubble.classList.add("pop"); }
+    $("say").textContent = (who ? who.name + ": " : "") + view.text;
+    replay(bubble, "pop");
+    $("choices").hidden = true;
+    $("choices").textContent = ""; // the replies are added when the line has typed out
+    $("next").hidden = false;
+    $("next").textContent = "Next ›";
+    typeLine(view.text, drawChoices);
   }
   function toast(mood) {
     const t = $("toast");
@@ -101,8 +173,11 @@
     box.textContent = "";
     const choices = story.currentChoices;
     choices.forEach((c, i) => {
-      box.append(el("button", { type: "button", className: "btn choice", textContent: c.text, onclick: () => choose(i) }));
+      const b = el("button", { type: "button", className: "btn choice" + (reduced ? "" : " enter"), textContent: c.text, onclick: () => choose(i) });
+      b.style.setProperty("--i", String(i));
+      box.append(b);
     });
+    box.hidden = !choices.length;
     const atEnd = !story.canContinue && !choices.length;
     $("next").hidden = choices.length > 0;
     $("next").textContent = atEnd ? "See my recommendation ›" : "Next ›";
@@ -145,19 +220,22 @@
       if (text) { view.text = text; break; }
     }
     view.show = show; // the panel this line opened, so the learner can reopen it
+    const newLevel = view.level !== shownLevel;
     render();
-    if (view.mood) toast(view.mood);
+    if (newLevel) banner(`${view.clock} · ${view.level}`);
+    if (view.mood) { toast(view.mood); react(view.mood); }
     report();
     save();
     if (show) openPanel(show, { story: true });
   }
 
+  let shownLevel = "";
   function render() {
+    shownLevel = view.level;
     drawScene();
     drawActor();
     drawHud();
-    drawLine();
-    drawChoices();
+    drawLine(); // shows the replies once the line has typed out
     drawReopen();
   }
 
@@ -174,10 +252,15 @@
   }
 
   $("next").addEventListener("click", () => {
+    if (typing) { finishTyping(); return; }
     if (story.canContinue) step();
     else if (!story.currentChoices.length) finish();
   });
-  $("bubble").addEventListener("click", () => { if (story.canContinue && !story.currentChoices.length) step(); });
+  $("bubble").addEventListener("click", () => {
+    if (typing) { finishTyping(); return; }
+    if (story.canContinue && !story.currentChoices.length) step();
+  });
+  $("stage").addEventListener("click", finishTyping);
 
   // ---- Notes panel: the rules, the three options, the comparison and the pitch ----
   const TABS = {
@@ -331,11 +414,28 @@
       view.sentName = name;
       save();
       sentState(name);
+      celebrate();
     } else {
       $("sendNote").textContent = "Couldn't send. Check the Wi-Fi, then tap Send again.";
     }
     $("send").disabled = false;
   });
+
+  function celebrate() {
+    if (reduced) return;
+    const burst = el("div", { className: "burst" });
+    burst.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * Math.PI * 2;
+      const d = 90 + (i % 3) * 40;
+      const s = el("span", { textContent: "★" });
+      s.style.setProperty("--dx", `${Math.round(Math.cos(a) * d)}px`);
+      s.style.setProperty("--dy", `${Math.round(Math.sin(a) * d)}px`);
+      burst.append(s);
+    }
+    document.body.append(burst);
+    setTimeout(() => burst.remove(), 1300);
+  }
 
   // ---- Screens ----
   function show(name) {
@@ -350,6 +450,8 @@
       view = { scene: "desk", clock: "9:00 am", level: "", who: "", face: "happy", text: "", mood: "", show: "", ended: false, sent: false };
       drawnScene = "";
       lastSent = "";
+      shownLevel = "";
+      shownScore = null;
     }
     show("play");
     if (fresh || !view.text) step();
@@ -368,6 +470,7 @@
   }
 
   $("introArt").innerHTML = GameArt.person(Object.values(G.cast)[0].look, "happy");
+  setTimeout(() => replay($("introArt"), "waving"), 500); // the manager waves hello
   const resumed = load();
   if (resumed) {
     $("start").textContent = view.ended ? "See my recommendation" : `Carry on (${view.clock})`;

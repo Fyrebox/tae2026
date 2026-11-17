@@ -103,7 +103,8 @@ for (const [key, game] of Object.entries(GAMES)) {
 // /session3: learners pick their workplace game. Server-rendered links, so it works even before the script loads.
 const gamesPage = fill(read("pages", "games.html"), {
   v: gameV,
-  list: Object.values(GAMES).map((g) => `        <li><a class="pick" href="${g.path}"><span class="pick-art" data-key="${g.key}" aria-hidden="true"></span>`
+  list: Object.values(GAMES).map((g, i) => `        <li style="--i:${i}"><a class="pick" href="${g.path}"><span class="pick-art" data-key="${g.key}" aria-hidden="true"></span>`
+    + `<span class="pick-hi" aria-hidden="true">${escHtml(g.greeting)}</span>`
     + `<span><span class="pick-job">${escHtml(g.job)}</span><span class="pick-title">${escHtml(g.title)}</span><span class="pick-go">Start ›</span></span></a></li>`).join("\n"),
   looks: embed(Object.fromEntries(Object.values(GAMES).map((g) => [g.key, Object.values(g.cast)[0].look]))),
 });

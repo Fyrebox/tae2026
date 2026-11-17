@@ -36,10 +36,11 @@
         <div id="toast" class="toast" hidden></div>
       </div>
       <div class="talk">
-        <div id="bubble" class="bubble" aria-live="polite">
+        <div id="bubble" class="bubble">
           <p id="who" class="who"></p>
-          <p id="line" class="line"></p>
+          <p id="line" class="line" aria-hidden="true"></p>
         </div>
+        <p id="say" class="sr" aria-live="polite"></p>
         <button id="reopen" class="btn ghost reopen" type="button" hidden></button>
         <div id="choices" class="choices" role="group" aria-label="Your reply"></div>
         <button id="next" class="btn primary next" type="button">Next ›</button>
