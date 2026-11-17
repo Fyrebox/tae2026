@@ -6,8 +6,8 @@ window.GameArt = (() => {
   // ---- Characters (160 × 200, a head-and-shoulders bust) ----
   const LOOKS = {
     owner: {
-      skin: "#b97a57", shade: "#a0664a", hair: "#e2bd6b", brow: "#8a6a33", top: "#26262e", trim: "#c2185b",
-      // Big blond curls down to the shoulders, small pink earrings and a scissors badge.
+      skin: "#f5d3bb", shade: "#e3b597", hair: "#e2bd6b", brow: "#8a6a33", top: "#26262e", trim: "#c2185b",
+      // Fair skin, big blond curls down to the shoulders, small pink earrings and a scissors badge.
       back: `<path d="M38 80 Q36 34 80 28 Q124 34 122 80 L128 140 Q104 152 80 146 Q56 152 32 140 Z" fill="#e2bd6b"/>
               ${[[46, 52, 15], [34, 76, 15], [31, 102, 15], [34, 126, 14], [44, 144, 13], [114, 52, 15], [126, 76, 15], [129, 102, 15], [126, 126, 14], [116, 144, 13], [62, 36, 15], [80, 30, 15], [98, 36, 15]]
                 .map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#e2bd6b"/><path d="M${x - r * 0.5} ${y + r * 0.2} q${r * 0.5} ${r * 0.5} ${r} 0" stroke="#c59a45" stroke-width="2" fill="none" stroke-linecap="round"/>`).join("")}`,
