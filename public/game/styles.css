@@ -243,3 +243,6 @@ h2 { font-size: 1.15rem; margin: 0; }
   transition: opacity .2s ease, transform .2s ease; pointer-events: none;
 }
 .pick:hover .pick-hi, .pick:focus-visible .pick-hi, .pick.greet .pick-hi { opacity: 1; transform: none; }
+
+/* The manager's budget, above the comparison. */
+.budget-box { margin: 0 0 12px; background: #fff8e1; border: 2px solid #f4b400; border-radius: 12px; padding: 10px 14px; font-size: 1.02rem; }

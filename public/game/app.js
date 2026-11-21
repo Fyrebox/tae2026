@@ -295,7 +295,10 @@
       el("p", { className: "product", textContent: c.product }),
       el("p", { textContent: c.text }),
       el("p", { className: "cost", textContent: `${money(c.setup)} to set up · ${money(c.monthly)} a month · Effort: ${c.effort}` })))),
-    compare: () => el("div", { className: "cards" }, ...G.cards.map((c) => el("article", { className: `card ${c.id}` },
+    // The budget sits above the comparison, so learners can check the options against it.
+    compare: () => el("div", {}, el("p", { className: "budget-box" }, el("strong", { textContent: "Budget: " }),
+      `${money(G.budget.setup)} to set up · ${money(G.budget.monthly)} a month`),
+    el("div", { className: "cards" }, ...G.cards.map((c) => el("article", { className: `card ${c.id}` },
       el("p", { className: "tag", textContent: `${c.type}: ${c.kind}` }),
       el("h3", { textContent: c.title }),
       el("dl", {},
@@ -303,7 +306,7 @@
         el("dt", { textContent: "Data needed" }), el("dd", { textContent: c.data }),
         el("dt", { textContent: "Cost" }), el("dd", { textContent: `${money(c.setup)} + ${money(c.monthly)} a month` }),
         el("dt", { textContent: "Effort" }), el("dd", { textContent: c.effort }),
-        el("dt", { textContent: "Main risk" }), el("dd", { textContent: filled(risk(c.id)) }))))),
+        el("dt", { textContent: "Main risk" }), el("dd", { textContent: filled(risk(c.id)) })))))),
     pitch: () => {
       const lines = pitchLines();
       if (!lines) return el("p", { className: "small", textContent: "Your pitch appears here once you pick the option to start with." });
